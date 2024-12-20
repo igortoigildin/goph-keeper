@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	upload "github.com/igortoigildin/goph-keeper/internal/server/api/note"
+	upload "github.com/igortoigildin/goph-keeper/internal/server/api/upload_v1"
 	"github.com/igortoigildin/goph-keeper/internal/server/config"
 	"github.com/igortoigildin/goph-keeper/internal/server/service"
 	uploadService "github.com/igortoigildin/goph-keeper/internal/server/service/upload"
