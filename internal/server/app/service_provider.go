@@ -4,18 +4,26 @@ import (
 	"context"
 	"log"
 
+	access "github.com/igortoigildin/goph-keeper/internal/server/api/access_v1"
+	auth "github.com/igortoigildin/goph-keeper/internal/server/api/auth_v1"
 	upload "github.com/igortoigildin/goph-keeper/internal/server/api/upload_v1"
+
 	"github.com/igortoigildin/goph-keeper/internal/server/config"
-	"github.com/igortoigildin/goph-keeper/internal/server/service"
+	authService "github.com/igortoigildin/goph-keeper/internal/server/service/auth"
 	uploadService "github.com/igortoigildin/goph-keeper/internal/server/service/upload"
 )
 
 type serviceProvider struct {
 	grpcConfig config.GRPCConfig
 
-	uploadService service.UploadService
+	uploadService upload.UploadService
+	uploadImpl    *upload.Implementation
 
-	uploadImpl *upload.Implementation
+	accessService access.AccessService
+	accessImpl    *access.Implementation
+
+	authService auth.AuthService
+	authImpl    *auth.Implementation
 }
 
 func newServiceProvider() *serviceProvider {
@@ -43,10 +51,23 @@ func (s *serviceProvider) UploadImpl(ctx context.Context) *upload.Implementation
 	return s.uploadImpl
 }
 
-func (s *serviceProvider) UploadService(ctx context.Context) service.UploadService {
+func (s *serviceProvider) UploadService(ctx context.Context) upload.UploadService {
 	if s.uploadService == nil {
 		s.uploadService = uploadService.New()
 	}
 
 	return s.uploadService
+}
+
+func (s *serviceProvider) AuthImpl(ctx context.Context) *auth.Implementation {
+	if s.accessImpl == nil {
+		s.accessImpl = access.NewImplementation(s.authService(ctx))
+	}
+}
+
+func (s *serviceProvider) AuthService(ctx context.Context) auth.AuthService {
+	if s.authService == nil {
+		s.authService = authService.New()
+	}
+	return s.authService
 }

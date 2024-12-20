@@ -10,13 +10,13 @@ import (
 	desc "github.com/igortoigildin/goph-keeper/pkg/upload_v1"
 )
 
-type FileServer struct{}
+type UploadService struct{}
 
-func New() *FileServer {
-	return &FileServer{}
+func New() *UploadService {
+	return &UploadService{}
 }
 
-func (f *FileServer) Upload(stream desc.FileService_UploadServer) error {
+func (f *UploadService) Upload(stream desc.FileService_UploadServer) error {
 	file := fl.NewFile()
 	var fileSize uint32
 	fileSize = 0

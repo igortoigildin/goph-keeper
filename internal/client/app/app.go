@@ -11,11 +11,11 @@ import (
 )
 
 var (
-	serverAddr string
-	filePath   string
-	batchSize  int
+	serverAddr  string
+	filePath    string
+	batchSize   int
 	loggerLevel string
-	rootCmd    = &cobra.Command{
+	rootCmd     = &cobra.Command{
 		Use:   "transfer_client",
 		Short: "Sending files via gRPC",
 		Run: func(cmd *cobra.Command, args []string) {

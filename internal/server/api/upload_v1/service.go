@@ -1,16 +1,19 @@
 package upload
 
 import (
-	"github.com/igortoigildin/goph-keeper/internal/server/service"
 	desc "github.com/igortoigildin/goph-keeper/pkg/upload_v1"
 )
 
-type Implementation struct {
-	desc.UnimplementedFileServiceServer
-	uploadService service.UploadService
+type UploadService interface {
+	Upload(stream desc.FileService_UploadServer) error
 }
 
-func NewImplementation(uploadService service.UploadService) *Implementation {
+type Implementation struct {
+	desc.UnimplementedFileServiceServer
+	uploadService UploadService
+}
+
+func NewImplementation(uploadService UploadService) *Implementation {
 	return &Implementation{
 		uploadService: uploadService,
 	}
