@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	grpcHostEnvName = "GRPC_HOST"
-	grpcPortEnvName = "GRPC_PORT"
+	grpcHostEnvName    = "GRPC_HOST"
+	grpcPortEnvName    = "GRPC_PORT"
+	loggerLevelEnvName = "LOGGER_LEVEL"
 )
 
 type GRPCConfig interface {

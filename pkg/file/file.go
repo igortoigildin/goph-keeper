@@ -8,9 +8,9 @@ import (
 )
 
 type File struct {
-	FilePath string
-	buffer *bytes.Buffer
-	OutputFile	*os.File
+	FilePath   string
+	buffer     *bytes.Buffer
+	OutputFile *os.File
 }
 
 func NewFile() *File {

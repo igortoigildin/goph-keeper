@@ -10,7 +10,7 @@ import (
 	desc "github.com/igortoigildin/goph-keeper/pkg/upload_v1"
 )
 
-type FileServer struct {}
+type FileServer struct{}
 
 func New() *FileServer {
 	return &FileServer{}
@@ -52,5 +52,5 @@ func (f *FileServer) Upload(stream desc.FileService_UploadServer) error {
 
 	fmt.Println("result:", file.FilePath, fileSize)
 	fileName := filepath.Base(file.FilePath)
-	return stream.SendAndClose(&desc.FileUploadResponse{FileName:fileName, Size: fileSize})
+	return stream.SendAndClose(&desc.FileUploadResponse{FileName: fileName, Size: fileSize})
 }

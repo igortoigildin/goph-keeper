@@ -26,10 +26,10 @@ func CloseAll() {
 
 // Closer ...
 type Closer struct {
-	mu sync.Mutex
-	once sync.Once
-	done chan struct{}
-	funcs  []func() error 
+	mu    sync.Mutex
+	once  sync.Once
+	done  chan struct{}
+	funcs []func() error
 }
 
 // New returns new Closer, if []os.Signal is specified Closer will automatically call CloseAll when one of signals is received from OS

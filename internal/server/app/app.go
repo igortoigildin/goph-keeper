@@ -14,9 +14,13 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
+const (
+	cfgFileName = ".env"
+)
+
 type App struct {
 	serviceProvider *serviceProvider
-	grpcServer		*grpc.Server
+	grpcServer      *grpc.Server
 }
 
 func NewApp(ctx context.Context) (*App, error) {
@@ -40,7 +44,7 @@ func (a *App) Run() error {
 }
 
 func (a *App) initDeps(ctx context.Context) error {
-	inits := []func(context.Context) error {
+	inits := []func(context.Context) error{
 		a.initConfig,
 		a.initServiceProvider,
 		a.initGRPCServer,
@@ -57,7 +61,7 @@ func (a *App) initDeps(ctx context.Context) error {
 }
 
 func (a *App) initConfig(_ context.Context) error {
-	err := config.Load(".env")
+	err := config.LoadFromFile(cfgFileName)
 	if err != nil {
 		return err
 	}

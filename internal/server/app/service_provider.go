@@ -15,7 +15,7 @@ type serviceProvider struct {
 
 	uploadService service.UploadService
 
-	uploadImpl	*upload.Implementation
+	uploadImpl *upload.Implementation
 }
 
 func newServiceProvider() *serviceProvider {
