@@ -1,4 +1,18 @@
-LOCAL_BIN:=$(CURDIR)/bin
+PROJECT_DIR = $(shell pwd)
+PROJECT_BIN:=$(PROJECT_DIR)/bin
+$(shell [ -f bin ] || mkdir -p $(PROJECT_BIN))
+PATH := $(PROJECT_BIN):$(PATH)
+
+GOLANGCI_LINT = $(PROJECT_BIN)/golangci-lint
+
+install-linter:
+	### INSTALL GOLANGCI_LINT ###
+	[ -f $(PROJECT_BIN)/golangci-lint ] || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(PROJECT_BIN) v1.62.2
+
+lint:
+	make install-linter
+	### RUN GOLANGCI_LINT ###
+	$(GOLANGCI_LINT) run ./... --config=.golangci.yml
 
 install-deps:
 	GOBIN=$(LOCAL_BIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.35.2 

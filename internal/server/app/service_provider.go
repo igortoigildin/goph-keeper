@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 
-	access "github.com/igortoigildin/goph-keeper/internal/server/api/access_v1"
 	auth "github.com/igortoigildin/goph-keeper/internal/server/api/auth_v1"
 	upload "github.com/igortoigildin/goph-keeper/internal/server/api/upload_v1"
 
@@ -18,9 +17,6 @@ type serviceProvider struct {
 
 	uploadService upload.UploadService
 	uploadImpl    *upload.Implementation
-
-	accessService access.AccessService
-	accessImpl    *access.Implementation
 
 	authService auth.AuthService
 	authImpl    *auth.Implementation
@@ -60,9 +56,11 @@ func (s *serviceProvider) UploadService(ctx context.Context) upload.UploadServic
 }
 
 func (s *serviceProvider) AuthImpl(ctx context.Context) *auth.Implementation {
-	if s.accessImpl == nil {
-		s.accessImpl = access.NewImplementation(s.authService(ctx))
+	if s.authImpl == nil {
+		s.authImpl = auth.NewImplementation(s.AuthService(ctx))
 	}
+
+	return s.authImpl
 }
 
 func (s *serviceProvider) AuthService(ctx context.Context) auth.AuthService {

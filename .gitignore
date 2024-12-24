@@ -30,3 +30,6 @@ vendor/
 #
 .html
 .bin
+
+# Ignore bin directories
+**/bin/

@@ -8,9 +8,9 @@ import (
 
 type AuthService interface {
 	Login(ctx context.Context, username, password string) (string, error)
-	Register(ctx context.Context, email, password string) (int64, error)
-	GetAccessToken(ctx context.Context, token string) (string, error)
-	GetRefreshToken(ctx context.Context, token string) (string, error)
+	RegisterNewUser(ctx context.Context, email, password string) (int64, error)
+	GetAccessToken(ctx context.Context, refreshToken string) (string, error)
+	GetRefreshToken(ctx context.Context, refreshToken string) (string, error)
 }
 
 type Implementation struct {
