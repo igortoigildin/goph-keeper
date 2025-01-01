@@ -17,10 +17,12 @@ lint:
 install-deps:
 	GOBIN=$(LOCAL_BIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.35.2 
 	GOBIN=$(LOCAL_BIN) go install -mod=mod google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
+	GOBIN=$(PROJECT_BIN) go install github.com/pressly/goose/v3/cmd/goose@v3.24.0
 
 get-deps:
 	go get -u google.golang.org/protobuf/cmd/protoc-gen-go
 	go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
+	go get -u github.com/pressly/goose/v3/cmd/goose@v3.24.0
 
 generate:
 	make generate-upload-api
@@ -53,3 +55,24 @@ make generate-access-api:
 	--go-grpc_out=pkg/access_v1 --go-grpc_opt=paths=source_relative \
 	--plugin=protoc-gen-go-grpc=bin/protoc-gen-go-grpc \
 	api/access_v1/access.proto
+
+# These are the default values for the test database. They can be overridden
+PG_DATABASE_NAME ?= test-db
+PG_PORT ?= 54321
+PG_PASSWORD ?= test-password
+PG_USER ?= test-user
+GOOSE_DRIVER ?= postgres
+
+### RUN Goose migrations ###
+-include .env
+create-migration:
+	$(PROJECT_BIN)/goose -dir ${MIGRATION_DIR} create add_users_table sql
+
+migration-status:
+	$(PROJECT_BIN)/goose -dir ${MIGRATION_DIR} postgres ${PG_DSN} status -v
+
+migration-up:
+	$(PROJECT_BIN)/goose -dir ${MIGRATION_DIR} postgres ${PG_DSN} up -v
+
+migration-down:
+	$(PROJECT_BIN)/goose -dir ${MIGRATION_DIR} postgres ${PG_DSN} down -v

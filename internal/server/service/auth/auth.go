@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/igortoigildin/goph-keeper/internal/server/client/db"
 	models "github.com/igortoigildin/goph-keeper/internal/server/models"
+	"github.com/igortoigildin/goph-keeper/internal/server/service"
 	"github.com/igortoigildin/goph-keeper/internal/server/storage"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
 	utils "github.com/igortoigildin/goph-keeper/pkg/utils"
@@ -27,38 +29,33 @@ var (
 	ErrUserExists         = errors.New("user already exists")
 )
 
-// type AuthService interface {
-// 	Login(ctx context.Context, username, password string) (string, error)
-// 	Register(ctx context.Context, email, password string) (int64, error)
-// 	GetAccessToken(ctx context.Context, token string) (string, error)
-// 	GetRefreshToken(ctx context.Context, token string) (string, error)
-// }
-
-type Auth struct {
-	userProvider UserProvider
-	userSaver    UserSaver
-}
-
 type UserProvider interface {
 	User(ctx context.Context, email string) (models.UserInfo, error)
 }
 
 type UserSaver interface {
-	SaveUser(
-		ctx context.Context,
-		email string,
-		passHash []byte,
-	) (uid int64, err error)
+	SaveUser(ctx context.Context, email string, passHash []byte) (uid int64, err error)
 }
 
-func New() *Auth {
-	return &Auth{}
+type authServ struct {
+	userProvider UserProvider
+	userSaver    UserSaver
+	txManager db.TxManager
+}
+
+func New(userProvider UserProvider, userSaver UserSaver, txManager db.TxManager,
+	) service.AuthService {
+	return &authServ{
+		userProvider: userProvider,
+		userSaver: userSaver,
+		txManager: txManager,
+	}
 }
 
 // Login checks if user with given credentials exists in the system and returns access token.
 // If user exists, but password is incorrect, returns error.
 // If user doesn't exist, returns error.
-func (a *Auth) Login(ctx context.Context, email, password string) (string, error) {
+func (a *authServ) Login(ctx context.Context, email, password string) (string, error) {
 	const op = "Auth.Login"
 	logger.Info("attempting to log in user")
 
@@ -92,7 +89,7 @@ func (a *Auth) Login(ctx context.Context, email, password string) (string, error
 	return refreshToken, nil
 }
 
-func (a *Auth) GetAccessToken(ctx context.Context, refreshToken string) (string, error) {
+func (a *authServ) GetAccessToken(ctx context.Context, refreshToken string) (string, error) {
 	claims, err := utils.VeryfyToken(refreshToken, []byte(refreshTokenSecretKey))
 	if err != nil {
 		return "", errors.New("invalid refresh token")
@@ -109,7 +106,7 @@ func (a *Auth) GetAccessToken(ctx context.Context, refreshToken string) (string,
 	return accessToken, nil
 }
 
-func (a *Auth) GetRefreshToken(ctx context.Context, refreshToken string) (string, error) {
+func (a *authServ) GetRefreshToken(ctx context.Context, refreshToken string) (string, error) {
 	claims, err := utils.VeryfyToken(refreshToken, []byte(refreshTokenSecretKey))
 	if err != nil {
 		return "", errors.New("invalid token")
@@ -130,7 +127,7 @@ func (a *Auth) GetRefreshToken(ctx context.Context, refreshToken string) (string
 
 // RegisterNewUser registers new user in the system and returns user ID.
 // If user with given username already exists, returns error.
-func (a *Auth) RegisterNewUser(ctx context.Context, Email string, pass string) (int64, error) {
+func (a *authServ) RegisterNewUser(ctx context.Context, Email string, pass string) (int64, error) {
 	const op = "auth.RegisterNewUser"
 	logger.Info("registering user")
 
