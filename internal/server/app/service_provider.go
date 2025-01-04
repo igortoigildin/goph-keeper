@@ -13,6 +13,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/igortoigildin/goph-keeper/internal/server/config"
+	authService "github.com/igortoigildin/goph-keeper/internal/server/service/auth"
 	uploadService "github.com/igortoigildin/goph-keeper/internal/server/service/upload"
 	repository "github.com/igortoigildin/goph-keeper/internal/server/storage"
 	userRepository "github.com/igortoigildin/goph-keeper/internal/server/storage/pg/user"
@@ -81,7 +82,7 @@ func (s *serviceProvider) UploadService(ctx context.Context) upload.UploadServic
 
 func (s *serviceProvider) AuthService(ctx context.Context) auth.AuthService {
 	if s.authService == nil {
-		//s.authService = authService.New(s.)
+		s.authService = authService.New(s.UserRepository(ctx))
 	}
 	return s.authService
 }

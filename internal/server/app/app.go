@@ -7,7 +7,8 @@ import (
 
 	"github.com/igortoigildin/goph-keeper/internal/server/closer"
 	config "github.com/igortoigildin/goph-keeper/internal/server/config"
-	desc "github.com/igortoigildin/goph-keeper/pkg/upload_v1"
+	authpb "github.com/igortoigildin/goph-keeper/pkg/auth_v1"
+	uploadpb "github.com/igortoigildin/goph-keeper/pkg/upload_v1"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -74,7 +75,8 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 
 	reflection.Register(a.grpcServer)
 
-	desc.RegisterFileServiceServer(a.grpcServer, a.serviceProvider.UploadImpl(ctx))
+	uploadpb.RegisterFileServiceServer(a.grpcServer, a.serviceProvider.UploadImpl(ctx))
+	authpb.RegisterAuthV1Server(a.grpcServer, a.serviceProvider.AuthImpl(ctx))
 
 	return nil
 }
@@ -97,5 +99,6 @@ func (a *App) runGRPCServer() error {
 
 func (a *App) initServiceProvider(_ context.Context) error {
 	a.serviceProvider = newServiceProvider()
+
 	return nil
 }

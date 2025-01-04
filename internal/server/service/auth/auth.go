@@ -29,7 +29,7 @@ var (
 )
 
 type UserRepository interface {
-	GetUser(ctx context.Context, email string) (models.UserInfo, error)
+	GetUser(ctx context.Context, email string) (*models.UserInfo, error)
 	SaveUser(ctx context.Context, email string, passHash []byte) (uid int64, err error)
 }
 
@@ -70,7 +70,7 @@ func (a *authServ) Login(ctx context.Context, email, password string) (string, e
 	}
 
 	// generate refresh token
-	refreshToken, err := utils.GenerateToken(user, []byte(refreshTokenSecretKey), refreshTokenExpiration)
+	refreshToken, err := utils.GenerateToken(*user, []byte(refreshTokenSecretKey), refreshTokenExpiration)
 	if err != nil {
 		return "", errors.New("failed to generate token")
 	}
@@ -118,7 +118,7 @@ func (a *authServ) GetRefreshToken(ctx context.Context, refreshToken string) (st
 
 // RegisterNewUser registers new user in the system and returns user ID.
 // If user with given username already exists, returns error.
-func (a *authServ) RegisterNewUser(ctx context.Context, Email string, pass string) (int64, error) {
+func (a *authServ) RegisterNewUser(ctx context.Context, email string, pass string) (int64, error) {
 	const op = "auth.RegisterNewUser"
 	logger.Info("registering user")
 
@@ -129,8 +129,10 @@ func (a *authServ) RegisterNewUser(ctx context.Context, Email string, pass strin
 		return 0, fmt.Errorf("%s: %w", op, zap.Error(err))
 	}
 
-	id, err := a.userRepo.SaveUser(ctx, Email, passHash)
+	id, err := a.userRepo.SaveUser(ctx, email, passHash)
 	if err != nil {
+		fmt.Println(err)
+
 		if errors.Is(err, storage.ErrUserExists) {
 			logger.Warn("user already exists", zap.Error(err))
 
