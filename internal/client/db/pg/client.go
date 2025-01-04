@@ -5,7 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/igortoigildin/goph-keeper/internal/server/client/db"
+	"github.com/igortoigildin/goph-keeper/internal/client/db"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/georgysavva/scany/pgxscan"
-	"github.com/igortoigildin/goph-keeper/internal/server/client/db"
+	"github.com/igortoigildin/goph-keeper/internal/client/db"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
 
 	"github.com/jackc/pgconn"
@@ -97,11 +97,7 @@ func (p *pg) Ping(ctx context.Context) error {
 	return p.dbc.Ping(ctx)
 }
 
-func MakeContextTx(ctx context.Context, tx pgx.Tx) context.Context {
-	return context.WithValue(ctx, TxKey, tx)
-}
-
 func logQuery(ctx context.Context, q db.Query, args ...interface{}) {
 	prettyQyery := prettier.Pretty(q.QueryRaw, prettier.PlaceholderDollar, args...)
-	logger.Info("", zap.String("sql", q.Name), zap.String("query", prettyQyery))
+	logger.Debug("", zap.String("sql", q.Name), zap.String("query", prettyQyery))
 }

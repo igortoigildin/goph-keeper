@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
-	"github.com/igortoigildin/goph-keeper/internal/server/models"
+	model "github.com/igortoigildin/goph-keeper/internal/server/models"
 	"github.com/pkg/errors"
 )
 
@@ -14,7 +14,6 @@ func GenerateToken(info model.UserInfo, secretKey []byte, duration time.Duration
 			ExpiresAt: time.Now().Add(duration).Unix(),
 		},
 		Email: info.Email,
-		Role:  info.Role,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

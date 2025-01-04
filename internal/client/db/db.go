@@ -7,28 +7,15 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
-// Handler - func, which should be executed within transaction
-type Handler func(ctx context.Context) error
-
 type Client interface {
 	DB() DB
 	Close() error
 }
 
-// TxManager executes handler, which defined by user within certain tx
-type TxManager interface {
-	ReadCommitted(ctx context.Context, f Handler) error
-}
-
-// Query is a request wrapper, which request
+// Query is a request wrapper, which request name and request itself
 type Query struct {
-	Name string
+	Name     string
 	QueryRaw string
-}
-
-// Transactor is an interface for working with txs
-type Transactor interface {
-	BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)
 }
 
 // SQLExecer combines NamedExeceer and QueryExecer
@@ -57,7 +44,6 @@ type Pinger interface {
 
 type DB interface {
 	SQLExecer
-	Transactor
 	Pinger
 	Close()
 }

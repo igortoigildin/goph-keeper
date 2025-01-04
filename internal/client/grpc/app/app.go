@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	service "github.com/igortoigildin/goph-keeper/internal/client/service"
+	service "github.com/igortoigildin/goph-keeper/internal/client/grpc/service"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"

@@ -4,20 +4,25 @@ import (
 	"context"
 	"log"
 
+	"github.com/igortoigildin/goph-keeper/internal/client/db"
+	"github.com/igortoigildin/goph-keeper/internal/client/db/pg"
 	auth "github.com/igortoigildin/goph-keeper/internal/server/api/auth_v1"
 	upload "github.com/igortoigildin/goph-keeper/internal/server/api/upload_v1"
-	"github.com/igortoigildin/goph-keeper/internal/server/client/db"
+	"github.com/igortoigildin/goph-keeper/internal/server/closer"
+	"github.com/igortoigildin/goph-keeper/pkg/logger"
+	"go.uber.org/zap"
 
 	"github.com/igortoigildin/goph-keeper/internal/server/config"
 	uploadService "github.com/igortoigildin/goph-keeper/internal/server/service/upload"
-	repository "github.com/igortoigildin/goph-keeper/internal/server/storage/pg"
+	repository "github.com/igortoigildin/goph-keeper/internal/server/storage"
+	userRepository "github.com/igortoigildin/goph-keeper/internal/server/storage/pg/user"
 )
 
 type serviceProvider struct {
 	grpcConfig config.GRPCConfig
+	pgConfig   config.PGConfig
 
 	dbClient db.Client
-	txManager db.TxManager
 
 	uploadService upload.UploadService
 	uploadImpl    *upload.Implementation
@@ -43,6 +48,19 @@ func (s *serviceProvider) GRPCConfig() config.GRPCConfig {
 	}
 
 	return s.grpcConfig
+}
+
+func (s *serviceProvider) PGConfig() config.PGConfig {
+	if s.pgConfig == nil {
+		cfg, err := config.NewPGConfig()
+		if err != nil {
+			logger.Fatal("failed to get pg config:", zap.Error(err))
+		}
+
+		s.pgConfig = cfg
+	}
+
+	return s.pgConfig
 }
 
 func (s *serviceProvider) UploadImpl(ctx context.Context) *upload.Implementation {
@@ -76,3 +94,30 @@ func (s *serviceProvider) AuthImpl(ctx context.Context) *auth.Implementation {
 	return s.authImpl
 }
 
+func (s *serviceProvider) DBClient(ctx context.Context) db.Client {
+	if s.dbClient == nil {
+		cl, err := pg.New(ctx, s.PGConfig().DSN())
+		if err != nil {
+			logger.Fatal("failed to create db client:", zap.Error(err))
+		}
+
+		err = cl.DB().Ping(ctx)
+		if err != nil {
+			logger.Fatal("ping error:", zap.Error(err))
+		}
+
+		closer.Add(cl.Close)
+
+		s.dbClient = cl
+	}
+
+	return s.dbClient
+}
+
+func (s *serviceProvider) UserRepository(ctx context.Context) repository.UserRepository {
+	if s.userRepository == nil {
+		s.userRepository = userRepository.NewRepository(s.DBClient(ctx))
+	}
+
+	return s.userRepository
+}

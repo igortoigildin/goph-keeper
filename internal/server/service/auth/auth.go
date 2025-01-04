@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/igortoigildin/goph-keeper/internal/server/client/db"
 	models "github.com/igortoigildin/goph-keeper/internal/server/models"
 	"github.com/igortoigildin/goph-keeper/internal/server/service"
 	"github.com/igortoigildin/goph-keeper/internal/server/storage"
@@ -29,26 +28,18 @@ var (
 	ErrUserExists         = errors.New("user already exists")
 )
 
-type UserProvider interface {
-	User(ctx context.Context, email string) (models.UserInfo, error)
-}
-
-type UserSaver interface {
+type UserRepository interface {
+	GetUser(ctx context.Context, email string) (models.UserInfo, error)
 	SaveUser(ctx context.Context, email string, passHash []byte) (uid int64, err error)
 }
 
 type authServ struct {
-	userProvider UserProvider
-	userSaver    UserSaver
-	txManager db.TxManager
+	userRepo UserRepository
 }
 
-func New(userProvider UserProvider, userSaver UserSaver, txManager db.TxManager,
-	) service.AuthService {
+func New(userRepo UserRepository) service.AuthService {
 	return &authServ{
-		userProvider: userProvider,
-		userSaver: userSaver,
-		txManager: txManager,
+		userRepo: userRepo,
 	}
 }
 
@@ -60,7 +51,7 @@ func (a *authServ) Login(ctx context.Context, email, password string) (string, e
 	logger.Info("attempting to log in user")
 
 	// identify user by email
-	user, err := a.userProvider.User(ctx, email)
+	user, err := a.userRepo.GetUser(ctx, email)
 	if err != nil {
 		if errors.Is(err, storage.ErrUserNotFound) {
 			logger.Warn("user not found", zap.Error(err))
@@ -138,7 +129,7 @@ func (a *authServ) RegisterNewUser(ctx context.Context, Email string, pass strin
 		return 0, fmt.Errorf("%s: %w", op, zap.Error(err))
 	}
 
-	id, err := a.userSaver.SaveUser(ctx, Email, passHash)
+	id, err := a.userRepo.SaveUser(ctx, Email, passHash)
 	if err != nil {
 		if errors.Is(err, storage.ErrUserExists) {
 			logger.Warn("user already exists", zap.Error(err))
