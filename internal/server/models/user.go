@@ -1,6 +1,6 @@
 package model
 
 type UserInfo struct {
-	Email string `json:"email"`
-	Hash  []byte `json:"-"`
+	Email string `db:"email"`
+	Hash  []byte `db:"password_hash"`
 }

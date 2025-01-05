@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	authService "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/register"
+	authService "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/auth"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -61,7 +61,7 @@ var createUserCmd = &cobra.Command{
 		authService := authService.New(serverAddr)
 
 		if err = authService.RegisterNewUser(context.Background(), emailStr, passStr); err != nil {
-			log.Fatalf("failed to login: %s\n", err.Error())
+			log.Fatalf("registration failed: %s\n", err.Error())
 		}
 
 		log.Printf("user with %s email created successfully\n", emailStr)
@@ -83,9 +83,14 @@ var loginUserCmd = &cobra.Command{
 			log.Fatalf("failed to get email: %s\n", err.Error())
 		}
 
-		_, err = cmd.Flags().GetString("password")
+		passStr, err := cmd.Flags().GetString("password")
 		if err != nil {
 			log.Fatalf("failed to get password: %s\n", err.Error())
+		}
+
+		authService := authService.New(serverAddr)
+		if err = authService.Login(context.Background(), emailStr, passStr); err != nil {
+			log.Fatalf("failed to login: %s\n", err.Error())
 		}
 
 		log.Printf("user with %s email logged in successfully\n", emailStr)

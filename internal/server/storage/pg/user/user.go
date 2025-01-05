@@ -83,7 +83,7 @@ func (rep *UserRepository) GetUser(ctx context.Context, email string) (*models.U
 	var user models.UserInfo
 	err = rep.db.DB().ScanOneContext(ctx, &user, qr, args...)
 	if err != nil {
-		return nil, errors.New("cannot get new user")
+		return nil, errors.New("error while retrieving info about specified user")
 	}
 
 	return &user, nil
