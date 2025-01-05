@@ -30,15 +30,15 @@ func NewRepository(db db.Client) *UserRepository {
 }
 
 func (rep *UserRepository) SaveUser(ctx context.Context, email string, passHash []byte) (int64, error) {
-	
+
 	builder := sq.Insert(tableName).
 		PlaceholderFormat(sq.Dollar).
 		Columns(emailColumn, passwordHashColumn).
 		Values(email, passHash).
 		Suffix("ON CONFLICT DO NOTHING RETURNING user_id")
-	
+
 	fmt.Printf("builder: %v\n", builder)
-	
+
 	query, args, err := builder.ToSql()
 	if err != nil {
 		return 0, errors.New("error while building SQL query")
@@ -48,7 +48,6 @@ func (rep *UserRepository) SaveUser(ctx context.Context, email string, passHash 
 		Name:     "user_repository.SaveUser",
 		QueryRaw: query,
 	}
-
 
 	var id int64
 	err = rep.db.DB().QueryRowContext(ctx, qr, args...).Scan(&id)
