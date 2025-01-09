@@ -11,6 +11,10 @@ import (
 	"go.uber.org/zap"
 )
 
+var (
+		batchSize   int
+)
+
 // var (
 // 	serverAddr  string
 // 	filePath    string
@@ -105,6 +109,7 @@ var saveCmd = &cobra.Command{
 
 // save password subcommand
 var savePasswordCmd = &cobra.Command{
+
 	Use:   "password",
 	Short: "Save login && password in storage",
 
@@ -119,7 +124,27 @@ var savePasswordCmd = &cobra.Command{
 			log.Fatalf("failed to get password: %s\n", err.Error())
 		}
 
-		// TODO: save login && pass in minio
+		// path := fmt.Sprintf("%s.txt", loginStr)
+		// file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+		// if err != nil {
+		// 	fmt.Println("Error opening file:", err)
+		// 	return
+		// }
+		// defer file.Close()
+		
+		// _, err = file.WriteString(fmt.Sprintf("%s %s", loginStr, passStr))
+		// if err != nil {
+		// 	fmt.Println("Error writing to file:", err)
+		// 	return
+		// }
+
+		// fmt.Println("Text appended to file successfully.")
+
+		// clientService := service.New(serverAddr, path, batchSize)
+
+		// if err := clientService.SendFile(); err != nil {
+		// 	log.Fatal(err)
+		// }
 
 		log.Printf("login %s && password %s saved successfully\n", loginStr, passStr)
 	},
@@ -204,10 +229,9 @@ func Execute() {
 }
 
 func init() {
-	//rootCmd.Flags().StringVarP(&serverAddr, "addr", "a", "", "server address")
 	rootCmd.Flags().StringVarP(&loggerLevel, "log", "l", "info", "logger level")
 	// rootCmd.Flags().StringVarP(&filePath, "file", "f", "", "file path")
-	// rootCmd.Flags().IntVarP(&batchSize, "batch", "b", 1024*1024, "batch size for sending")
+	rootCmd.Flags().IntVarP(&batchSize, "batch", "b", 1024*1024, "batch size for sending")
 	rootCmd.AddCommand(createCmd)
 	createCmd.AddCommand(createUserCmd)
 	createUserCmd.Flags().StringP("email", "e", "", "User email")
@@ -232,25 +256,18 @@ func init() {
 	saveCmd.AddCommand(saveTextCmd)
 	saveTextCmd.Flags().StringP("file_name", "n", "", "Provided text will be saved in stated file")
 	saveTextCmd.Flags().StringP("text", "t", "", "Text which need to be saved")
-	saveTextCmd.Flags().StringVarP(&serverAddr, "addr", "a", "", "server address")
 
 	// save binary data
 	saveCmd.AddCommand(saveBinCmd)
 	saveBinCmd.Flags().StringP("file_name", "n", "", "Name of the file to be saved")
 	saveBinCmd.Flags().StringP("file_path", "p", "", "Path to the binary file, which need to be saved")
-	saveBinCmd.Flags().StringVarP(&serverAddr, "addr", "a", "", "server address")
 
 	// save card data
 	saveCmd.AddCommand(saveCardInfoCmd)
 	saveCardInfoCmd.Flags().StringP("card_number", "n", "", "Card number to be saved")
 	saveCardInfoCmd.Flags().StringP("CVC", "c", "", "CVC to be saved")
-	saveCardInfoCmd.Flags().StringP("expiration_date", "e", "", "Expiration date to be saved")
 
 	logger.Initialize(loggerLevel)
-
-	// if err := rootCmd.MarkFlagRequired("file"); err != nil {
-	// 	log.Fatal(err)
-	// }
 
 	if err := createUserCmd.MarkFlagRequired("addr"); err != nil {
 		log.Fatal(err)
