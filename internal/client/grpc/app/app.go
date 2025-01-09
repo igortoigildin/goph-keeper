@@ -158,7 +158,7 @@ var saveBinCmd = &cobra.Command{
 			log.Fatalf("failed to get file_name: %s\n", err.Error())
 		}
 
-		pathStr, err := cmd.Flags().GetString("path")
+		pathStr, err := cmd.Flags().GetString("file_path")
 		if err != nil {
 			log.Fatalf("failed to get path: %s\n", err.Error())
 		}
@@ -185,7 +185,7 @@ var saveCardInfoCmd = &cobra.Command{
 			log.Fatalf("failed to get path: %s\n", err.Error())
 		}
 
-		_, err = cmd.Flags().GetString("Expiration date")
+		_, err = cmd.Flags().GetString("expiration_date")
 		if err != nil {
 			log.Fatalf("failed to get path: %s\n", err.Error())
 		}
@@ -219,6 +219,32 @@ func init() {
 	loginUserCmd.Flags().StringP("email", "e", "", "User email")
 	loginUserCmd.Flags().StringP("password", "p", "", "User password")
 	loginUserCmd.Flags().StringVarP(&serverAddr, "addr", "a", "", "server address")
+
+	rootCmd.AddCommand(saveCmd)
+
+	// save login && password
+	saveCmd.AddCommand(savePasswordCmd)
+	savePasswordCmd.Flags().StringP("login", "l", "", "Login to be saved")
+	savePasswordCmd.Flags().StringP("password", "p", "", "Password to be saved")
+	savePasswordCmd.Flags().StringVarP(&serverAddr, "addr", "a", "", "server address")
+
+	// save text data
+	saveCmd.AddCommand(saveTextCmd)
+	saveTextCmd.Flags().StringP("file_name", "n", "", "Provided text will be saved in stated file")
+	saveTextCmd.Flags().StringP("text", "t", "", "Text which need to be saved")
+	saveTextCmd.Flags().StringVarP(&serverAddr, "addr", "a", "", "server address")
+
+	// save binary data
+	saveCmd.AddCommand(saveBinCmd)
+	saveBinCmd.Flags().StringP("file_name", "n", "", "Name of the file to be saved")
+	saveBinCmd.Flags().StringP("file_path", "p", "", "Path to the binary file, which need to be saved")
+	saveBinCmd.Flags().StringVarP(&serverAddr, "addr", "a", "", "server address")
+
+	// save card data
+	saveCmd.AddCommand(saveCardInfoCmd)
+	saveCardInfoCmd.Flags().StringP("card_number", "n", "", "Card number to be saved")
+	saveCardInfoCmd.Flags().StringP("CVC", "c", "", "CVC to be saved")
+	saveCardInfoCmd.Flags().StringP("expiration_date", "e", "", "Expiration date to be saved")
 
 	logger.Initialize(loggerLevel)
 
