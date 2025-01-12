@@ -17,7 +17,7 @@ type ClientService struct {
 	addr      string
 	filePath  string
 	batchSize int
-	client    desc.FileServiceClient
+	client    desc.UploadV1Client
 }
 
 func New(addr string, filePath string, batchSize int) *ClientService {
@@ -35,7 +35,7 @@ func (s *ClientService) SendFile() error {
 	}
 	defer conn.Close()
 
-	s.client = desc.NewFileServiceClient(conn)
+	s.client = desc.NewUploadV1Client(conn)
 
 	interrupt := make(chan os.Signal, 1)
 	shutdownSignals := []os.Signal{
@@ -65,7 +65,7 @@ func (s *ClientService) SendFile() error {
 }
 
 func (s *ClientService) upload(ctx context.Context, cancel context.CancelFunc) error {
-	stream, err := s.client.Upload(ctx)
+	stream, err := s.client.UploadFile(ctx)
 	if err != nil {
 		logger.Error("error", zap.Error(err))
 		return err
@@ -88,7 +88,7 @@ func (s *ClientService) upload(ctx context.Context, cancel context.CancelFunc) e
 		}
 		chunk := buf[:num]
 
-		if err := stream.Send(&desc.FileUploadRequest{FileName: s.filePath, Chunk: chunk}); err != nil {
+		if err := stream.Send(&desc.UploadFileRequest{FileName: s.filePath, Chunk: chunk}); err != nil {
 			logger.Error("error", zap.Error(err))
 			return err
 		}

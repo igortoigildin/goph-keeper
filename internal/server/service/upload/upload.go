@@ -16,7 +16,7 @@ func New() *UploadService {
 	return &UploadService{}
 }
 
-func (f *UploadService) Upload(stream desc.FileService_UploadServer) error {
+func (f *UploadService) Upload(stream desc.UploadV1_UploadFileServer) error {
 	file := fl.NewFile()
 	var fileSize uint32
 	fileSize = 0
@@ -52,5 +52,6 @@ func (f *UploadService) Upload(stream desc.FileService_UploadServer) error {
 
 	fmt.Println("result:", file.FilePath, fileSize)
 	fileName := filepath.Base(file.FilePath)
-	return stream.SendAndClose(&desc.FileUploadResponse{FileName: fileName, Size: fileSize})
+	
+	return stream.SendAndClose(&desc.UploadFileResponse{FileName: fileName, Size: fileSize})
 }

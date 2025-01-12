@@ -75,7 +75,7 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 
 	reflection.Register(a.grpcServer)
 
-	uploadpb.RegisterFileServiceServer(a.grpcServer, a.serviceProvider.UploadImpl(ctx))
+	uploadpb.RegisterUploadV1Server(a.grpcServer, a.serviceProvider.UploadImpl(ctx))
 	authpb.RegisterAuthV1Server(a.grpcServer, a.serviceProvider.AuthImpl(ctx))
 
 	return nil

@@ -5,11 +5,11 @@ import (
 )
 
 type UploadService interface {
-	Upload(stream desc.FileService_UploadServer) error
+	Upload(stream desc.UploadV1_UploadFileServer) error
 }
 
 type Implementation struct {
-	desc.UnimplementedFileServiceServer
+	desc.UnimplementedUploadV1Server
 	uploadService UploadService
 }
 
