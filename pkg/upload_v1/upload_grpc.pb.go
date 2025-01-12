@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -19,94 +20,209 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	FileService_Upload_FullMethodName = "/upload_v1.FileService/Upload"
+	UploadV1_UploadPassword_FullMethodName = "/upload_v1.UploadV1/UploadPassword"
+	UploadV1_UploadText_FullMethodName     = "/upload_v1.UploadV1/UploadText"
+	UploadV1_UploadFile_FullMethodName     = "/upload_v1.UploadV1/UploadFile"
+	UploadV1_UploadBankData_FullMethodName = "/upload_v1.UploadV1/UploadBankData"
 )
 
-// FileServiceClient is the client API for FileService service.
+// UploadV1Client is the client API for UploadV1 service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type FileServiceClient interface {
-	Upload(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[FileUploadRequest, FileUploadResponse], error)
+type UploadV1Client interface {
+	UploadPassword(ctx context.Context, in *UploadPasswordRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	UploadText(ctx context.Context, in *UploadTextRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	UploadFile(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[UploadFileRequest, UploadFileResponse], error)
+	UploadBankData(ctx context.Context, in *UploadBankDataRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
-type fileServiceClient struct {
+type uploadV1Client struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewFileServiceClient(cc grpc.ClientConnInterface) FileServiceClient {
-	return &fileServiceClient{cc}
+func NewUploadV1Client(cc grpc.ClientConnInterface) UploadV1Client {
+	return &uploadV1Client{cc}
 }
 
-func (c *fileServiceClient) Upload(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[FileUploadRequest, FileUploadResponse], error) {
+func (c *uploadV1Client) UploadPassword(ctx context.Context, in *UploadPasswordRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &FileService_ServiceDesc.Streams[0], FileService_Upload_FullMethodName, cOpts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, UploadV1_UploadPassword_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[FileUploadRequest, FileUploadResponse]{ClientStream: stream}
+	return out, nil
+}
+
+func (c *uploadV1Client) UploadText(ctx context.Context, in *UploadTextRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, UploadV1_UploadText_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *uploadV1Client) UploadFile(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[UploadFileRequest, UploadFileResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &UploadV1_ServiceDesc.Streams[0], UploadV1_UploadFile_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[UploadFileRequest, UploadFileResponse]{ClientStream: stream}
 	return x, nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type FileService_UploadClient = grpc.ClientStreamingClient[FileUploadRequest, FileUploadResponse]
+type UploadV1_UploadFileClient = grpc.ClientStreamingClient[UploadFileRequest, UploadFileResponse]
 
-// FileServiceServer is the server API for FileService service.
-// All implementations must embed UnimplementedFileServiceServer
-// for forward compatibility.
-type FileServiceServer interface {
-	Upload(grpc.ClientStreamingServer[FileUploadRequest, FileUploadResponse]) error
-	mustEmbedUnimplementedFileServiceServer()
+func (c *uploadV1Client) UploadBankData(ctx context.Context, in *UploadBankDataRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, UploadV1_UploadBankData_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
-// UnimplementedFileServiceServer must be embedded to have
+// UploadV1Server is the server API for UploadV1 service.
+// All implementations must embed UnimplementedUploadV1Server
+// for forward compatibility.
+type UploadV1Server interface {
+	UploadPassword(context.Context, *UploadPasswordRequest) (*emptypb.Empty, error)
+	UploadText(context.Context, *UploadTextRequest) (*emptypb.Empty, error)
+	UploadFile(grpc.ClientStreamingServer[UploadFileRequest, UploadFileResponse]) error
+	UploadBankData(context.Context, *UploadBankDataRequest) (*emptypb.Empty, error)
+	mustEmbedUnimplementedUploadV1Server()
+}
+
+// UnimplementedUploadV1Server must be embedded to have
 // forward compatible implementations.
 //
 // NOTE: this should be embedded by value instead of pointer to avoid a nil
 // pointer dereference when methods are called.
-type UnimplementedFileServiceServer struct{}
+type UnimplementedUploadV1Server struct{}
 
-func (UnimplementedFileServiceServer) Upload(grpc.ClientStreamingServer[FileUploadRequest, FileUploadResponse]) error {
-	return status.Errorf(codes.Unimplemented, "method Upload not implemented")
+func (UnimplementedUploadV1Server) UploadPassword(context.Context, *UploadPasswordRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UploadPassword not implemented")
 }
-func (UnimplementedFileServiceServer) mustEmbedUnimplementedFileServiceServer() {}
-func (UnimplementedFileServiceServer) testEmbeddedByValue()                     {}
+func (UnimplementedUploadV1Server) UploadText(context.Context, *UploadTextRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UploadText not implemented")
+}
+func (UnimplementedUploadV1Server) UploadFile(grpc.ClientStreamingServer[UploadFileRequest, UploadFileResponse]) error {
+	return status.Errorf(codes.Unimplemented, "method UploadFile not implemented")
+}
+func (UnimplementedUploadV1Server) UploadBankData(context.Context, *UploadBankDataRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UploadBankData not implemented")
+}
+func (UnimplementedUploadV1Server) mustEmbedUnimplementedUploadV1Server() {}
+func (UnimplementedUploadV1Server) testEmbeddedByValue()                  {}
 
-// UnsafeFileServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to FileServiceServer will
+// UnsafeUploadV1Server may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to UploadV1Server will
 // result in compilation errors.
-type UnsafeFileServiceServer interface {
-	mustEmbedUnimplementedFileServiceServer()
+type UnsafeUploadV1Server interface {
+	mustEmbedUnimplementedUploadV1Server()
 }
 
-func RegisterFileServiceServer(s grpc.ServiceRegistrar, srv FileServiceServer) {
-	// If the following call pancis, it indicates UnimplementedFileServiceServer was
+func RegisterUploadV1Server(s grpc.ServiceRegistrar, srv UploadV1Server) {
+	// If the following call pancis, it indicates UnimplementedUploadV1Server was
 	// embedded by pointer and is nil.  This will cause panics if an
 	// unimplemented method is ever invoked, so we test this at initialization
 	// time to prevent it from happening at runtime later due to I/O.
 	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
 		t.testEmbeddedByValue()
 	}
-	s.RegisterService(&FileService_ServiceDesc, srv)
+	s.RegisterService(&UploadV1_ServiceDesc, srv)
 }
 
-func _FileService_Upload_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(FileServiceServer).Upload(&grpc.GenericServerStream[FileUploadRequest, FileUploadResponse]{ServerStream: stream})
+func _UploadV1_UploadPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UploadPasswordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UploadV1Server).UploadPassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UploadV1_UploadPassword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UploadV1Server).UploadPassword(ctx, req.(*UploadPasswordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UploadV1_UploadText_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UploadTextRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UploadV1Server).UploadText(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UploadV1_UploadText_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UploadV1Server).UploadText(ctx, req.(*UploadTextRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UploadV1_UploadFile_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(UploadV1Server).UploadFile(&grpc.GenericServerStream[UploadFileRequest, UploadFileResponse]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type FileService_UploadServer = grpc.ClientStreamingServer[FileUploadRequest, FileUploadResponse]
+type UploadV1_UploadFileServer = grpc.ClientStreamingServer[UploadFileRequest, UploadFileResponse]
 
-// FileService_ServiceDesc is the grpc.ServiceDesc for FileService service.
+func _UploadV1_UploadBankData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UploadBankDataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UploadV1Server).UploadBankData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UploadV1_UploadBankData_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UploadV1Server).UploadBankData(ctx, req.(*UploadBankDataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// UploadV1_ServiceDesc is the grpc.ServiceDesc for UploadV1 service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var FileService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "upload_v1.FileService",
-	HandlerType: (*FileServiceServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+var UploadV1_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "upload_v1.UploadV1",
+	HandlerType: (*UploadV1Server)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "UploadPassword",
+			Handler:    _UploadV1_UploadPassword_Handler,
+		},
+		{
+			MethodName: "UploadText",
+			Handler:    _UploadV1_UploadText_Handler,
+		},
+		{
+			MethodName: "UploadBankData",
+			Handler:    _UploadV1_UploadBankData_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "Upload",
-			Handler:       _FileService_Upload_Handler,
+			StreamName:    "UploadFile",
+			Handler:       _UploadV1_UploadFile_Handler,
 			ClientStreams: true,
 		},
 	},

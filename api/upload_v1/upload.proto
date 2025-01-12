@@ -2,18 +2,36 @@ syntax = "proto3";
 
 package upload_v1;
 
+import "google/protobuf/empty.proto";
+
 option go_package = "github.com/igortoigildin/goph-keeper/pkg/upload_v1;upload_v1";
 
-message FileUploadRequest {
+service UploadV1 {
+    rpc UploadPassword(UploadPasswordRequest) returns (google.protobuf.Empty);
+    rpc UploadText(UploadTextRequest) returns (google.protobuf.Empty);
+    rpc UploadFile(stream UploadFileRequest) returns(UploadFileResponse);
+    rpc UploadBankData(UploadBankDataRequest) returns (google.protobuf.Empty);
+}
+
+message UploadFileRequest {
     string file_name = 1;
     bytes chunk = 2;
 }
 
-message FileUploadResponse {
+message UploadFileResponse {
     string file_name = 1;
     uint32 size = 2;
 }
 
-service FileService {
-    rpc Upload(stream FileUploadRequest) returns(FileUploadResponse);
+message UploadPasswordRequest {
+    map<string, string> data = 1;
 }
+
+message UploadTextRequest {
+    string text = 1;
+}
+
+message UploadBankDataRequest {
+    map<string, string> data = 1;
+}
+

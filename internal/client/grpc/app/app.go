@@ -124,27 +124,7 @@ var savePasswordCmd = &cobra.Command{
 			log.Fatalf("failed to get password: %s\n", err.Error())
 		}
 
-		// path := fmt.Sprintf("%s.txt", loginStr)
-		// file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-		// if err != nil {
-		// 	fmt.Println("Error opening file:", err)
-		// 	return
-		// }
-		// defer file.Close()
 		
-		// _, err = file.WriteString(fmt.Sprintf("%s %s", loginStr, passStr))
-		// if err != nil {
-		// 	fmt.Println("Error writing to file:", err)
-		// 	return
-		// }
-
-		// fmt.Println("Text appended to file successfully.")
-
-		// clientService := service.New(serverAddr, path, batchSize)
-
-		// if err := clientService.SendFile(); err != nil {
-		// 	log.Fatal(err)
-		// }
 
 		log.Printf("login %s && password %s saved successfully\n", loginStr, passStr)
 	},
@@ -273,3 +253,28 @@ func init() {
 		log.Fatal(err)
 	}
 }
+
+
+
+
+// path := fmt.Sprintf("%s.txt", loginStr)
+		// file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+		// if err != nil {
+		// 	fmt.Println("Error opening file:", err)
+		// 	return
+		// }
+		// defer file.Close()
+		
+		// _, err = file.WriteString(fmt.Sprintf("%s %s", loginStr, passStr))
+		// if err != nil {
+		// 	fmt.Println("Error writing to file:", err)
+		// 	return
+		// }
+
+		// fmt.Println("Text appended to file successfully.")
+
+		// clientService := service.New(serverAddr, path, batchSize)
+
+		// if err := clientService.SendFile(); err != nil {
+		// 	log.Fatal(err)
+		// }
