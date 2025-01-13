@@ -6,6 +6,7 @@ import (
 	"os"
 
 	authService "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/auth"
+	service "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/upload"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -97,6 +98,8 @@ var loginUserCmd = &cobra.Command{
 			log.Fatalf("failed to login: %s\n", err.Error())
 		}
 
+		_ = cmd.Flags().Set("user", emailStr)
+
 		log.Printf("user with %s email logged in successfully\n", emailStr)
 	},
 }
@@ -109,10 +112,16 @@ var saveCmd = &cobra.Command{
 
 // save password subcommand
 var savePasswordCmd = &cobra.Command{
-
 	Use:   "password",
 	Short: "Save login && password in storage",
-
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		// Check if the user is set (authenticated)
+		user, _ := cmd.Flags().GetString("user")
+		if user == "" {
+			log.Println("You must be logged in to run this command")
+			os.Exit(1)
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		loginStr, err := cmd.Flags().GetString("login")
 		if err != nil {
@@ -134,7 +143,14 @@ var savePasswordCmd = &cobra.Command{
 var saveTextCmd = &cobra.Command{
 	Use:   "text",
 	Short: "Save arbitrary text data in storage",
-
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		// Check if the user is set (authenticated)
+		user, _ := cmd.Flags().GetString("user")
+		if user == "" {
+			log.Println("You must be logged in to run this command")
+			os.Exit(1)
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		_, err := cmd.Flags().GetString("file_name")
 		if err != nil {
@@ -152,23 +168,29 @@ var saveTextCmd = &cobra.Command{
 	},
 }
 
-// save bin data subcommand
+// save binary data subcommand
 var saveBinCmd = &cobra.Command{
 	Use:   "bin",
 	Short: "Save binary data in storage",
-
-	Run: func(cmd *cobra.Command, args []string) {
-		_, err := cmd.Flags().GetString("file_name")
-		if err != nil {
-			log.Fatalf("failed to get file_name: %s\n", err.Error())
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		// Check if the user is set (authenticated)
+		user, _ := cmd.Flags().GetString("user")
+		if user == "" {
+			log.Println("You must be logged in to run this command")
+			os.Exit(1)
 		}
-
+	},
+	Run: func(cmd *cobra.Command, args []string) {
 		pathStr, err := cmd.Flags().GetString("file_path")
 		if err != nil {
 			log.Fatalf("failed to get path: %s\n", err.Error())
 		}
 
-		// TODO: save binary data in minio
+		clientService := service.New(serverAddr, pathStr, batchSize)
+
+		if err := clientService.SendFile(); err != nil {
+			log.Fatal(err)
+		}
 
 		log.Printf("biniry data %s saved successfully\n", pathStr)
 	},
@@ -178,7 +200,14 @@ var saveBinCmd = &cobra.Command{
 var saveCardInfoCmd = &cobra.Command{
 	Use:   "card",
 	Short: "Save bank card details in storage",
-
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		// Check if the user is set (authenticated)
+		user, _ := cmd.Flags().GetString("user")
+		if user == "" {
+			log.Println("You must be logged in to run this command")
+			os.Exit(1)
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		_, err := cmd.Flags().GetString("card_number")
 		if err != nil {

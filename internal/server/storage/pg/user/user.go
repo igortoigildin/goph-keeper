@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 
@@ -52,12 +51,7 @@ func (rep *UserRepository) SaveUser(ctx context.Context, email string, passHash 
 	var id int64
 	err = rep.db.DB().QueryRowContext(ctx, qr, args...).Scan(&id)
 	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return 0, fmt.Errorf("user already exists: %w", err)
-		default:
-			return 0, fmt.Errorf("error while creating user: %w", err)
-		}
+		return 0, err
 	}
 
 	return id, nil

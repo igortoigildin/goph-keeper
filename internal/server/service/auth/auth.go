@@ -131,13 +131,8 @@ func (a *authServ) RegisterNewUser(ctx context.Context, email string, pass strin
 
 	id, err := a.userRepo.SaveUser(ctx, email, passHash)
 	if err != nil {
-		fmt.Println(err)
 
-		if errors.Is(err, storage.ErrUserExists) {
-			logger.Warn("user already exists", zap.Error(err))
-
-			return 0, fmt.Errorf("%s: %w", op, ErrUserExists)
-		}
+		
 
 		logger.Error("failed to save user", zap.Error(err))
 		return 0, fmt.Errorf("%s: %w", op, err)
