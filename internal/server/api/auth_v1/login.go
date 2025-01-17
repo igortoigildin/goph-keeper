@@ -13,10 +13,10 @@ import (
 func (i *Implementation) Login(ctx context.Context, req *descAuth.LoginRequest) (*descAuth.LoginResponse, error) {
 	tkn, err := i.authService.Login(ctx, req.Email, req.Password)
 	if err != nil {
-			logger.Error("login error", zap.Error(err))
+		logger.Error("login error", zap.Error(err))
 
-			return nil, status.Error(codes.Unknown, "failed to login")
-		}
+		return nil, status.Error(codes.Unknown, "failed to login")
+	}
 
 	return &descAuth.LoginResponse{
 		RefreshToken: tkn,

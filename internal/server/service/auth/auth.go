@@ -16,9 +16,8 @@ import (
 )
 
 const (
-	refreshTokenSecretKey = "W4/X+LLjehdxptt4YgGFCvMpq5ewptpZZYRHY6A72g0="
-	accessTokenSecretKey  = "VqvguGiffXILza1f44TWXowDT4zwf03dtXmqWW4SYyE="
-
+	refreshTokenSecretKey="W4/X+LLjehdxptt4YgGFCvMpq5ewptpZZYRHY6A72g0="
+	accessTokenSecretKey="VqvguGiffXILza1f44TWXowDT4zwf03dtXmqWW4SYyE="
 	refreshTokenExpiration = 60 * time.Minute
 	accessTokenExpiration  = 2 * time.Minute
 )
@@ -131,8 +130,6 @@ func (a *authServ) RegisterNewUser(ctx context.Context, email string, pass strin
 
 	id, err := a.userRepo.SaveUser(ctx, email, passHash)
 	if err != nil {
-
-		
 
 		logger.Error("failed to save user", zap.Error(err))
 		return 0, fmt.Errorf("%s: %w", op, err)

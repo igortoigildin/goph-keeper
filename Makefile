@@ -66,6 +66,7 @@ GOOSE_DRIVER ?= postgres
 -include .env
 create-migration:
 	$(PROJECT_BIN)/goose -dir ${MIGRATION_DIR} create add_users_table sql
+	$(PROJECT_BIN)/goose -dir ${MIGRATION_DIR} create add_orders_table sql
 
 migration-status:
 	$(PROJECT_BIN)/goose -dir ${MIGRATION_DIR} postgres ${PG_DSN} status -v

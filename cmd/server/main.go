@@ -2,12 +2,19 @@ package main
 
 import (
 	"context"
+	"flag"
 	"log"
 
 	"github.com/igortoigildin/goph-keeper/internal/server/app"
 	"github.com/igortoigildin/goph-keeper/internal/server/config"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
 )
+
+var configPath string
+
+func init() {
+	flag.StringVar(&configPath, "config-path", ".env", "path to config file")
+}
 
 func main() {
 	ctx := context.Background()

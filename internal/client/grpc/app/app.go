@@ -8,33 +8,20 @@ import (
 	authService "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/auth"
 	service "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/upload"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
+	utils "github.com/igortoigildin/goph-keeper/pkg/utils"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
 
 var (
-		batchSize   int
+	// File to store JWT token
+	tokenFile             = ".jwt_token"
+	refreshTokenSecretKey = "W4/X+LLjehdxptt4YgGFCvMpq5ewptpZZYRHY6A72g0="
+	accessTokenSecretKey  = "VqvguGiffXILza1f44TWXowDT4zwf03dtXmqWW4SYyE="
 )
 
-// var (
-// 	serverAddr  string
-// 	filePath    string
-// 	batchSize   int
-// 	loggerLevel string
-// 	rootCmd     = &cobra.Command{
-// 		Use:   "transfer_client",
-// 		Short: "Sending files via gRPC",
-// 		Run: func(cmd *cobra.Command, args []string) {
-// 			clientService := service.New(serverAddr, filePath, batchSize)
-
-// 			if err := clientService.SendFile(); err != nil {
-// 				log.Fatal(err)
-// 			}
-// 		},
-// 	}
-// )
-
 var (
+	batchSize   int
 	loggerLevel string
 	serverAddr  string
 	rootCmd     = &cobra.Command{
@@ -94,11 +81,18 @@ var loginUserCmd = &cobra.Command{
 		}
 
 		authService := authService.New(serverAddr)
-		if err = authService.Login(context.Background(), emailStr, passStr); err != nil {
+		token, err := authService.Login(context.Background(), emailStr, passStr)
+		if err != nil {
 			log.Fatalf("failed to login: %s\n", err.Error())
+		} else if token == "" {
+			log.Fatalf("got invalid jwt token: %s\n", err.Error())
 		}
 
-		_ = cmd.Flags().Set("user", emailStr)
+		err = os.WriteFile(tokenFile, []byte(token), 0644)
+		if err != nil {
+			logger.Error("error saving JWT token", zap.Error(err))
+			return
+		}
 
 		log.Printf("user with %s email logged in successfully\n", emailStr)
 	},
@@ -132,8 +126,6 @@ var savePasswordCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalf("failed to get password: %s\n", err.Error())
 		}
-
-		
 
 		log.Printf("login %s && password %s saved successfully\n", loginStr, passStr)
 	},
@@ -173,12 +165,13 @@ var saveBinCmd = &cobra.Command{
 	Use:   "bin",
 	Short: "Save binary data in storage",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// Check if the user is set (authenticated)
-		user, _ := cmd.Flags().GetString("user")
-		if user == "" {
-			log.Println("You must be logged in to run this command")
-			os.Exit(1)
+		// Check if the user is authenticated
+
+		if !utils.CheckSession([]byte(refreshTokenSecretKey), tokenFile) {
+			logger.Info("Please login")
 		}
+
+		logger.Info("OK")
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		pathStr, err := cmd.Flags().GetString("file_path")
@@ -283,27 +276,20 @@ func init() {
 	}
 }
 
+// var (
+// 	serverAddr  string
+// 	filePath    string
+// 	batchSize   int
+// 	loggerLevel string
+// 	rootCmd     = &cobra.Command{
+// 		Use:   "transfer_client",
+// 		Short: "Sending files via gRPC",
+// 		Run: func(cmd *cobra.Command, args []string) {
+// 			clientService := service.New(serverAddr, filePath, batchSize)
 
-
-
-// path := fmt.Sprintf("%s.txt", loginStr)
-		// file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-		// if err != nil {
-		// 	fmt.Println("Error opening file:", err)
-		// 	return
-		// }
-		// defer file.Close()
-		
-		// _, err = file.WriteString(fmt.Sprintf("%s %s", loginStr, passStr))
-		// if err != nil {
-		// 	fmt.Println("Error writing to file:", err)
-		// 	return
-		// }
-
-		// fmt.Println("Text appended to file successfully.")
-
-		// clientService := service.New(serverAddr, path, batchSize)
-
-		// if err := clientService.SendFile(); err != nil {
-		// 	log.Fatal(err)
-		// }
+// 			if err := clientService.SendFile(); err != nil {
+// 				log.Fatal(err)
+// 			}
+// 		},
+// 	}
+// )

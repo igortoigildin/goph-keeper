@@ -52,6 +52,6 @@ func (f *UploadService) Upload(stream desc.UploadV1_UploadFileServer) error {
 
 	fmt.Println("result:", file.FilePath, fileSize)
 	fileName := filepath.Base(file.FilePath)
-	
+
 	return stream.SendAndClose(&desc.UploadFileResponse{FileName: fileName, Size: fileSize})
 }
