@@ -1,7 +1,6 @@
 package jwt
 
 import (
-	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -48,14 +47,9 @@ func VeryfyToken(tokenStr string, secretKey []byte) (*model.UserClaims, error) {
 	return claims, nil
 }
 
-func CheckSession(secretKey []byte, tokenFile string) bool {
-	tokenBytes, err := os.ReadFile(tokenFile)
-	if err != nil {
-		return false
-	}
+// func CheckSession(secretKey []byte, token string) bool {
+// 	// Validate the JWT token
+// 	_, err := VeryfyToken(token, secretKey)
 
-	// Validate the JWT token
-	_, err = VeryfyToken(string(tokenBytes), secretKey)
-
-	return err == nil
-}
+// 	return err == nil
+// }

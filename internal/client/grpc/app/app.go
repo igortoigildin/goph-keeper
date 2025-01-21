@@ -4,11 +4,12 @@ import (
 	"context"
 	"log"
 	"os"
+	"time"
 
 	authService "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/auth"
 	service "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/upload"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
-	utils "github.com/igortoigildin/goph-keeper/pkg/utils"
+	"github.com/igortoigildin/goph-keeper/pkg/session"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
@@ -18,6 +19,7 @@ var (
 	tokenFile             = ".jwt_token"
 	refreshTokenSecretKey = "W4/X+LLjehdxptt4YgGFCvMpq5ewptpZZYRHY6A72g0="
 	accessTokenSecretKey  = "VqvguGiffXILza1f44TWXowDT4zwf03dtXmqWW4SYyE="
+	sessionDuration = time.Minute * 7
 )
 
 var (
@@ -88,13 +90,24 @@ var loginUserCmd = &cobra.Command{
 			log.Fatalf("got invalid jwt token: %s\n", err.Error())
 		}
 
-		err = os.WriteFile(tokenFile, []byte(token), 0644)
-		if err != nil {
-			logger.Error("error saving JWT token", zap.Error(err))
-			return
+		// err = os.WriteFile(tokenFile, []byte(token), 0644)
+		// if err != nil {
+		// 	logger.Error("error saving JWT token", zap.Error(err))
+		// 	return
+		// }
+
+		sessionData := &session.Session{
+			Email: emailStr,
+			Token: token,
+			ExpiresAt: time.Now().Add(sessionDuration),
 		}
 
-		log.Printf("user with %s email logged in successfully\n", emailStr)
+		err = session.SaveSession(sessionData)
+		if err != nil {
+			logger.Error("failed to save sesson", zap.Error(err))
+		}
+
+		log.Printf("user with %s email logged in successfully. Session saved\n", emailStr)
 	},
 }
 
@@ -165,13 +178,12 @@ var saveBinCmd = &cobra.Command{
 	Use:   "bin",
 	Short: "Save binary data in storage",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// Check if the user is authenticated
-
-		if !utils.CheckSession([]byte(refreshTokenSecretKey), tokenFile) {
-			logger.Info("Please login")
+		if !session.IsSessionValid(refreshTokenSecretKey)  {
+			logger.Error("Session expired or not found. Please login again")
+			return
 		}
 
-		logger.Info("OK")
+		logger.Info("Session is valid")
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		pathStr, err := cmd.Flags().GetString("file_path")
