@@ -180,6 +180,8 @@ var saveBinCmd = &cobra.Command{
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if !session.IsSessionValid(refreshTokenSecretKey)  {
 			logger.Error("Session expired or not found. Please login again")
+
+			os.Exit(1)
 			return
 		}
 
@@ -191,10 +193,12 @@ var saveBinCmd = &cobra.Command{
 			log.Fatalf("failed to get path: %s\n", err.Error())
 		}
 
+		serverAddr = ":9000" // TO BE UPDATED
+
 		clientService := service.New(serverAddr, pathStr, batchSize)
 
 		if err := clientService.SendFile(); err != nil {
-			log.Fatal(err)
+			log.Fatal("failed to send binary file: ", zap.Error(err))
 		}
 
 		log.Printf("biniry data %s saved successfully\n", pathStr)
