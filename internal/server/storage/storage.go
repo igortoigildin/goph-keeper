@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	models "github.com/igortoigildin/goph-keeper/internal/server/models"
+	fl "github.com/igortoigildin/goph-keeper/pkg/file"
 )
 
 var (
@@ -15,4 +16,8 @@ var (
 type UserRepository interface {
 	GetUser(ctx context.Context, email string) (*models.UserInfo, error)
 	SaveUser(ctx context.Context, email string, passHash []byte) (uid int64, err error)
+}
+
+type DataRepository interface {
+	SaveData(ctx context.Context, file *fl.File, email string) error
 }

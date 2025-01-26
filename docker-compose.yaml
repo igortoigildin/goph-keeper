@@ -3,6 +3,9 @@ version: "3"
 # Settings and configurations that are common for all containers
 x-minio-common: &minio-common
   image: quay.io/minio/minio:RELEASE.2024-12-18T13-15-44Z
+  environment:
+    MINIO_ACCESS_KEY: minioaccesskey # Your custom access key
+    MINIO_SECRET_KEY: miniosecretkey # Your custom secret key
   command: server --console-address ":9001" http://minio{1...4}/data{1...2}
   expose:
     - "9000"

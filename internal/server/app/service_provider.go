@@ -16,6 +16,7 @@ import (
 	authService "github.com/igortoigildin/goph-keeper/internal/server/service/auth"
 	uploadService "github.com/igortoigildin/goph-keeper/internal/server/service/upload"
 	repository "github.com/igortoigildin/goph-keeper/internal/server/storage"
+	dataRepository "github.com/igortoigildin/goph-keeper/internal/server/storage/minio"
 	userRepository "github.com/igortoigildin/goph-keeper/internal/server/storage/pg/user"
 )
 
@@ -32,6 +33,7 @@ type serviceProvider struct {
 	authImpl    *auth.Implementation
 
 	userRepository repository.UserRepository
+	dataRepository repository.DataRepository
 }
 
 func newServiceProvider() *serviceProvider {
@@ -66,7 +68,7 @@ func (s *serviceProvider) PGConfig() config.PGConfig {
 
 func (s *serviceProvider) UploadImpl(ctx context.Context) *upload.Implementation {
 	if s.uploadImpl == nil {
-		s.uploadImpl = upload.NewImplementation(s.UploadService(ctx))
+		s.uploadImpl = upload.NewImplementation(ctx, s.UploadService(ctx))
 	}
 
 	return s.uploadImpl
@@ -74,7 +76,7 @@ func (s *serviceProvider) UploadImpl(ctx context.Context) *upload.Implementation
 
 func (s *serviceProvider) UploadService(ctx context.Context) upload.UploadService {
 	if s.uploadService == nil {
-		s.uploadService = uploadService.New()
+		s.uploadService = uploadService.New(ctx, s.DataRepository(ctx))
 	}
 
 	return s.uploadService
@@ -122,3 +124,12 @@ func (s *serviceProvider) UserRepository(ctx context.Context) repository.UserRep
 
 	return s.userRepository
 }
+
+func (s *serviceProvider) DataRepository(ctx context.Context) repository.DataRepository {
+	if s.dataRepository == nil {
+		s.dataRepository = dataRepository.NewRepository()
+	}
+
+	return s.dataRepository
+}
+

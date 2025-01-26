@@ -8,9 +8,11 @@ import (
 	"syscall"
 
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
+	"github.com/igortoigildin/goph-keeper/pkg/session"
 	desc "github.com/igortoigildin/goph-keeper/pkg/upload_v1"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 type ClientService struct {
@@ -18,6 +20,7 @@ type ClientService struct {
 	filePath  string
 	batchSize int
 	client    desc.UploadV1Client
+	email 	  string
 }
 
 func New(addr string, filePath string, batchSize int) *ClientService {
@@ -47,6 +50,12 @@ func (s *ClientService) SendFile() error {
 	signal.Notify(interrupt, shutdownSignals...)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	ss, err := session.LoadSession()
+	// s.email = ss.Email
+
+	md := metadata.Pairs("email", ss.Email)
+	ctx = metadata.NewOutgoingContext(context.Background(), md)
 
 	go func(s *ClientService) {
 		if err = s.upload(ctx, cancel); err != nil {
@@ -105,6 +114,8 @@ func (s *ClientService) upload(ctx context.Context, cancel context.CancelFunc) e
 		logger.Error("error", zap.Error(err))
 		return err
 	}
+
+	
 
 	logger.Info("Sent:",
 		zap.Int("bytes", int(res.GetSize())),
