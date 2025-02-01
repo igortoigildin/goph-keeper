@@ -25,7 +25,7 @@ func NewRepository() *DataRepository {
 	return &DataRepository{}
 }
 
-func (d *DataRepository) SaveData(ctx context.Context, file *fl.File, email string) error {
+func (d *DataRepository) SaveData(ctx context.Context, file *fl.File, bucketName string) error {
 	client, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure: useSSL,
@@ -37,7 +37,6 @@ func (d *DataRepository) SaveData(ctx context.Context, file *fl.File, email stri
 	}
 
 	// Define the file to upload and the destination bucket
-	bucketName := email  // Replace with your bucket name
 	objectName := filepath.Base(file.FilePath) // The name for the object in MinIO
 
 	// Ensure the bucket exists (or create it)

@@ -93,7 +93,7 @@ func (c *uploadV1Client) UploadBankData(ctx context.Context, in *UploadBankDataR
 type UploadV1Server interface {
 	UploadPassword(context.Context, *UploadPasswordRequest) (*emptypb.Empty, error)
 	UploadText(context.Context, *UploadTextRequest) (*emptypb.Empty, error)
-	UploadFile(context.Context, grpc.ClientStreamingServer[UploadFileRequest, UploadFileResponse]) error
+	UploadFile(grpc.ClientStreamingServer[UploadFileRequest, UploadFileResponse]) error
 	UploadBankData(context.Context, *UploadBankDataRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedUploadV1Server()
 }
@@ -111,7 +111,7 @@ func (UnimplementedUploadV1Server) UploadPassword(context.Context, *UploadPasswo
 func (UnimplementedUploadV1Server) UploadText(context.Context, *UploadTextRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UploadText not implemented")
 }
-func (UnimplementedUploadV1Server) UploadFile(context.Context, grpc.ClientStreamingServer[UploadFileRequest, UploadFileResponse]) error {
+func (UnimplementedUploadV1Server) UploadFile(grpc.ClientStreamingServer[UploadFileRequest, UploadFileResponse]) error {
 	return status.Errorf(codes.Unimplemented, "method UploadFile not implemented")
 }
 func (UnimplementedUploadV1Server) UploadBankData(context.Context, *UploadBankDataRequest) (*emptypb.Empty, error) {
@@ -174,8 +174,8 @@ func _UploadV1_UploadText_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UploadV1_UploadFile_Handler(ctx context.Context, srv interface{}, stream grpc.ServerStream) error {
-	return srv.(UploadV1Server).UploadFile(ctx, &grpc.GenericServerStream[UploadFileRequest, UploadFileResponse]{ServerStream: stream})
+func _UploadV1_UploadFile_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(UploadV1Server).UploadFile(&grpc.GenericServerStream[UploadFileRequest, UploadFileResponse]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.

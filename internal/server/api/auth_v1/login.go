@@ -11,7 +11,7 @@ import (
 )
 
 func (i *Implementation) Login(ctx context.Context, req *descAuth.LoginRequest) (*descAuth.LoginResponse, error) {
-	tkn, err := i.authService.Login(ctx, req.Email, req.Password)
+	tkn, err := i.authService.Login(ctx, req.Login, req.Password)
 	if err != nil {
 		logger.Error("login error", zap.Error(err))
 

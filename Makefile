@@ -76,3 +76,21 @@ migration-up:
 
 migration-down:
 	$(PROJECT_BIN)/goose -dir ${MIGRATION_DIR} postgres ${PG_DSN} down -v
+
+### Run basic building binary methods for server ###
+build-server:
+	go build -o ./bin/server cmd/server/main.go
+
+clear-server:
+	rm -f ./bin/server
+	rm -rf ./*.out ./*.cover
+	go clean -cache -modcache -i -r
+
+### Run basic building binary methods for client ###
+build-client:
+	go build -o ./bin/client cmd/client/main.go
+
+clear-client:
+	rm -f ./bin/client
+	rm -rf ./*.out ./*.cover
+	go clean -cache -modcache -i -r

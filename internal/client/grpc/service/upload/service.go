@@ -52,9 +52,9 @@ func (s *ClientService) SendFile() error {
 	defer cancel()
 
 	ss, err := session.LoadSession()
-	// s.email = ss.Email
 
-	md := metadata.Pairs("email", ss.Email)
+	md := metadata.Pairs("login", ss.Email)
+
 	ctx = metadata.NewOutgoingContext(context.Background(), md)
 
 	go func(s *ClientService) {
@@ -79,6 +79,8 @@ func (s *ClientService) upload(ctx context.Context, cancel context.CancelFunc) e
 		logger.Error("error", zap.Error(err))
 		return err
 	}
+
+	//stream.Context()
 
 	file, err := os.Open(s.filePath)
 	if err != nil {

@@ -68,7 +68,7 @@ func (s *serviceProvider) PGConfig() config.PGConfig {
 
 func (s *serviceProvider) UploadImpl(ctx context.Context) *upload.Implementation {
 	if s.uploadImpl == nil {
-		s.uploadImpl = upload.NewImplementation(ctx, s.UploadService(ctx))
+		s.uploadImpl = upload.NewImplementation(s.UploadService(ctx))
 	}
 
 	return s.uploadImpl

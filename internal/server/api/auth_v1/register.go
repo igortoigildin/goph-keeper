@@ -13,12 +13,12 @@ import (
 )
 
 func (i *Implementation) Register(ctx context.Context, req *descAuth.RegisterRequest) (*descAuth.RegisterResponse, error) {
-	id, err := i.authService.RegisterNewUser(ctx, req.Email, req.Password)
+	id, err := i.authService.RegisterNewUser(ctx, req.Login, req.Password)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			logger.Warn("user already exists", zap.Error(err))
 
-			return nil, status.Errorf(codes.AlreadyExists, `User with email %s already exists`, req.Email)
+			return nil, status.Errorf(codes.AlreadyExists, `User with email %s already exists`, req.Login)
 		} else {
 			logger.Error("login error", zap.Error(err))
 
