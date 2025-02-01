@@ -32,6 +32,7 @@ vendor/
 .html
 .bin
 .json
+.txt
 
 # Ignore bin directories
 **/bin/

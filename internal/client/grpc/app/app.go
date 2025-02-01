@@ -19,7 +19,7 @@ var (
 	tokenFile             = ".jwt_token"
 	refreshTokenSecretKey = "W4/X+LLjehdxptt4YgGFCvMpq5ewptpZZYRHY6A72g0="
 	accessTokenSecretKey  = "VqvguGiffXILza1f44TWXowDT4zwf03dtXmqWW4SYyE="
-	sessionDuration = time.Minute * 7
+	sessionDuration       = time.Minute * 7
 )
 
 var (
@@ -72,7 +72,7 @@ var loginUserCmd = &cobra.Command{
 	Use:   "user",
 	Short: "User authentication",
 	Run: func(cmd *cobra.Command, args []string) {
-		emailStr, err := cmd.Flags().GetString("email")
+		loginStr, err := cmd.Flags().GetString("login")
 		if err != nil {
 			log.Fatalf("failed to get email: %s\n", err.Error())
 		}
@@ -83,7 +83,7 @@ var loginUserCmd = &cobra.Command{
 		}
 
 		authService := authService.New(serverAddr)
-		token, err := authService.Login(context.Background(), emailStr, passStr)
+		token, err := authService.Login(context.Background(), loginStr, passStr)
 		if err != nil {
 			log.Fatalf("failed to login: %s\n", err.Error())
 		} else if token == "" {
@@ -97,8 +97,8 @@ var loginUserCmd = &cobra.Command{
 		// }
 
 		sessionData := &session.Session{
-			Email: emailStr,
-			Token: token,
+			Login:     loginStr,
+			Token:     token,
 			ExpiresAt: time.Now().Add(sessionDuration),
 		}
 
@@ -107,7 +107,7 @@ var loginUserCmd = &cobra.Command{
 			logger.Error("failed to save sesson", zap.Error(err))
 		}
 
-		log.Printf("user with %s email logged in successfully. Session saved\n", emailStr)
+		log.Printf("user with %s email logged in successfully. Session saved\n", loginStr)
 	},
 }
 
@@ -139,6 +139,19 @@ var savePasswordCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalf("failed to get password: %s\n", err.Error())
 		}
+
+		serverAddr = ":9000" // TO BE UPDATED
+
+		clientService := service.New()
+
+		if err := clientService.SendPassword(serverAddr, loginStr, passStr); err != nil {
+			log.Fatal("failed to send password file: ", zap.Error(err))
+		}
+
+
+
+
+
 
 		log.Printf("login %s && password %s saved successfully\n", loginStr, passStr)
 	},
@@ -178,7 +191,7 @@ var saveBinCmd = &cobra.Command{
 	Use:   "bin",
 	Short: "Save binary data in storage",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if !session.IsSessionValid(refreshTokenSecretKey)  {
+		if !session.IsSessionValid(refreshTokenSecretKey) {
 			logger.Error("Session expired or not found. Please login again")
 
 			os.Exit(1)
@@ -195,9 +208,9 @@ var saveBinCmd = &cobra.Command{
 
 		serverAddr = ":9000" // TO BE UPDATED
 
-		clientService := service.New(serverAddr, pathStr, batchSize)
+		clientService := service.New()
 
-		if err := clientService.SendFile(); err != nil {
+		if err := clientService.SendFile(serverAddr, pathStr, batchSize); err != nil {
 			log.Fatal("failed to send binary file: ", zap.Error(err))
 		}
 

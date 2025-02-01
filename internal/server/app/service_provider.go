@@ -132,4 +132,3 @@ func (s *serviceProvider) DataRepository(ctx context.Context) repository.DataRep
 
 	return s.dataRepository
 }
-

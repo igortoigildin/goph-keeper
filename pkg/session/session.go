@@ -12,9 +12,9 @@ import (
 const sessionFile = "session.json"
 
 type Session struct {
-	Email string `json:"email"`
-	Token string `json:"token"`
-	ExpiresAt time.Time	`json:"expires_at"`
+	Login     string    `json:"email"`
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"expires_at"`
 }
 
 func IsSessionValid(tokenSectet string) bool {

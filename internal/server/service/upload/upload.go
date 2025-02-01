@@ -16,7 +16,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-type UploadService struct{
+type UploadService struct {
 	dataRepository rep.DataRepository
 }
 
@@ -69,7 +69,7 @@ func (f *UploadService) Upload(stream desc.UploadV1_UploadFileServer) error {
 	if len(login) == 0 {
 		logger.Error("md-login is emty")
 		return errors.New("md is empty")
-	} 
+	}
 
 	// remove @ since this charac is not allowed for Minio bucket name
 	login = strings.Replace(login, "@", "", -1)

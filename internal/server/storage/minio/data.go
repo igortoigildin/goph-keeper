@@ -13,13 +13,13 @@ import (
 )
 
 const (
-	accessKey = "minioaccesskey"  
-	secretKey = "miniosecretkey"  
-	useSSL = false  // Whether to use SSL
-	endpoint = "localhost:9000"
+	accessKey = "minioaccesskey"
+	secretKey = "miniosecretkey"
+	useSSL    = false // Whether to use SSL
+	endpoint  = "localhost:9000"
 )
 
-type DataRepository struct {}
+type DataRepository struct{}
 
 func NewRepository() *DataRepository {
 	return &DataRepository{}
@@ -63,7 +63,7 @@ func (d *DataRepository) SaveData(ctx context.Context, file *fl.File, bucketName
 		bucketName,
 		objectName,
 		f,
-		-1,  // -1 means the file size will be determined automatically
+		-1, // -1 means the file size will be determined automatically
 		minio.PutObjectOptions{ContentType: "application/octet-stream"},
 	)
 	if err != nil {
@@ -75,4 +75,3 @@ func (d *DataRepository) SaveData(ctx context.Context, file *fl.File, bucketName
 
 	return nil
 }
-	

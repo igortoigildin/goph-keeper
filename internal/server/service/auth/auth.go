@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	refreshTokenSecretKey="W4/X+LLjehdxptt4YgGFCvMpq5ewptpZZYRHY6A72g0="
-	accessTokenSecretKey="VqvguGiffXILza1f44TWXowDT4zwf03dtXmqWW4SYyE="
+	refreshTokenSecretKey  = "W4/X+LLjehdxptt4YgGFCvMpq5ewptpZZYRHY6A72g0="
+	accessTokenSecretKey   = "VqvguGiffXILza1f44TWXowDT4zwf03dtXmqWW4SYyE="
 	refreshTokenExpiration = 60 * time.Minute
 	accessTokenExpiration  = 2 * time.Minute
 )
