@@ -19,5 +19,6 @@ type UserRepository interface {
 }
 
 type DataRepository interface {
-	SaveData(ctx context.Context, file *fl.File, email string) error
+	SaveFile(ctx context.Context, file *fl.File, login string, id string) error
+	SaveTextData(ctx context.Context, data any, login string, id string) error
 }

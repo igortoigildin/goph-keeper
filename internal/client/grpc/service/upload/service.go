@@ -15,10 +15,10 @@ import (
 )
 
 type Sender interface {
-	SendPassword(addr, loginStr, passStr string) error
-	SendText(addr, text string) error
-	SendFile(addr string, filePath string, batchSize int) error
-	SendBankDetails(addr, cardNumber, cvc, expDate string) error
+	SendPassword(addr, loginStr, passStr string, id string) error
+	SendText(addr, text string, id string) error
+	SendFile(addr string, filePath string, batchSize int, id string) error
+	SendBankDetails(addr, cardNumber, cvc, expDate string, id string) error
 }
 
 type ClientService struct {
@@ -30,7 +30,7 @@ func New() Sender {
 }
 
 
-func (s *ClientService) SendPassword(addr, loginStr, passStr string) error {
+func (s *ClientService) SendPassword(addr, loginStr, passStr string, id string) error {
 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
 	if err != nil {
 		return err
@@ -42,7 +42,7 @@ func (s *ClientService) SendPassword(addr, loginStr, passStr string) error {
 	var wg sync.WaitGroup
 	ss, err := session.LoadSession()
 
-	md := metadata.Pairs("login", ss.Login)
+	md := metadata.Pairs("login", ss.Login, "id", id)
 
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
@@ -74,7 +74,7 @@ func (s *ClientService) uploadPassword(ctx context.Context, loginStr, passStr st
 }
 
 
-func (s *ClientService) SendBankDetails(addr, cardNumber, cvc, expDate string) error {
+func (s *ClientService) SendBankDetails(addr, cardNumber, cvc, expDate string, id string) error {
 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
 	if err != nil {
 		return err
@@ -85,7 +85,7 @@ func (s *ClientService) SendBankDetails(addr, cardNumber, cvc, expDate string) e
 
 	ss, err := session.LoadSession()
 	var wg sync.WaitGroup
-	md := metadata.Pairs("login", ss.Login)
+	md := metadata.Pairs("login", ss.Login, "id", id)
 
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
@@ -120,7 +120,7 @@ func (s *ClientService) uploadBankDetails(ctx context.Context, cardNumber, cvc, 
 }
 
 
-func (s *ClientService) SendText(addr, text string) error {
+func (s *ClientService) SendText(addr, text string, id string) error {
 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
 	if err != nil {
 		return err
@@ -132,7 +132,7 @@ func (s *ClientService) SendText(addr, text string) error {
 	var wg sync.WaitGroup
 	ss, err := session.LoadSession()
 
-	md := metadata.Pairs("login", ss.Login)
+	md := metadata.Pairs("login", ss.Login, "id", id)
 
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
@@ -161,7 +161,7 @@ func (s *ClientService) uploadText(ctx context.Context, text string, wg *sync.Wa
 	return nil
 }
 
-func (s *ClientService) SendFile(addr string, filePath string, batchSize int) error {
+func (s *ClientService) SendFile(addr string, filePath string, batchSize int, id string) error {
 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
 	if err != nil {
 		return err
@@ -172,7 +172,7 @@ func (s *ClientService) SendFile(addr string, filePath string, batchSize int) er
 	var wg sync.WaitGroup
 
 	ss, err := session.LoadSession()
-	md := metadata.Pairs("login", ss.Login)
+	md := metadata.Pairs("login", ss.Login, "id", id)
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
 	wg.Add(1)

@@ -26,7 +26,7 @@ type serviceProvider struct {
 
 	dbClient db.Client
 
-	uploadService upload.UploadService
+	uploadService upload.Saver 
 	uploadImpl    *upload.Implementation
 
 	authService auth.AuthService
@@ -74,7 +74,7 @@ func (s *serviceProvider) UploadImpl(ctx context.Context) *upload.Implementation
 	return s.uploadImpl
 }
 
-func (s *serviceProvider) UploadService(ctx context.Context) upload.UploadService {
+func (s *serviceProvider) UploadService(ctx context.Context) upload.Saver  {
 	if s.uploadService == nil {
 		s.uploadService = uploadService.New(ctx, s.DataRepository(ctx))
 	}
