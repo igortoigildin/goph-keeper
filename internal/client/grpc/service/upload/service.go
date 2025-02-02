@@ -4,8 +4,7 @@ import (
 	"context"
 	"io"
 	"os"
-	"os/signal"
-	"syscall"
+	"sync"
 
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
 	"github.com/igortoigildin/goph-keeper/pkg/session"
@@ -17,9 +16,9 @@ import (
 
 type Sender interface {
 	SendPassword(addr, loginStr, passStr string) error
-	SendText()
+	SendText(addr, text string) error
 	SendFile(addr string, filePath string, batchSize int) error
-	SendBankDetails()
+	SendBankDetails(addr, cardNumber, cvc, expDate string) error
 }
 
 type ClientService struct {
@@ -27,7 +26,7 @@ type ClientService struct {
 }
 
 func New() Sender {
-	return ClientService{}
+	return &ClientService{}
 }
 
 
@@ -40,41 +39,26 @@ func (s *ClientService) SendPassword(addr, loginStr, passStr string) error {
 
 	s.client = desc.NewUploadV1Client(conn)
 
-	interrupt := make(chan os.Signal, 1)
-	shutdownSignals := []os.Signal{
-		os.Interrupt,
-		syscall.SIGTERM,
-		syscall.SIGINT,
-		syscall.SIGQUIT,
-	}
-	signal.Notify(interrupt, shutdownSignals...)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
+	var wg sync.WaitGroup
 	ss, err := session.LoadSession()
 
 	md := metadata.Pairs("login", ss.Login)
 
-	ctx = metadata.NewOutgoingContext(context.Background(), md)
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
 	go func(s *ClientService) {
-		if err = s.uploadFile(ctx, filePath, batchSize, cancel); err != nil {
+		if err = s.uploadPassword(ctx, loginStr, passStr, &wg); err != nil {
 			logger.Fatal("error while sending file", zap.Error(err))
-			cancel()
 		}
 	}(s)
 
-	select {
-	case killSignal := <-interrupt:
-		logger.Info("Got ", zap.Any("signal", killSignal))
-		cancel()
-	case <-ctx.Done():
-	}
+	wg.Wait()
+
 	return nil
 }
 
 
-func (s *ClientService) uploadPassword(ctx context.Context, loginStr, passStr string, cancel context.CancelFunc) error {
+func (s *ClientService) uploadPassword(ctx context.Context, loginStr, passStr string, wg *sync.WaitGroup) error {
 	data := make(map[string]string, 1)
 	data[loginStr] = passStr
 
@@ -83,28 +67,99 @@ func (s *ClientService) uploadPassword(ctx context.Context, loginStr, passStr st
 		logger.Error("error", zap.Error(err))
 		return err
 	}
-	// TODO : to be completed
+
+	logger.Info("Login && password data sent successfully")
 
 	return nil
 }
 
 
+func (s *ClientService) SendBankDetails(addr, cardNumber, cvc, expDate string) error {
+	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
 
-// type ClientService struct {
-// 	addr      string
-// 	filePath  string
-// 	batchSize int
-// 	client    desc.UploadV1Client
-// 	email     string
-// }
+	s.client = desc.NewUploadV1Client(conn)
 
-// func New(addr string, filePath string, batchSize int) *ClientService {
-// 	return &ClientService{
-// 		addr:      addr,
-// 		filePath:  filePath,
-// 		batchSize: batchSize,
-// 	}
-// }
+	ss, err := session.LoadSession()
+	var wg sync.WaitGroup
+	md := metadata.Pairs("login", ss.Login)
+
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+
+	go func(s *ClientService) {
+		if err = s.uploadBankDetails(ctx, cardNumber, cvc, expDate, &wg); err != nil {
+			logger.Fatal("error while sending file", zap.Error(err))
+		}
+	}(s)
+	wg.Wait()
+	
+
+	return nil
+}
+
+
+func (s *ClientService) uploadBankDetails(ctx context.Context, cardNumber, cvc, expDate string, wg *sync.WaitGroup) error {
+	defer wg.Done()
+	data := make(map[string]string, 3)
+	data["card_number"] = cardNumber
+	data["CVC"] = cvc
+	data["expiration_date"] = expDate
+
+	_, err := s.client.UploadBankData(ctx, &desc.UploadBankDataRequest{Data: data})
+	if err != nil {
+		logger.Error("error", zap.Error(err))
+		return err
+	}
+
+	logger.Info("Login && password data sent successfully")
+
+	return nil
+}
+
+
+func (s *ClientService) SendText(addr, text string) error {
+	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	s.client = desc.NewUploadV1Client(conn)
+
+	var wg sync.WaitGroup
+	ss, err := session.LoadSession()
+
+	md := metadata.Pairs("login", ss.Login)
+
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+
+	go func(s *ClientService) {
+		if err = s.uploadText(ctx, text, &wg); err != nil {
+			logger.Fatal("error while sending file", zap.Error(err))
+		}
+	}(s)
+	wg.Wait()
+
+	return nil
+}
+
+
+func (s *ClientService) uploadText(ctx context.Context, text string, wg *sync.WaitGroup) error {
+	defer wg.Done()
+
+	_, err := s.client.UploadText(ctx, &desc.UploadTextRequest{Text: text})
+	if err != nil {
+		logger.Error("error", zap.Error(err))
+		return err
+	}
+
+	logger.Info("Text data sent successfully")
+
+	return nil
+}
 
 func (s *ClientService) SendFile(addr string, filePath string, batchSize int) error {
 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
@@ -114,41 +169,28 @@ func (s *ClientService) SendFile(addr string, filePath string, batchSize int) er
 	defer conn.Close()
 
 	s.client = desc.NewUploadV1Client(conn)
-
-	interrupt := make(chan os.Signal, 1)
-	shutdownSignals := []os.Signal{
-		os.Interrupt,
-		syscall.SIGTERM,
-		syscall.SIGINT,
-		syscall.SIGQUIT,
-	}
-	signal.Notify(interrupt, shutdownSignals...)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	var wg sync.WaitGroup
 
 	ss, err := session.LoadSession()
-
 	md := metadata.Pairs("login", ss.Login)
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
-	ctx = metadata.NewOutgoingContext(context.Background(), md)
-
+	wg.Add(1)
 	go func(s *ClientService) {
-		if err = s.uploadFile(ctx, filePath, batchSize, cancel); err != nil {
+		if err = s.uploadFile(ctx, filePath, batchSize, &wg); err != nil {
 			logger.Fatal("error while sending file", zap.Error(err))
-			cancel()
 		}
+		
 	}(s)
 
-	select {
-	case killSignal := <-interrupt:
-		logger.Info("Got ", zap.Any("signal", killSignal))
-		cancel()
-	case <-ctx.Done():
-	}
+	wg.Wait()
+
 	return nil
 }
 
-func (s *ClientService) uploadFile(ctx context.Context, filepath string, batchSize int, cancel context.CancelFunc) error {
+func (s *ClientService) uploadFile(ctx context.Context, filepath string, batchSize int, wg *sync.WaitGroup) error {
+	defer wg.Done()
+
 	stream, err := s.client.UploadFile(ctx)
 	if err != nil {
 		logger.Error("error", zap.Error(err))
@@ -195,7 +237,6 @@ func (s *ClientService) uploadFile(ctx context.Context, filepath string, batchSi
 		zap.String("file name", res.GetFileName()),
 	)
 
-	cancel()
 
 	return nil
 }

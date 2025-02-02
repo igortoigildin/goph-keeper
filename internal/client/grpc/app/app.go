@@ -122,12 +122,14 @@ var savePasswordCmd = &cobra.Command{
 	Use:   "password",
 	Short: "Save login && password in storage",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// Check if the user is set (authenticated)
-		user, _ := cmd.Flags().GetString("user")
-		if user == "" {
-			log.Println("You must be logged in to run this command")
+		if !session.IsSessionValid(refreshTokenSecretKey) {
+			logger.Error("Session expired or not found. Please login again")
+
 			os.Exit(1)
+			return
 		}
+
+		logger.Info("Session is valid")
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		loginStr, err := cmd.Flags().GetString("login")
@@ -145,13 +147,8 @@ var savePasswordCmd = &cobra.Command{
 		clientService := service.New()
 
 		if err := clientService.SendPassword(serverAddr, loginStr, passStr); err != nil {
-			log.Fatal("failed to send password file: ", zap.Error(err))
+			log.Fatal("failed to send password: ", zap.Error(err))
 		}
-
-
-
-
-
 
 		log.Printf("login %s && password %s saved successfully\n", loginStr, passStr)
 	},
@@ -162,25 +159,33 @@ var saveTextCmd = &cobra.Command{
 	Use:   "text",
 	Short: "Save arbitrary text data in storage",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// Check if the user is set (authenticated)
-		user, _ := cmd.Flags().GetString("user")
-		if user == "" {
-			log.Println("You must be logged in to run this command")
+		if !session.IsSessionValid(refreshTokenSecretKey) {
+			logger.Error("Session expired or not found. Please login again")
+
 			os.Exit(1)
-		}
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		_, err := cmd.Flags().GetString("file_name")
-		if err != nil {
-			log.Fatalf("failed to get file_name: %s\n", err.Error())
+			return
 		}
 
-		_, err = cmd.Flags().GetString("text")
+		logger.Info("Session is valid")
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		// _, err := cmd.Flags().GetString("file_name")
+		// if err != nil {
+		// 	log.Fatalf("failed to get file_name: %s\n", err.Error())
+		// }
+
+		textData, err := cmd.Flags().GetString("text")
 		if err != nil {
 			log.Fatalf("failed to get text: %s\n", err.Error())
 		}
 
-		// TODO: save text in minio
+		serverAddr = ":9000" // TO BE UPDATED
+
+		clientService := service.New()
+
+		if err := clientService.SendText(serverAddr, textData); err != nil {
+			log.Fatal("failed to send text: ", zap.Error(err))
+		}
 
 		log.Println("text saved successfully\n")
 	},
@@ -223,27 +228,37 @@ var saveCardInfoCmd = &cobra.Command{
 	Use:   "card",
 	Short: "Save bank card details in storage",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// Check if the user is set (authenticated)
-		user, _ := cmd.Flags().GetString("user")
-		if user == "" {
-			log.Println("You must be logged in to run this command")
+		if !session.IsSessionValid(refreshTokenSecretKey) {
+			logger.Error("Session expired or not found. Please login again")
+
 			os.Exit(1)
+			return
 		}
+
+		logger.Info("Session is valid")
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		_, err := cmd.Flags().GetString("card_number")
+		cardNumber, err := cmd.Flags().GetString("card_number")
 		if err != nil {
 			log.Fatalf("failed to get card_number: %s\n", err.Error())
 		}
 
-		_, err = cmd.Flags().GetString("CVC")
+		cvc, err := cmd.Flags().GetString("CVC")
 		if err != nil {
 			log.Fatalf("failed to get path: %s\n", err.Error())
 		}
 
-		_, err = cmd.Flags().GetString("expiration_date")
+		expDate, err := cmd.Flags().GetString("expiration_date")
 		if err != nil {
 			log.Fatalf("failed to get path: %s\n", err.Error())
+		}
+
+		serverAddr = ":9000" // TO BE UPDATED
+
+		clientService := service.New()
+
+		if err := clientService.SendBankDetails(serverAddr, cardNumber, cvc, expDate); err != nil {
+			log.Fatal("failed to send binary file: ", zap.Error(err))
 		}
 
 		// TODO: save bank card details in minio
@@ -265,13 +280,13 @@ func init() {
 	rootCmd.Flags().IntVarP(&batchSize, "batch", "b", 1024*1024, "batch size for sending")
 	rootCmd.AddCommand(createCmd)
 	createCmd.AddCommand(createUserCmd)
-	createUserCmd.Flags().StringP("email", "e", "", "User email")
+	createUserCmd.Flags().StringP("login", "l", "", "User login")
 	createUserCmd.Flags().StringP("password", "p", "", "User password")
 	createUserCmd.Flags().StringVarP(&serverAddr, "addr", "a", "", "server address")
 
 	rootCmd.AddCommand(loginCmd)
 	loginCmd.AddCommand(loginUserCmd)
-	loginUserCmd.Flags().StringP("email", "e", "", "User email")
+	loginUserCmd.Flags().StringP("login", "l", "", "User login")
 	loginUserCmd.Flags().StringP("password", "p", "", "User password")
 	loginUserCmd.Flags().StringVarP(&serverAddr, "addr", "a", "", "server address")
 
@@ -285,7 +300,6 @@ func init() {
 
 	// save text data
 	saveCmd.AddCommand(saveTextCmd)
-	saveTextCmd.Flags().StringP("file_name", "n", "", "Provided text will be saved in stated file")
 	saveTextCmd.Flags().StringP("text", "t", "", "Text which need to be saved")
 
 	// save binary data
@@ -297,6 +311,7 @@ func init() {
 	saveCmd.AddCommand(saveCardInfoCmd)
 	saveCardInfoCmd.Flags().StringP("card_number", "n", "", "Card number to be saved")
 	saveCardInfoCmd.Flags().StringP("CVC", "c", "", "CVC to be saved")
+	saveCardInfoCmd.Flags().StringP("expiration_date", "e", "", "expiration_date to be saved")
 
 	logger.Initialize(loggerLevel)
 
@@ -304,21 +319,3 @@ func init() {
 		log.Fatal(err)
 	}
 }
-
-// var (
-// 	serverAddr  string
-// 	filePath    string
-// 	batchSize   int
-// 	loggerLevel string
-// 	rootCmd     = &cobra.Command{
-// 		Use:   "transfer_client",
-// 		Short: "Sending files via gRPC",
-// 		Run: func(cmd *cobra.Command, args []string) {
-// 			clientService := service.New(serverAddr, filePath, batchSize)
-
-// 			if err := clientService.SendFile(); err != nil {
-// 				log.Fatal(err)
-// 			}
-// 		},
-// 	}
-// )
