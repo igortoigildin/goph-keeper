@@ -2,15 +2,12 @@ package upload
 
 import (
 	"context"
-	"fmt"
 
 	desc "github.com/igortoigildin/goph-keeper/pkg/upload_v1"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func (i *Implementation) UploadFile(stream desc.UploadV1_UploadFileServer) error {
-
-	fmt.Println("OK!")
 	err := i.uploadService.SaveFile(stream)
 	if err != nil {
 		return err
@@ -20,7 +17,6 @@ func (i *Implementation) UploadFile(stream desc.UploadV1_UploadFileServer) error
 }
 
 func (i *Implementation) UploadBankData(ctx context.Context, req *desc.UploadBankDataRequest) (*emptypb.Empty, error) {
-	fmt.Println("OK")
 	err := i.uploadService.SaveBankData(ctx, req.GetData())
 	if err != nil {
 		return nil, err

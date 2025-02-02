@@ -7,8 +7,9 @@ import (
 	"github.com/igortoigildin/goph-keeper/internal/client/db"
 	"github.com/igortoigildin/goph-keeper/internal/client/db/pg"
 	auth "github.com/igortoigildin/goph-keeper/internal/server/api/auth_v1"
-	upload "github.com/igortoigildin/goph-keeper/internal/server/api/upload_v1"
+	api "github.com/igortoigildin/goph-keeper/internal/server/api/upload_v1"
 	"github.com/igortoigildin/goph-keeper/internal/server/closer"
+	upload "github.com/igortoigildin/goph-keeper/internal/server/service"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
 	"go.uber.org/zap"
 
@@ -26,8 +27,8 @@ type serviceProvider struct {
 
 	dbClient db.Client
 
-	uploadService upload.Saver 
-	uploadImpl    *upload.Implementation
+	uploadService upload.UploadService 
+	uploadImpl    *api.Implementation
 
 	authService auth.AuthService
 	authImpl    *auth.Implementation
@@ -66,15 +67,15 @@ func (s *serviceProvider) PGConfig() config.PGConfig {
 	return s.pgConfig
 }
 
-func (s *serviceProvider) UploadImpl(ctx context.Context) *upload.Implementation {
+func (s *serviceProvider) UploadImpl(ctx context.Context) *api.Implementation {
 	if s.uploadImpl == nil {
-		s.uploadImpl = upload.NewImplementation(s.UploadService(ctx))
+		s.uploadImpl = api.NewImplementation(s.UploadService(ctx))
 	}
 
 	return s.uploadImpl
 }
 
-func (s *serviceProvider) UploadService(ctx context.Context) upload.Saver  {
+func (s *serviceProvider) UploadService(ctx context.Context) upload.UploadService  {
 	if s.uploadService == nil {
 		s.uploadService = uploadService.New(ctx, s.DataRepository(ctx))
 	}

@@ -46,6 +46,7 @@ func (s *ClientService) SendPassword(addr, loginStr, passStr string, id string) 
 
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
+	wg.Add(1)
 	go func(s *ClientService) {
 		if err = s.uploadPassword(ctx, loginStr, passStr, &wg); err != nil {
 			logger.Fatal("error while sending file", zap.Error(err))
@@ -59,6 +60,8 @@ func (s *ClientService) SendPassword(addr, loginStr, passStr string, id string) 
 
 
 func (s *ClientService) uploadPassword(ctx context.Context, loginStr, passStr string, wg *sync.WaitGroup) error {
+	defer wg.Done()
+
 	data := make(map[string]string, 1)
 	data[loginStr] = passStr
 
@@ -89,11 +92,13 @@ func (s *ClientService) SendBankDetails(addr, cardNumber, cvc, expDate string, i
 
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
+	wg.Add(1)
 	go func(s *ClientService) {
 		if err = s.uploadBankDetails(ctx, cardNumber, cvc, expDate, &wg); err != nil {
 			logger.Fatal("error while sending file", zap.Error(err))
 		}
 	}(s)
+
 	wg.Wait()
 	
 
@@ -103,6 +108,7 @@ func (s *ClientService) SendBankDetails(addr, cardNumber, cvc, expDate string, i
 
 func (s *ClientService) uploadBankDetails(ctx context.Context, cardNumber, cvc, expDate string, wg *sync.WaitGroup) error {
 	defer wg.Done()
+
 	data := make(map[string]string, 3)
 	data["card_number"] = cardNumber
 	data["CVC"] = cvc
@@ -136,11 +142,13 @@ func (s *ClientService) SendText(addr, text string, id string) error {
 
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
+	wg.Add(1)
 	go func(s *ClientService) {
 		if err = s.uploadText(ctx, text, &wg); err != nil {
 			logger.Fatal("error while sending file", zap.Error(err))
 		}
 	}(s)
+
 	wg.Wait()
 
 	return nil
