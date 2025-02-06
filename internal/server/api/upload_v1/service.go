@@ -5,8 +5,6 @@ import (
 	desc "github.com/igortoigildin/goph-keeper/pkg/upload_v1"
 )
 
-
-
 type Implementation struct {
 	desc.UnimplementedUploadV1Server
 	uploadService service.UploadService

@@ -43,6 +43,3 @@ func (i *Implementation) UploadText(ctx context.Context, req *desc.UploadTextReq
 
 	return nil, nil
 }
-
-
-

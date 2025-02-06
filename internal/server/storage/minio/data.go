@@ -38,8 +38,8 @@ func (d *DataRepository) SaveFile(ctx context.Context, file *fl.File, login stri
 	}
 
 	// Define the file to upload and the destination bucket
-	objectName := id // The name for the object in MinIO
-	bucketName := login	// Bucket name in MinIO
+	objectName := id    // The name for the object in MinIO
+	bucketName := login // Bucket name in MinIO
 
 	// Ensure the bucket exists (or create it)
 	err = client.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{})
@@ -78,7 +78,6 @@ func (d *DataRepository) SaveFile(ctx context.Context, file *fl.File, login stri
 	return nil
 }
 
-
 func (d *DataRepository) SaveTextData(ctx context.Context, data any, login string, id string) error {
 	client, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
@@ -102,8 +101,8 @@ func (d *DataRepository) SaveTextData(ctx context.Context, data any, login strin
 	buf := bytes.NewReader(serializedData)
 
 	// Define the file to upload and the destination bucket
-	objectName := id // The name for the object in MinIO
-	bucketName := login	// Bucket name in MinIO
+	objectName := id    // The name for the object in MinIO
+	bucketName := login // Bucket name in MinIO
 
 	// Ensure the bucket exists (or create it)
 	err = client.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{})

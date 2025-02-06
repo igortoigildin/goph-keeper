@@ -2,12 +2,12 @@
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS users (
     user_id bigserial PRIMARY KEY,
-    email TEXT UNIQUE NOT NULL,
+    login TEXT UNIQUE NOT NULL,
     password_hash bytea NOT NULL
 );
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
-SELECT 'down SQL query';
+DROP TABLE users;
 -- +goose StatementEnd

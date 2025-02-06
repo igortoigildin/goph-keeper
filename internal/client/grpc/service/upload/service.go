@@ -22,13 +22,12 @@ type Sender interface {
 }
 
 type ClientService struct {
-	client    desc.UploadV1Client
+	client desc.UploadV1Client
 }
 
 func New() Sender {
 	return &ClientService{}
 }
-
 
 func (s *ClientService) SendPassword(addr, loginStr, passStr string, id string) error {
 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
@@ -58,7 +57,6 @@ func (s *ClientService) SendPassword(addr, loginStr, passStr string, id string) 
 	return nil
 }
 
-
 func (s *ClientService) uploadPassword(ctx context.Context, loginStr, passStr string, wg *sync.WaitGroup) error {
 	defer wg.Done()
 
@@ -75,7 +73,6 @@ func (s *ClientService) uploadPassword(ctx context.Context, loginStr, passStr st
 
 	return nil
 }
-
 
 func (s *ClientService) SendBankDetails(addr, cardNumber, cvc, expDate string, id string) error {
 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
@@ -100,11 +97,9 @@ func (s *ClientService) SendBankDetails(addr, cardNumber, cvc, expDate string, i
 	}(s)
 
 	wg.Wait()
-	
 
 	return nil
 }
-
 
 func (s *ClientService) uploadBankDetails(ctx context.Context, cardNumber, cvc, expDate string, wg *sync.WaitGroup) error {
 	defer wg.Done()
@@ -124,7 +119,6 @@ func (s *ClientService) uploadBankDetails(ctx context.Context, cardNumber, cvc, 
 
 	return nil
 }
-
 
 func (s *ClientService) SendText(addr, text string, id string) error {
 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
@@ -153,7 +147,6 @@ func (s *ClientService) SendText(addr, text string, id string) error {
 
 	return nil
 }
-
 
 func (s *ClientService) uploadText(ctx context.Context, text string, wg *sync.WaitGroup) error {
 	defer wg.Done()
@@ -188,7 +181,7 @@ func (s *ClientService) SendFile(addr string, filePath string, batchSize int, id
 		if err = s.uploadFile(ctx, filePath, batchSize, &wg); err != nil {
 			logger.Fatal("error while sending file", zap.Error(err))
 		}
-		
+
 	}(s)
 
 	wg.Wait()
@@ -244,7 +237,6 @@ func (s *ClientService) uploadFile(ctx context.Context, filepath string, batchSi
 		zap.Int("bytes", int(res.GetSize())),
 		zap.String("file name", res.GetFileName()),
 	)
-
 
 	return nil
 }

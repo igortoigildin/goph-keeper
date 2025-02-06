@@ -13,7 +13,7 @@ func GenerateToken(info model.UserInfo, secretKey []byte, duration time.Duration
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(duration).Unix(),
 		},
-		Email: info.Email,
+		Login: info.Login,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -46,10 +46,3 @@ func VeryfyToken(tokenStr string, secretKey []byte) (*model.UserClaims, error) {
 
 	return claims, nil
 }
-
-// func CheckSession(secretKey []byte, token string) bool {
-// 	// Validate the JWT token
-// 	_, err := VeryfyToken(token, secretKey)
-
-// 	return err == nil
-// }

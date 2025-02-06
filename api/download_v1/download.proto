@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package download_v1;
+
+option go_package = "github.com/igortoigildin/goph-keeper/pkg/download_v1;download_v1";
+
+service DownloadV1 {
+    rpc DownloadPassword(DownloadPasswordRequest) returns (DownloadPasswordResponse);
+    rpc DownloadText(DownloadTextRequest) returns (DownloadTextResponse);
+    rpc DownloadFile(DownloadFileRequest) returns(stream DownloadFileResponse);
+    rpc DownloadBankData(DownloadBankDataRequest) returns (DownloadBankDataResponse);
+}
+
+message DownloadFileRequest {
+    string uuid = 1;
+}
+
+message DownloadFileResponse {
+    string uuid = 1;
+    bytes chunk = 2;
+}
+
+message DownloadPasswordRequest {
+    string uuid = 1;
+}
+
+message DownloadPasswordResponse {
+    map<string, string> data = 1;
+}
+
+message DownloadTextRequest {
+    string uuid = 1;
+}
+
+message DownloadTextResponse {
+    string text = 1;
+}
+
+message DownloadBankDataRequest {
+    string uuid = 1;
+}
+
+message DownloadBankDataResponse {
+    map<string, string> data = 1;
+}
+

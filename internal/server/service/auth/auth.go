@@ -28,8 +28,8 @@ var (
 )
 
 type UserRepository interface {
-	GetUser(ctx context.Context, email string) (*models.UserInfo, error)
-	SaveUser(ctx context.Context, email string, passHash []byte) (uid int64, err error)
+	GetUser(ctx context.Context, login string) (*models.UserInfo, error)
+	SaveUser(ctx context.Context, login string, passHash []byte) (uid int64, err error)
 }
 
 type authServ struct {
@@ -86,7 +86,7 @@ func (a *authServ) GetAccessToken(ctx context.Context, refreshToken string) (str
 	}
 
 	accessToken, err := utils.GenerateToken(models.UserInfo{
-		Email: claims.Email,
+		Login: claims.Login,
 	}, []byte(accessTokenSecretKey), accessTokenExpiration,
 	)
 	if err != nil {
@@ -103,7 +103,7 @@ func (a *authServ) GetRefreshToken(ctx context.Context, refreshToken string) (st
 	}
 
 	token, err := utils.GenerateToken(models.UserInfo{
-		Email: claims.Email,
+		Login: claims.Login,
 	},
 		[]byte(refreshTokenSecretKey),
 		refreshTokenExpiration,

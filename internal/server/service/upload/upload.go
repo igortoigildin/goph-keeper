@@ -18,13 +18,14 @@ import (
 
 type UploadService struct {
 	dataRepository rep.DataRepository
+	accessRepository rep.AccessRepository
 }
 
-func New(ctx context.Context, rep rep.DataRepository) *UploadService {
-	return &UploadService{dataRepository: rep}
+func New(ctx context.Context, dataRep rep.DataRepository, accessRep rep.AccessRepository) *UploadService {
+	return &UploadService{dataRepository: dataRep, accessRepository: accessRep}
 }
 
-func (f *UploadService) SaveBankData(ctx context.Context, data map[string]string) error  {
+func (f *UploadService) SaveBankData(ctx context.Context, data map[string]string) error {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		logger.Error("metada is not received from incoming context")
@@ -40,7 +41,14 @@ func (f *UploadService) SaveBankData(ctx context.Context, data map[string]string
 	// remove @ since this charac is not allowed for Minio bucket name
 	login = strings.Replace(login, "@", "", -1)
 
-	err := f.dataRepository.SaveTextData(ctx, data, login, id)
+	err := f.accessRepository.SaveAccess(ctx, login, id)
+	if err != nil {
+		logger.Error("error while saving access: ", zap.Error(err))
+
+		return err
+	}
+
+	err = f.dataRepository.SaveTextData(ctx, data, login, id)
 	if err != nil {
 		logger.Error("error while saving bank data")
 
@@ -65,7 +73,15 @@ func (f *UploadService) SaveText(ctx context.Context, text string) error {
 	id := md["id"][0]
 	// remove @ since this charac is not allowed for Minio bucket name
 	login = strings.Replace(login, "@", "", -1)
-	err := f.dataRepository.SaveTextData(ctx, text, login, id)
+
+	err := f.accessRepository.SaveAccess(ctx, login, id)
+	if err != nil {
+		logger.Error("error while saving access: ", zap.Error(err))
+
+		return err
+	}
+
+	err = f.dataRepository.SaveTextData(ctx, text, login, id)
 	if err != nil {
 		logger.Error("error while saving text data")
 
@@ -91,7 +107,14 @@ func (f *UploadService) SaveLoginPassword(ctx context.Context, data map[string]s
 	// remove @ since this charac is not allowed for Minio bucket name
 	login = strings.Replace(login, "@", "", -1)
 
-	err := f.dataRepository.SaveTextData(ctx, data, login, id)
+	err := f.accessRepository.SaveAccess(ctx, login, id)
+	if err != nil {
+		logger.Error("error while saving access: ", zap.Error(err))
+
+		return err
+	}
+
+	err = f.dataRepository.SaveTextData(ctx, data, login, id)
 	if err != nil {
 		logger.Error("error while saving login&password data")
 
@@ -152,10 +175,17 @@ func (f *UploadService) SaveFile(stream desc.UploadV1_UploadFileServer) error {
 	// remove @ since this charac is not allowed for Minio bucket name
 	login = strings.Replace(login, "@", "", -1)
 
+	err := f.accessRepository.SaveAccess(stream.Context(), login, id)
+	if err != nil {
+		logger.Error("error while saving access: ", zap.Error(err))
+
+		return err
+	}
+
 	logger.Info("result:", zap.String("path", file.FilePath), zap.Any("size", fileSize))
 	fileName := filepath.Base(file.FilePath)
 
-	err := f.dataRepository.SaveFile(context.TODO(), file, login, id)
+	err = f.dataRepository.SaveFile(context.TODO(), file, login, id)
 	if err != nil {
 		logger.Error("error while uploading file to Minio: ", zap.Error(err))
 

@@ -13,7 +13,6 @@ type AuthService interface {
 	RegisterNewUser(ctx context.Context, Email string, pass string) (int64, error)
 }
 
-
 type UploadService interface {
 	SaveFile(stream desc.UploadV1_UploadFileServer) error
 	SaveBankData(ctx context.Context, data map[string]string) error

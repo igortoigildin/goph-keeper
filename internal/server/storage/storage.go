@@ -22,3 +22,9 @@ type DataRepository interface {
 	SaveFile(ctx context.Context, file *fl.File, login string, id string) error
 	SaveTextData(ctx context.Context, data any, login string, id string) error
 }
+
+type AccessRepository interface {
+	GetAccess(ctx context.Context, login string, id string) (*models.FileInfo, error)
+	SaveAccess(ctx context.Context, login string, id string) (error)
+}
+

@@ -14,7 +14,7 @@ import (
 const (
 	tableName = "users"
 
-	emailColumn        = "email"
+	loginColumn        = "login"
 	passwordHashColumn = "password_hash"
 )
 
@@ -28,12 +28,11 @@ func NewRepository(db db.Client) *UserRepository {
 	}
 }
 
-func (rep *UserRepository) SaveUser(ctx context.Context, email string, passHash []byte) (int64, error) {
-
+func (rep *UserRepository) SaveUser(ctx context.Context, login string, passHash []byte) (int64, error) {
 	builder := sq.Insert(tableName).
 		PlaceholderFormat(sq.Dollar).
-		Columns(emailColumn, passwordHashColumn).
-		Values(email, passHash).
+		Columns(loginColumn, passwordHashColumn).
+		Values(login, passHash).
 		Suffix("ON CONFLICT DO NOTHING RETURNING user_id")
 
 	fmt.Printf("builder: %v\n", builder)
@@ -57,11 +56,11 @@ func (rep *UserRepository) SaveUser(ctx context.Context, email string, passHash 
 	return id, nil
 }
 
-func (rep *UserRepository) GetUser(ctx context.Context, email string) (*models.UserInfo, error) {
-	builder := sq.Select(emailColumn, passwordHashColumn).
+func (rep *UserRepository) GetUser(ctx context.Context, login string) (*models.UserInfo, error) {
+	builder := sq.Select(loginColumn, passwordHashColumn).
 		PlaceholderFormat(sq.Dollar).
 		From(tableName).
-		Where(sq.Eq{emailColumn: email}).
+		Where(sq.Eq{loginColumn: login}).
 		Limit(1)
 
 	query, args, err := builder.ToSql()

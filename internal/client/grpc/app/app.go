@@ -43,9 +43,9 @@ var createUserCmd = &cobra.Command{
 	Use:   "user",
 	Short: "New user registration",
 	Run: func(cmd *cobra.Command, args []string) {
-		emailStr, err := cmd.Flags().GetString("email")
+		loginStr, err := cmd.Flags().GetString("login")
 		if err != nil {
-			log.Fatalf("failed to get email: %s\n", err.Error())
+			log.Fatalf("failed to get login: %s\n", err.Error())
 		}
 
 		passStr, err := cmd.Flags().GetString("password")
@@ -55,11 +55,11 @@ var createUserCmd = &cobra.Command{
 
 		authService := authService.New(serverAddr)
 
-		if err = authService.RegisterNewUser(context.Background(), emailStr, passStr); err != nil {
+		if err = authService.RegisterNewUser(context.Background(), loginStr, passStr); err != nil {
 			log.Fatalf("registration failed: %s\n", err.Error())
 		}
 
-		log.Printf("user with %s email created successfully\n", emailStr)
+		log.Printf("user with %s login created successfully\n", loginStr)
 	},
 }
 
@@ -75,7 +75,7 @@ var loginUserCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		loginStr, err := cmd.Flags().GetString("login")
 		if err != nil {
-			log.Fatalf("failed to get email: %s\n", err.Error())
+			log.Fatalf("failed to get login: %s\n", err.Error())
 		}
 
 		passStr, err := cmd.Flags().GetString("password")
@@ -91,12 +91,6 @@ var loginUserCmd = &cobra.Command{
 			log.Fatalf("got invalid jwt token: %s\n", err.Error())
 		}
 
-		// err = os.WriteFile(tokenFile, []byte(token), 0644)
-		// if err != nil {
-		// 	logger.Error("error saving JWT token", zap.Error(err))
-		// 	return
-		// }
-
 		sessionData := &session.Session{
 			Login:     loginStr,
 			Token:     token,
@@ -108,7 +102,38 @@ var loginUserCmd = &cobra.Command{
 			logger.Error("failed to save sesson", zap.Error(err))
 		}
 
-		log.Printf("user with %s email logged in successfully. Session saved\n", loginStr)
+		log.Printf("user with %s login logged in successfully. Session saved\n", loginStr)
+	},
+}
+
+// download command
+var downloadCmd = &cobra.Command{
+	Use: "download",
+	Short: "Download data from storage",
+}
+
+// download password subcommmand
+var downloadPassCmd = &cobra.Command{
+	Use: "password",
+	Short: "Download login && password from storage",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if !session.IsSessionValid(refreshTokenSecretKey) {
+			logger.Error("Session expired or not found. Please login again")
+
+			os.Exit(1)
+			return
+		}
+
+		logger.Info("Session is valid")
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		idStr, err := cmd.Flags().GetString("id")
+		if err != nil {
+			log.Fatalf("failed to get password uuid: %s\n", err.Error())
+		}
+
+		// TODO
+		serverAddr = ":9000" // TO BE UPDATED
 	},
 }
 
@@ -157,6 +182,35 @@ var savePasswordCmd = &cobra.Command{
 	},
 }
 
+
+// download text subcommand
+var downloadTextCmd = &cobra.Command{
+	Use: "text",
+	Short: "Download arbitrary text data from storage",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if !session.IsSessionValid(refreshTokenSecretKey) {
+			logger.Error("Session expired or not found. Please login again")
+
+			os.Exit(1)
+			return
+		}
+
+		logger.Info("Session is valid")
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		idStr, err := cmd.Flags().GetString("id")
+		if err != nil {
+			log.Fatalf("failed to get password uuid: %s\n", err.Error())
+		}
+
+		// TODO
+		serverAddr = ":9000" // TO BE UPDATED
+
+
+
+	},
+}
+
 // save text subcommand
 var saveTextCmd = &cobra.Command{
 	Use:   "text",
@@ -172,10 +226,6 @@ var saveTextCmd = &cobra.Command{
 		logger.Info("Session is valid")
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		// _, err := cmd.Flags().GetString("file_name")
-		// if err != nil {
-		// 	log.Fatalf("failed to get file_name: %s\n", err.Error())
-		// }
 
 		textData, err := cmd.Flags().GetString("text")
 		if err != nil {
@@ -193,6 +243,36 @@ var saveTextCmd = &cobra.Command{
 		}
 
 		log.Println("text saved successfully\n")
+	},
+}
+
+// download binary data subcommand
+var downloadBinCmd = &cobra.Command{
+	Use: "bin",
+	Short: "Download binary data from storage",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if !session.IsSessionValid(refreshTokenSecretKey) {
+			logger.Error("Session expired or not found. Please login again")
+
+			os.Exit(1)
+			return
+		}
+
+		logger.Info("Session is valid")
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		idStr, err := cmd.Flags().GetString("id")
+		if err != nil {
+			log.Fatalf("failed to get password uuid: %s\n", err.Error())
+		}
+
+		// TODO
+		serverAddr = ":9000" // TO BE UPDATED
+
+
+
+
+
 	},
 }
 
@@ -228,6 +308,41 @@ var saveBinCmd = &cobra.Command{
 
 		log.Printf("biniry data %s saved successfully\n", pathStr)
 	},
+}
+
+// download card details subcommand
+var downloadCardInfoCmd = &cobra.Command{
+	Use: "card",
+	Short: "Download card details from storage",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if !session.IsSessionValid(refreshTokenSecretKey) {
+			logger.Error("Session expired or not found. Please login again")
+
+			os.Exit(1)
+			return
+		}
+
+		logger.Info("Session is valid")
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		idStr, err := cmd.Flags().GetString("id")
+		if err != nil {
+			log.Fatalf("failed to get password uuid: %s\n", err.Error())
+		}
+
+		// TODO
+		serverAddr = ":9000" // TO BE UPDATED
+
+
+
+
+
+
+
+
+
+	},
+
 }
 
 // save card bank details subcommand
@@ -270,8 +385,6 @@ var saveCardInfoCmd = &cobra.Command{
 			log.Fatal("failed to send binary file: ", zap.Error(err))
 		}
 
-		// TODO: save bank card details in minio
-
 		log.Println("bank card details saved successfully\n")
 	},
 }
@@ -307,20 +420,36 @@ func init() {
 	savePasswordCmd.Flags().StringP("password", "p", "", "Password to be saved")
 	savePasswordCmd.Flags().StringVarP(&serverAddr, "addr", "a", "", "server address")
 
+	// download login && password
+	downloadCmd.AddCommand(downloadPassCmd)
+	downloadPassCmd.Flags().StringP("id", "i", "", "A Universally Unique Identifier of the saved password")
+
 	// save text data
 	saveCmd.AddCommand(saveTextCmd)
 	saveTextCmd.Flags().StringP("text", "t", "", "Text which need to be saved")
+
+	// download text 
+	downloadCmd.AddCommand(downloadTextCmd)
+	downloadTextCmd.Flags().StringP("id", "i", "", "A Universally Unique Identifier of saved text")
 
 	// save binary data
 	saveCmd.AddCommand(saveBinCmd)
 	saveBinCmd.Flags().StringP("file_name", "n", "", "Name of the file to be saved")
 	saveBinCmd.Flags().StringP("file_path", "p", "", "Path to the binary file, which need to be saved")
 
-	// save card data
+	// download binary data
+	downloadCmd.AddCommand(downloadBinCmd)
+	downloadBinCmd.Flags().StringP("id", "i", "", "A Universally Unique Identifier of saved binary")
+
+	// save card details
 	saveCmd.AddCommand(saveCardInfoCmd)
 	saveCardInfoCmd.Flags().StringP("card_number", "n", "", "Card number to be saved")
 	saveCardInfoCmd.Flags().StringP("CVC", "c", "", "CVC to be saved")
 	saveCardInfoCmd.Flags().StringP("expiration_date", "e", "", "expiration_date to be saved")
+
+	// download card details
+	downloadCmd.AddCommand(downloadCardInfoCmd)
+	downloadCardInfoCmd.Flags().StringP("id", "i", "", "A Universally Unique Identifier of the saved card details")
 
 	logger.Initialize(loggerLevel)
 
