@@ -8,7 +8,8 @@ import (
 
 	"github.com/google/uuid"
 	authService "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/auth"
-	service "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/upload"
+	serviceDown "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/download"
+	serviceUp "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/upload"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
 	"github.com/igortoigildin/goph-keeper/pkg/session"
 	"github.com/spf13/cobra"
@@ -134,6 +135,12 @@ var downloadPassCmd = &cobra.Command{
 
 		// TODO
 		serverAddr = ":9000" // TO BE UPDATED
+
+		clientService := serviceDown.New()
+
+		if err := clientService.DownloadPassword(serverAddr, idStr); err != nil {
+			log.Fatal("failed to obtain password data from goph-keeper: ", zap.Error(err))
+		}
 	},
 }
 
@@ -170,7 +177,7 @@ var savePasswordCmd = &cobra.Command{
 
 		serverAddr = ":9000" // TO BE UPDATED
 
-		clientService := service.New()
+		clientService := serviceUp.New()
 
 		id := uuid.New()
 
@@ -206,8 +213,11 @@ var downloadTextCmd = &cobra.Command{
 		// TODO
 		serverAddr = ":9000" // TO BE UPDATED
 
+		clientService := serviceDown.New()
 
-
+		if err := clientService.DownloadText(serverAddr, idStr); err != nil {
+			log.Fatal("failed to obtain text data from goph-keeper: ", zap.Error(err))
+		}
 	},
 }
 
@@ -236,7 +246,7 @@ var saveTextCmd = &cobra.Command{
 
 		id := uuid.New()
 
-		clientService := service.New()
+		clientService := serviceUp.New()
 
 		if err := clientService.SendText(serverAddr, textData, id.String()); err != nil {
 			log.Fatal("failed to send text: ", zap.Error(err))
@@ -269,9 +279,11 @@ var downloadBinCmd = &cobra.Command{
 		// TODO
 		serverAddr = ":9000" // TO BE UPDATED
 
+		clientService := serviceDown.New()
 
-
-
+		if err := clientService.DownloadFile(serverAddr, idStr); err != nil {
+			log.Fatal("failed to obtain bin data from goph-keeper: ", zap.Error(err))
+		}
 
 	},
 }
@@ -300,7 +312,7 @@ var saveBinCmd = &cobra.Command{
 
 		id := uuid.New()
 
-		clientService := service.New()
+		clientService := serviceUp.New()
 
 		if err := clientService.SendFile(serverAddr, pathStr, batchSize, id.String()); err != nil {
 			log.Fatal("failed to send binary file: ", zap.Error(err))
@@ -333,16 +345,13 @@ var downloadCardInfoCmd = &cobra.Command{
 		// TODO
 		serverAddr = ":9000" // TO BE UPDATED
 
+		clientService := serviceDown.New()
 
-
-
-
-
-
-
+		if err := clientService.DownloadBankDetails(serverAddr, idStr); err != nil {
+			log.Fatal("failed to obtain card details from goph-keeper: ", zap.Error(err))
+		}
 
 	},
-
 }
 
 // save card bank details subcommand
@@ -379,7 +388,7 @@ var saveCardInfoCmd = &cobra.Command{
 
 		id := uuid.New()
 
-		clientService := service.New()
+		clientService := serviceUp.New()
 
 		if err := clientService.SendBankDetails(serverAddr, cardNumber, cvc, expDate, id.String()); err != nil {
 			log.Fatal("failed to send binary file: ", zap.Error(err))

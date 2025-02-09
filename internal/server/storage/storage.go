@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"bytes"
 	"context"
 	"errors"
 
@@ -20,7 +21,9 @@ type UserRepository interface {
 
 type DataRepository interface {
 	SaveFile(ctx context.Context, file *fl.File, login string, id string) error
+	DownloadFile(ctx context.Context, bucketName, objectName string) (*bytes.Buffer, error)
 	SaveTextData(ctx context.Context, data any, login string, id string) error
+	DownloadTextData(ctx context.Context, bucketName, objectName string) ([]byte, error)
 }
 
 type AccessRepository interface {

@@ -19,3 +19,10 @@ type UploadService interface {
 	SaveText(ctx context.Context, text string) error
 	SaveLoginPassword(ctx context.Context, data map[string]string) error
 }
+
+type DownloadService interface {
+	DownloadFile(ctx context.Context, id string) ([]byte, error)
+	DownloadBankData(ctx context.Context, id string) (map[string]string, error)
+	DownloadText(ctx context.Context, id string) (string, error)
+	DownloadLoginPassword(ctx context.Context, id string) (map[string]string, error)
+}

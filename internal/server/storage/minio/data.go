@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
+	"log"
 	"os"
 
 	fl "github.com/igortoigildin/goph-keeper/pkg/file"
@@ -78,6 +80,36 @@ func (d *DataRepository) SaveFile(ctx context.Context, file *fl.File, login stri
 	return nil
 }
 
+
+func (d *DataRepository) DownloadFile(ctx context.Context, bucketName, objectName string) (*bytes.Buffer, error) {
+	client, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
+		Secure: useSSL,
+	})
+	if err != nil {
+		logger.Error("error while creating minio client: ", zap.Error(err))
+
+		return nil, err
+	}
+
+	obj, err := client.GetObject(ctx, bucketName, objectName, minio.GetObjectOptions{})
+	if err != nil {
+		return nil, err
+	}
+	defer obj.Close()
+
+	// Read the object data into a byte buffer
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, obj)
+	if err != nil {
+		log.Fatalf("Error reading object data: %v", err)
+	}
+
+	logger.Info("Object downloaded successfully")
+
+	return buf, nil
+}
+
 func (d *DataRepository) SaveTextData(ctx context.Context, data any, login string, id string) error {
 	client, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
@@ -124,4 +156,36 @@ func (d *DataRepository) SaveTextData(ctx context.Context, data any, login strin
 	logger.Info("string data uploaded to Minio successfully")
 
 	return nil
+}
+
+
+func (d *DataRepository) DownloadTextData(ctx context.Context, bucketName, objectName string) ([]byte, error) {
+	client, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
+		Secure: useSSL,
+	})
+	if err != nil {
+		logger.Error("error while creating minio client: ", zap.Error(err))
+
+		return nil, err
+	}
+
+	obj, err := client.GetObject(ctx, bucketName, objectName, minio.GetObjectOptions{})
+	if err != nil {
+		return nil, err
+	}
+	defer obj.Close()
+
+	// Read the object data into a byte buffer
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, obj)
+	if err != nil {
+		log.Fatalf("Error reading object data: %v", err)
+	}
+
+	res := buf.Bytes()
+
+	logger.Info("Object downloaded successfully")
+
+	return res, nil
 }
