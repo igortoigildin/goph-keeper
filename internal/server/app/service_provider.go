@@ -7,14 +7,17 @@ import (
 	"github.com/igortoigildin/goph-keeper/internal/client/db"
 	"github.com/igortoigildin/goph-keeper/internal/client/db/pg"
 	auth "github.com/igortoigildin/goph-keeper/internal/server/api/auth_v1"
+	download "github.com/igortoigildin/goph-keeper/internal/server/api/download_v1"
 	api "github.com/igortoigildin/goph-keeper/internal/server/api/upload_v1"
 	"github.com/igortoigildin/goph-keeper/internal/server/closer"
-	upload "github.com/igortoigildin/goph-keeper/internal/server/service"
+	service "github.com/igortoigildin/goph-keeper/internal/server/service"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
 	"go.uber.org/zap"
 
+	downloadApi "github.com/igortoigildin/goph-keeper/internal/server/api/download_v1"
 	"github.com/igortoigildin/goph-keeper/internal/server/config"
 	authService "github.com/igortoigildin/goph-keeper/internal/server/service/auth"
+	downloadService "github.com/igortoigildin/goph-keeper/internal/server/service/download"
 	uploadService "github.com/igortoigildin/goph-keeper/internal/server/service/upload"
 	repository "github.com/igortoigildin/goph-keeper/internal/server/storage"
 	dataRepository "github.com/igortoigildin/goph-keeper/internal/server/storage/minio"
@@ -28,11 +31,14 @@ type serviceProvider struct {
 
 	dbClient db.Client
 
-	uploadService upload.UploadService
+	uploadService service.UploadService
 	uploadImpl    *api.Implementation
 
-	authService auth.AuthService
+	authService service.AuthService
 	authImpl    *auth.Implementation
+
+	downloadService service.DownloadService
+	downloadImpl	*downloadApi.Implementation
 
 	userRepository repository.UserRepository
 	dataRepository repository.DataRepository
@@ -77,7 +83,7 @@ func (s *serviceProvider) UploadImpl(ctx context.Context) *api.Implementation {
 	return s.uploadImpl
 }
 
-func (s *serviceProvider) UploadService(ctx context.Context) upload.UploadService {
+func (s *serviceProvider) UploadService(ctx context.Context) service.UploadService {
 	if s.uploadService == nil {
 		s.uploadService = uploadService.New(ctx, s.DataRepository(ctx), s.AccessRepository(ctx))
 	}
@@ -98,6 +104,22 @@ func (s *serviceProvider) AuthImpl(ctx context.Context) *auth.Implementation {
 	}
 
 	return s.authImpl
+}
+
+func (s *serviceProvider) DownloadService(ctx context.Context) service.DownloadService {
+	if s.downloadService == nil {
+		s.downloadService = downloadService.New(ctx, s.DataRepository(ctx), s.AccessRepository(ctx))
+	}
+
+	return s.downloadService
+}
+
+func (s *serviceProvider) DownloadImpl(ctx context.Context) *download.Implementation {
+	if s.downloadImpl == nil {
+		s.downloadImpl = download.NewImplementation(s.DownloadService(ctx))
+	}
+
+	return s.downloadImpl
 }
 
 func (s *serviceProvider) DBClient(ctx context.Context) db.Client {

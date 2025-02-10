@@ -116,6 +116,7 @@ func (d *DownloadService) DownloadLoginPassword(ctx context.Context, id string) 
 	}
 	login := md["login"][0]
 
+
 	data, err := d.dataRepository.DownloadTextData(ctx, login, id)
 	if err != nil {
 		logger.Error("error downloading login details: ", zap.Error(err))

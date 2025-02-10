@@ -60,8 +60,9 @@ func (s *ClientService) SendPassword(addr, loginStr, passStr string, id string) 
 func (s *ClientService) uploadPassword(ctx context.Context, loginStr, passStr string, wg *sync.WaitGroup) error {
 	defer wg.Done()
 
-	data := make(map[string]string, 1)
-	data[loginStr] = passStr
+	data := make(map[string]string, 2)
+	data["login"] = loginStr
+	data["password"] = passStr
 
 	_, err := s.client.UploadPassword(ctx, &desc.UploadPasswordRequest{Data: data})
 	if err != nil {

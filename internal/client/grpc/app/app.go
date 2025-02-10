@@ -186,6 +186,8 @@ var savePasswordCmd = &cobra.Command{
 		}
 
 		log.Printf("login %s && password %s saved successfully\n", loginStr, passStr)
+
+		log.Printf("Your uuid is %s\n", id.String())
 	},
 }
 
@@ -253,6 +255,8 @@ var saveTextCmd = &cobra.Command{
 		}
 
 		log.Println("text saved successfully\n")
+
+		log.Printf("Your uuid is %s\n", id.String())
 	},
 }
 
@@ -319,6 +323,8 @@ var saveBinCmd = &cobra.Command{
 		}
 
 		log.Printf("biniry data %s saved successfully\n", pathStr)
+
+		log.Printf("Your uuid is %s\n", id.String())
 	},
 }
 
@@ -395,6 +401,8 @@ var saveCardInfoCmd = &cobra.Command{
 		}
 
 		log.Println("bank card details saved successfully\n")
+
+		log.Printf("Your uuid is %s\n", id.String())
 	},
 }
 
@@ -428,6 +436,8 @@ func init() {
 	savePasswordCmd.Flags().StringP("login", "l", "", "Login to be saved")
 	savePasswordCmd.Flags().StringP("password", "p", "", "Password to be saved")
 	savePasswordCmd.Flags().StringVarP(&serverAddr, "addr", "a", "", "server address")
+
+	rootCmd.AddCommand(downloadCmd)
 
 	// download login && password
 	downloadCmd.AddCommand(downloadPassCmd)

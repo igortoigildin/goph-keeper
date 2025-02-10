@@ -2,6 +2,7 @@ package download
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 
@@ -50,6 +51,8 @@ func (s *ClientService) DownloadPassword(addr, id string) error {
 	}
 
 	data := resp.GetData()
+
+	fmt.Println(data)
 	
 	logger.Info("Your data: ", zap.Any("login", data["login"]), zap.Any("password", data["password"]))
 	
