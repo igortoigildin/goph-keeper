@@ -80,7 +80,6 @@ func (d *DataRepository) SaveFile(ctx context.Context, file *fl.File, login stri
 	return nil
 }
 
-
 func (d *DataRepository) DownloadFile(ctx context.Context, bucketName, objectName string) (*bytes.Buffer, error) {
 	client, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
@@ -157,7 +156,6 @@ func (d *DataRepository) SaveTextData(ctx context.Context, data any, login strin
 
 	return nil
 }
-
 
 func (d *DataRepository) DownloadTextData(ctx context.Context, bucketName, objectName string) ([]byte, error) {
 	client, err := minio.New(endpoint, &minio.Options{

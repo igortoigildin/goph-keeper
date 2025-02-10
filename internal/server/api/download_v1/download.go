@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-
 func (i *Implementation) DownloadBankData(ctx context.Context, req *desc.DownloadBankDataRequest) (*desc.DownloadBankDataResponse, error) {
 	res, err := i.downloadService.DownloadBankData(ctx, req.GetUuid())
 	if err != nil {
@@ -56,6 +55,5 @@ func (i *Implementation) DownloadFile(req *desc.DownloadFileRequest, stream grpc
 		return err
 	}
 
-
-	return stream.Send(&desc.DownloadFileResponse{Uuid:  req.GetUuid(), Chunk: res})
+	return stream.Send(&desc.DownloadFileResponse{Uuid: req.GetUuid(), Chunk: res})
 }

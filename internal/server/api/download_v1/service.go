@@ -5,15 +5,14 @@ import (
 	desc "github.com/igortoigildin/goph-keeper/pkg/download_v1"
 )
 
-
 const (
 	filePath = "./"
 )
+
 type Implementation struct {
 	desc.UnimplementedDownloadV1Server
 	downloadService service.DownloadService
 }
-
 
 func NewImplementation(downloadService service.DownloadService) *Implementation {
 	return &Implementation{

@@ -17,7 +17,7 @@ import (
 )
 
 type UploadService struct {
-	dataRepository rep.DataRepository
+	dataRepository   rep.DataRepository
 	accessRepository rep.AccessRepository
 }
 

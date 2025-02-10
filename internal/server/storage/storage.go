@@ -28,6 +28,5 @@ type DataRepository interface {
 
 type AccessRepository interface {
 	GetAccess(ctx context.Context, login string, id string) (*models.FileInfo, error)
-	SaveAccess(ctx context.Context, login string, id string) (error)
+	SaveAccess(ctx context.Context, login string, id string) error
 }
-

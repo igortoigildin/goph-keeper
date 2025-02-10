@@ -14,8 +14,8 @@ import (
 const (
 	tableName = "access"
 
-	loginColumn        = "login"
-	fileIdColumn 	   = "data_id"
+	loginColumn  = "login"
+	fileIdColumn = "data_id"
 )
 
 type AccessRepository struct {
@@ -54,7 +54,7 @@ func (rep *AccessRepository) GetAccess(ctx context.Context, login string, id str
 	return &file, nil
 }
 
-func (rep *AccessRepository) SaveAccess(ctx context.Context, login string, id string) (error) {
+func (rep *AccessRepository) SaveAccess(ctx context.Context, login string, id string) error {
 	builder := sq.Insert(tableName).
 		PlaceholderFormat(sq.Dollar).
 		Columns(loginColumn, fileIdColumn).

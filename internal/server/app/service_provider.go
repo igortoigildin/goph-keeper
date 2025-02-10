@@ -38,10 +38,10 @@ type serviceProvider struct {
 	authImpl    *auth.Implementation
 
 	downloadService service.DownloadService
-	downloadImpl	*downloadApi.Implementation
+	downloadImpl    *downloadApi.Implementation
 
-	userRepository repository.UserRepository
-	dataRepository repository.DataRepository
+	userRepository   repository.UserRepository
+	dataRepository   repository.DataRepository
 	accessRepository repository.AccessRepository
 }
 

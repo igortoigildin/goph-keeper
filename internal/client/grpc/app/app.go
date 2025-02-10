@@ -109,13 +109,13 @@ var loginUserCmd = &cobra.Command{
 
 // download command
 var downloadCmd = &cobra.Command{
-	Use: "download",
+	Use:   "download",
 	Short: "Download data from storage",
 }
 
 // download password subcommmand
 var downloadPassCmd = &cobra.Command{
-	Use: "password",
+	Use:   "password",
 	Short: "Download login && password from storage",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if !session.IsSessionValid(refreshTokenSecretKey) {
@@ -191,10 +191,9 @@ var savePasswordCmd = &cobra.Command{
 	},
 }
 
-
 // download text subcommand
 var downloadTextCmd = &cobra.Command{
-	Use: "text",
+	Use:   "text",
 	Short: "Download arbitrary text data from storage",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if !session.IsSessionValid(refreshTokenSecretKey) {
@@ -262,7 +261,7 @@ var saveTextCmd = &cobra.Command{
 
 // download binary data subcommand
 var downloadBinCmd = &cobra.Command{
-	Use: "bin",
+	Use:   "bin",
 	Short: "Download binary data from storage",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if !session.IsSessionValid(refreshTokenSecretKey) {
@@ -330,7 +329,7 @@ var saveBinCmd = &cobra.Command{
 
 // download card details subcommand
 var downloadCardInfoCmd = &cobra.Command{
-	Use: "card",
+	Use:   "card",
 	Short: "Download card details from storage",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if !session.IsSessionValid(refreshTokenSecretKey) {
@@ -447,7 +446,7 @@ func init() {
 	saveCmd.AddCommand(saveTextCmd)
 	saveTextCmd.Flags().StringP("text", "t", "", "Text which need to be saved")
 
-	// download text 
+	// download text
 	downloadCmd.AddCommand(downloadTextCmd)
 	downloadTextCmd.Flags().StringP("id", "i", "", "A Universally Unique Identifier of saved text")
 
