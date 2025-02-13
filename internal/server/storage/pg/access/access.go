@@ -2,7 +2,6 @@ package access
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
@@ -37,7 +36,7 @@ func (rep *AccessRepository) GetAccess(ctx context.Context, login string, id str
 
 	query, args, err := builder.ToSql()
 	if err != nil {
-		return nil, errors.New("error while building SQL query")
+		return nil, fmt.Errorf("error building SQL query: %w", err)
 	}
 
 	qr := db.Query{
@@ -48,7 +47,7 @@ func (rep *AccessRepository) GetAccess(ctx context.Context, login string, id str
 	var file models.FileInfo
 	err = rep.db.DB().ScanOneContext(ctx, &file, qr, args...)
 	if err != nil {
-		return nil, errors.New("error while retrieving info about specified user")
+		return nil, fmt.Errorf("error retrieving info about sepcified user: %w", err)
 	}
 
 	return &file, nil
@@ -65,7 +64,7 @@ func (rep *AccessRepository) SaveAccess(ctx context.Context, login string, id st
 
 	query, args, err := builder.ToSql()
 	if err != nil {
-		return errors.New("error while building SQL query")
+		return fmt.Errorf("error building SQL query: %w", err)
 	}
 
 	qr := db.Query{

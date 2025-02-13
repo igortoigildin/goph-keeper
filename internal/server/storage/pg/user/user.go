@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
@@ -39,7 +38,7 @@ func (rep *UserRepository) SaveUser(ctx context.Context, login string, passHash 
 
 	query, args, err := builder.ToSql()
 	if err != nil {
-		return 0, errors.New("error while building SQL query")
+		return 0, fmt.Errorf("error building SQL query: %w", err)
 	}
 
 	qr := db.Query{
@@ -65,7 +64,7 @@ func (rep *UserRepository) GetUser(ctx context.Context, login string) (*models.U
 
 	query, args, err := builder.ToSql()
 	if err != nil {
-		return nil, errors.New("error while building SQL query")
+		return nil, fmt.Errorf("error building SQL query: %w", err)
 	}
 
 	qr := db.Query{
@@ -76,7 +75,7 @@ func (rep *UserRepository) GetUser(ctx context.Context, login string) (*models.U
 	var user models.UserInfo
 	err = rep.db.DB().ScanOneContext(ctx, &user, qr, args...)
 	if err != nil {
-		return nil, errors.New("error while retrieving info about specified user")
+		return nil, fmt.Errorf("error retrieving info about sepcified user: %w", err)
 	}
 
 	return &user, nil

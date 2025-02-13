@@ -42,7 +42,7 @@ type serviceProvider struct {
 
 	userRepository   repository.UserRepository
 	dataRepository   repository.DataRepository
-	accessRepository repository.AccessRepository
+	accessRepository downloadService.AccessRepository
 }
 
 func newServiceProvider() *serviceProvider {
@@ -158,7 +158,7 @@ func (s *serviceProvider) DataRepository(ctx context.Context) repository.DataRep
 	return s.dataRepository
 }
 
-func (s *serviceProvider) AccessRepository(ctx context.Context) repository.AccessRepository {
+func (s *serviceProvider) AccessRepository(ctx context.Context) downloadService.AccessRepository {
 	if s.accessRepository == nil {
 		s.accessRepository = accessRepository.NewRepository(s.DBClient(ctx))
 	}

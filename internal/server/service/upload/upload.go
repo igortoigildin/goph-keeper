@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	models "github.com/igortoigildin/goph-keeper/internal/server/models"
 	rep "github.com/igortoigildin/goph-keeper/internal/server/storage"
 	fl "github.com/igortoigildin/goph-keeper/pkg/file"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
@@ -16,12 +17,17 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-type UploadService struct {
-	dataRepository   rep.DataRepository
-	accessRepository rep.AccessRepository
+type AccessRepository interface {
+	GetAccess(ctx context.Context, login string, id string) (*models.FileInfo, error)
+	SaveAccess(ctx context.Context, login string, id string) error
 }
 
-func New(ctx context.Context, dataRep rep.DataRepository, accessRep rep.AccessRepository) *UploadService {
+type UploadService struct {
+	dataRepository   rep.DataRepository
+	accessRepository AccessRepository
+}
+
+func New(ctx context.Context, dataRep rep.DataRepository, accessRep AccessRepository) *UploadService {
 	return &UploadService{dataRepository: dataRep, accessRepository: accessRep}
 }
 

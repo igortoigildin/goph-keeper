@@ -26,7 +26,4 @@ type DataRepository interface {
 	DownloadTextData(ctx context.Context, bucketName, objectName string) ([]byte, error)
 }
 
-type AccessRepository interface {
-	GetAccess(ctx context.Context, login string, id string) (*models.FileInfo, error)
-	SaveAccess(ctx context.Context, login string, id string) error
-}
+
