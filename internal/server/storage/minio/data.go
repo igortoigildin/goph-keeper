@@ -39,6 +39,8 @@ func (d *DataRepository) SaveFile(ctx context.Context, file *fl.File, login stri
 		return err
 	}
 
+	// filepath.Base(file.FilePath)
+
 	// Define the file to upload and the destination bucket
 	objectName := id    // The name for the object in MinIO
 	bucketName := login // Bucket name in MinIO

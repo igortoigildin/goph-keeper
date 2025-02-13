@@ -192,5 +192,12 @@ func (f *UploadService) SaveFile(stream desc.UploadV1_UploadFileServer) error {
 		return err
 	}
 
+	err = file.Remove()
+	if err != nil {
+		logger.Error("error while removing file: ", zap.Error(err))
+
+		return err
+	}
+
 	return stream.SendAndClose(&desc.UploadFileResponse{FileName: fileName, Size: fileSize})
 }

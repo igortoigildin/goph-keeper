@@ -19,7 +19,7 @@ import (
 type Downloader interface {
 	DownloadPassword(addr, id string) error
 	DownloadText(addr, id string) error
-	DownloadFile(addr string, id string) error
+	DownloadFile(addr, id, fileName string) error
 	DownloadBankDetails(addr, id string) error
 }
 
@@ -85,7 +85,7 @@ func (s *ClientService) DownloadText(addr, id string) error {
 	return nil
 }
 
-func (s *ClientService) DownloadFile(addr string, id string) error {
+func (s *ClientService) DownloadFile(addr string, id, fileName string) error {
 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
 	if err != nil {
 		return err
@@ -107,6 +107,8 @@ func (s *ClientService) DownloadFile(addr string, id string) error {
 	var fileSize uint32
 	fileSize = 0
 	defer func() {
+
+
 		if err := file.OutputFile.Close(); err != nil {
 			logger.Error("error", zap.Error(err))
 		}
@@ -115,7 +117,7 @@ func (s *ClientService) DownloadFile(addr string, id string) error {
 	for {
 		req, err := stream.Recv()
 		if file.FilePath == "" {
-			file.SetFile(req.GetUuid(), "client_files")
+			file.SetFile(fileName, "client_files")
 		}
 		if err == io.EOF {
 			break

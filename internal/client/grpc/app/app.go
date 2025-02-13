@@ -279,12 +279,17 @@ var downloadBinCmd = &cobra.Command{
 			log.Fatalf("failed to get password uuid: %s\n", err.Error())
 		}
 
+		fileNameStr, err := cmd.Flags().GetString("file_name")
+		if err != nil {
+			log.Fatalf("failed to get file_name: %s\n", err.Error())
+		}
+
 		// TODO
 		serverAddr = ":9000" // TO BE UPDATED
 
 		clientService := serviceDown.New()
 
-		if err := clientService.DownloadFile(serverAddr, idStr); err != nil {
+		if err := clientService.DownloadFile(serverAddr, idStr, fileNameStr); err != nil {
 			log.Fatal("failed to obtain bin data from goph-keeper: ", zap.Error(err))
 		}
 
@@ -457,7 +462,8 @@ func init() {
 
 	// download binary data
 	downloadCmd.AddCommand(downloadBinCmd)
-	downloadBinCmd.Flags().StringP("id", "i", "", "A Universally Unique Identifier of saved binary")
+	downloadBinCmd.Flags().StringP("id", "i", "", "A Universally Unique Identifier of needed binary")
+	downloadBinCmd.Flags().StringP("file_name", "n", "", "Name of the file")
 
 	// save card details
 	saveCmd.AddCommand(saveCardInfoCmd)

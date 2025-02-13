@@ -44,3 +44,12 @@ func (f *File) Write(chunk []byte) error {
 func (f *File) Close() error {
 	return f.OutputFile.Close()
 }
+
+func (f *File) Remove() error {
+	err := os.Remove(f.FilePath)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
