@@ -45,12 +45,12 @@ func New(userRepo UserRepository) service.AuthService {
 // Login checks if user with given credentials exists in the system and returns access token.
 // If user exists, but password is incorrect, returns error.
 // If user doesn't exist, returns error.
-func (a *authServ) Login(ctx context.Context, email, password string) (string, error) {
+func (a *authServ) Login(ctx context.Context, login, password string) (string, error) {
 	const op = "Auth.Login"
-	logger.Info("attempting to log in user")
+	logger.Info("attempting to login user")
 
 	// identify user by email
-	user, err := a.userRepo.GetUser(ctx, email)
+	user, err := a.userRepo.GetUser(ctx, login)
 	if err != nil {
 		if errors.Is(err, storage.ErrUserNotFound) {
 			logger.Warn("user not found", zap.Error(err))
@@ -71,55 +71,18 @@ func (a *authServ) Login(ctx context.Context, email, password string) (string, e
 	// generate refresh token
 	refreshToken, err := utils.GenerateToken(*user, []byte(refreshTokenSecretKey), refreshTokenExpiration)
 	if err != nil {
-		return "", errors.New("failed to generate token")
+		return "", fmt.Errorf("failed to generate token: %w", err)
 	}
 
-	logger.Info("user logged in successfully")
+	logger.Info("user logged in successfully:", zap.String("login", login))
 
 	return refreshToken, nil
 }
 
-func (a *authServ) GetAccessToken(ctx context.Context, refreshToken string) (string, error) {
-	claims, err := utils.VeryfyToken(refreshToken, []byte(refreshTokenSecretKey))
-	if err != nil {
-		return "", errors.New("invalid refresh token")
-	}
-
-	accessToken, err := utils.GenerateToken(models.UserInfo{
-		Login: claims.Login,
-	}, []byte(accessTokenSecretKey), accessTokenExpiration,
-	)
-	if err != nil {
-		return "", errors.New("internal error")
-	}
-
-	return accessToken, nil
-}
-
-func (a *authServ) GetRefreshToken(ctx context.Context, refreshToken string) (string, error) {
-	claims, err := utils.VeryfyToken(refreshToken, []byte(refreshTokenSecretKey))
-	if err != nil {
-		return "", errors.New("invalid token")
-	}
-
-	token, err := utils.GenerateToken(models.UserInfo{
-		Login: claims.Login,
-	},
-		[]byte(refreshTokenSecretKey),
-		refreshTokenExpiration,
-	)
-	if err != nil {
-		return "", err
-	}
-
-	return token, nil
-}
-
 // RegisterNewUser registers new user in the system and returns user ID.
 // If user with given username already exists, returns error.
-func (a *authServ) RegisterNewUser(ctx context.Context, email string, pass string) (int64, error) {
-	const op = "auth.RegisterNewUser"
-	logger.Info("registering user")
+func (a *authServ) RegisterNewUser(ctx context.Context, login string, pass string) (int64, error) {
+	op := "server/service/auth"
 
 	passHash, err := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
 	if err != nil {
@@ -128,13 +91,14 @@ func (a *authServ) RegisterNewUser(ctx context.Context, email string, pass strin
 		return 0, fmt.Errorf("%s: %w", op, zap.Error(err))
 	}
 
-	id, err := a.userRepo.SaveUser(ctx, email, passHash)
+	id, err := a.userRepo.SaveUser(ctx, login, passHash)
 	if err != nil {
-
 		logger.Error("failed to save user", zap.Error(err))
+
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
-	logger.Info("user registered")
+	logger.Info("user registered:", zap.String("login", login))
+
 	return id, nil
 }

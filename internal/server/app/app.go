@@ -2,14 +2,16 @@ package app
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"net"
 
 	"github.com/igortoigildin/goph-keeper/internal/server/closer"
 	config "github.com/igortoigildin/goph-keeper/internal/server/config"
 	authpb "github.com/igortoigildin/goph-keeper/pkg/auth_v1"
 	downloadpb "github.com/igortoigildin/goph-keeper/pkg/download_v1"
+	"github.com/igortoigildin/goph-keeper/pkg/logger"
 	uploadpb "github.com/igortoigildin/goph-keeper/pkg/upload_v1"
+	"go.uber.org/zap"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -30,7 +32,7 @@ func NewApp(ctx context.Context) (*App, error) {
 
 	err := a.initDeps(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error inintializing dependecies: %w", err)
 	}
 
 	return a, nil
@@ -65,7 +67,7 @@ func (a *App) initDeps(ctx context.Context) error {
 func (a *App) initConfig(_ context.Context) error {
 	err := config.LoadFromFile(cfgFileName)
 	if err != nil {
-		return err
+		return fmt.Errorf("error loading config from local file: %w", err)
 	}
 
 	return nil
@@ -84,16 +86,16 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 }
 
 func (a *App) runGRPCServer() error {
-	log.Printf("GRPC server is running on %s", a.serviceProvider.GRPCConfig().Address())
+	logger.Info("GRPC server is running on:", zap.Any("address:", a.serviceProvider.GRPCConfig().Address()))
 
 	list, err := net.Listen("tcp", a.serviceProvider.GRPCConfig().Address())
 	if err != nil {
-		return err
+		return fmt.Errorf("error announcing on the local network address: %w", err)
 	}
 
 	err = a.grpcServer.Serve(list)
 	if err != nil {
-		return err
+		return fmt.Errorf("error accepting incoming connections on the listener: %w", err)
 	}
 
 	return nil

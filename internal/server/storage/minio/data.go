@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
-	"log"
 	"os"
 
 	fl "github.com/igortoigildin/goph-keeper/pkg/file"
@@ -18,7 +19,7 @@ import (
 const (
 	accessKey = "minioaccesskey"
 	secretKey = "miniosecretkey"
-	useSSL    = false // Whether to use SSL
+	useSSL    = false
 	endpoint  = "localhost:9000"
 )
 
@@ -36,10 +37,8 @@ func (d *DataRepository) SaveFile(ctx context.Context, file *fl.File, login stri
 	if err != nil {
 		logger.Error("error while creating minio client: ", zap.Error(err))
 
-		return err
+		return fmt.Errorf("error instantiating Minio client with options: %w", err)
 	}
-
-	// filepath.Base(file.FilePath)
 
 	// Define the file to upload and the destination bucket
 	objectName := id    // The name for the object in MinIO
@@ -52,14 +51,17 @@ func (d *DataRepository) SaveFile(ctx context.Context, file *fl.File, login stri
 			logger.Info("Bucket already exists")
 		} else {
 			logger.Info("Failed to create bucket:", zap.Error(err))
+
+			return fmt.Errorf("Minio error: %w", err)
 		}
 	}
 
 	// Open the file to upload
 	f, err := os.Open(file.FilePath)
 	if err != nil {
-		logger.Error("error while uploading file to minio: ", zap.Error(err))
-		return err
+		logger.Error("error opening targeted file: ", zap.Error(err))
+
+		return fmt.Errorf("error opening targeted file: %w", err)
 	}
 	defer f.Close()
 
@@ -69,15 +71,16 @@ func (d *DataRepository) SaveFile(ctx context.Context, file *fl.File, login stri
 		bucketName,
 		objectName,
 		f,
-		-1, // -1 means the file size will be determined automatically
+		-1,
 		minio.PutObjectOptions{ContentType: "application/octet-stream"},
 	)
 	if err != nil {
 		logger.Error("error while uploading file to MinIO", zap.Error(err))
-		return err
+
+		return fmt.Errorf("error while uploading file to MinIO: %w", err)
 	}
 
-	logger.Info("File uploaded successfully")
+	logger.Info("File uploaded to Minio successfully", zap.String("id:", id))
 
 	return nil
 }
@@ -88,14 +91,14 @@ func (d *DataRepository) DownloadFile(ctx context.Context, bucketName, objectNam
 		Secure: useSSL,
 	})
 	if err != nil {
-		logger.Error("error while creating minio client: ", zap.Error(err))
+		logger.Error("error creating minio client: ", zap.Error(err))
 
-		return nil, err
+		return nil, errors.New("error instantiating Minio client with options")
 	}
 
 	obj, err := client.GetObject(ctx, bucketName, objectName, minio.GetObjectOptions{})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error downloading object from Minio: %w", err)
 	}
 	defer obj.Close()
 
@@ -103,10 +106,12 @@ func (d *DataRepository) DownloadFile(ctx context.Context, bucketName, objectNam
 	buf := new(bytes.Buffer)
 	_, err = io.Copy(buf, obj)
 	if err != nil {
-		log.Fatalf("Error reading object data: %v", err)
+		logger.Error("copy file error: ", zap.Error(err))
+
+		return nil, fmt.Errorf("copy file error: %w", err)
 	}
 
-	logger.Info("Object downloaded successfully")
+	logger.Info("Object downloaded successfully:", zap.String("id:", objectName))
 
 	return buf, nil
 }
@@ -119,7 +124,7 @@ func (d *DataRepository) SaveTextData(ctx context.Context, data any, login strin
 	if err != nil {
 		logger.Error("error while creating minio client: ", zap.Error(err))
 
-		return err
+		return fmt.Errorf("error instantiating Minio client with options: %w", err)
 	}
 
 	// Serialize the map to JSON
@@ -127,7 +132,7 @@ func (d *DataRepository) SaveTextData(ctx context.Context, data any, login strin
 	if err != nil {
 		logger.Error("error while serializing the map: ", zap.Error(err))
 
-		return err
+		return fmt.Errorf("serialization error: %w", err)
 	}
 
 	// Create a buffer from the serialized data
@@ -143,18 +148,22 @@ func (d *DataRepository) SaveTextData(ctx context.Context, data any, login strin
 		if exists, errBucketExists := client.BucketExists(context.Background(), bucketName); errBucketExists == nil && exists {
 			logger.Info("Bucket already exists")
 		} else {
-			logger.Info("Failed to create bucket:", zap.Error(err))
+			logger.Error("Failed to create bucket:", zap.Error(err))
+
+			return fmt.Errorf("Minio error: %w", err)
 		}
 	}
 
-	_, err = client.PutObject(ctx, bucketName, objectName, buf, int64(buf.Len()), minio.PutObjectOptions{ContentType: "application/json"})
+	_, err = client.PutObject(ctx, bucketName, objectName, buf,
+		int64(buf.Len()),
+		minio.PutObjectOptions{ContentType: "application/json"})
 	if err != nil {
 		logger.Error("error while uploading object to minio: ", zap.Error(err))
 
-		return err
+		return fmt.Errorf("Minio error: %w", err)
 	}
 
-	logger.Info("string data uploaded to Minio successfully")
+	logger.Info("String data uploaded to Minio successfully:", zap.String("id:", id))
 
 	return nil
 }
@@ -167,12 +176,14 @@ func (d *DataRepository) DownloadTextData(ctx context.Context, bucketName, objec
 	if err != nil {
 		logger.Error("error while creating minio client: ", zap.Error(err))
 
-		return nil, err
+		return nil, fmt.Errorf("error instantiating Minio client with options: %w", err)
 	}
 
 	obj, err := client.GetObject(ctx, bucketName, objectName, minio.GetObjectOptions{})
 	if err != nil {
-		return nil, err
+		logger.Error("error opening targeted file: ", zap.Error(err))
+
+		return nil, fmt.Errorf("error opening targeted file: %w", err)
 	}
 	defer obj.Close()
 
@@ -180,12 +191,14 @@ func (d *DataRepository) DownloadTextData(ctx context.Context, bucketName, objec
 	buf := new(bytes.Buffer)
 	_, err = io.Copy(buf, obj)
 	if err != nil {
-		log.Fatalf("Error reading object data: %v", err)
+		logger.Error("error copying targeted file: ", zap.Error(err))
+
+		return nil, fmt.Errorf("error copying targeted file: %w", err)
 	}
 
 	res := buf.Bytes()
 
-	logger.Info("Object downloaded successfully")
+	logger.Info("Object downloaded successfully: ", zap.String("id:", objectName))
 
 	return res, nil
 }

@@ -6,6 +6,8 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	models "github.com/igortoigildin/goph-keeper/internal/server/models"
+	"github.com/igortoigildin/goph-keeper/pkg/logger"
+	"go.uber.org/zap"
 
 	"github.com/igortoigildin/goph-keeper/internal/client/db"
 )
@@ -60,7 +62,7 @@ func (rep *AccessRepository) SaveAccess(ctx context.Context, login string, id st
 		Values(login, id).
 		Suffix("ON CONFLICT DO NOTHING")
 
-	fmt.Printf("builder: %v\n", builder)
+	logger.Info("SQL query", zap.Any("builder:", builder))
 
 	query, args, err := builder.ToSql()
 	if err != nil {

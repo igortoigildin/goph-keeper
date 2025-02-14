@@ -91,7 +91,7 @@ func (s *serviceProvider) UploadService(ctx context.Context) service.UploadServi
 	return s.uploadService
 }
 
-func (s *serviceProvider) AuthService(ctx context.Context) auth.AuthService {
+func (s *serviceProvider) AuthService(ctx context.Context) service.AuthService {
 	if s.authService == nil {
 		s.authService = authService.New(s.UserRepository(ctx))
 	}

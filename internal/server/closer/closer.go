@@ -1,10 +1,12 @@
 package closer
 
 import (
-	"log"
 	"os"
 	"os/signal"
 	"sync"
+
+	"github.com/igortoigildin/goph-keeper/pkg/logger"
+	"go.uber.org/zap"
 )
 
 var globalCloser = New()
@@ -32,7 +34,8 @@ type Closer struct {
 	funcs []func() error
 }
 
-// New returns new Closer, if []os.Signal is specified Closer will automatically call CloseAll when one of signals is received from OS
+// New returns new Closer, if []os.Signal is specified Closer
+// will automatically call CloseAll when one of signals is received from OS.
 func New(sig ...os.Signal) *Closer {
 	c := &Closer{done: make(chan struct{})}
 	if len(sig) > 0 {
@@ -79,7 +82,7 @@ func (c *Closer) CloseAll() {
 
 		for i := 0; i < cap(errs); i++ {
 			if err := <-errs; err != nil {
-				log.Println("error returned from Closer")
+				logger.Error("error returned from Closer", zap.Error(err))
 			}
 		}
 	})

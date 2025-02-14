@@ -3,8 +3,8 @@ package upload
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
-	"log"
 	"path/filepath"
 	"strings"
 
@@ -47,18 +47,19 @@ func (f *UploadService) SaveBankData(ctx context.Context, data map[string]string
 	// remove @ since this charac is not allowed for Minio bucket name
 	login = strings.Replace(login, "@", "", -1)
 
+	// Save information in storage about authorized user, which has right to access data.
 	err := f.accessRepository.SaveAccess(ctx, login, id)
 	if err != nil {
-		logger.Error("error while saving access: ", zap.Error(err))
+		logger.Error("error saving access: ", zap.Error(err))
 
-		return err
+		return fmt.Errorf("error saving access: %w", err)
 	}
 
 	err = f.dataRepository.SaveTextData(ctx, data, login, id)
 	if err != nil {
-		logger.Error("error while saving bank data")
+		logger.Error("error saving bank data:", zap.Error(err))
 
-		return err
+		return fmt.Errorf("error saving bank data: %w", err)
 	}
 
 	return nil
@@ -80,18 +81,19 @@ func (f *UploadService) SaveText(ctx context.Context, text string) error {
 	// remove @ since this charac is not allowed for Minio bucket name
 	login = strings.Replace(login, "@", "", -1)
 
+	// Save information in storage about authorized user, which has right to access this data.
 	err := f.accessRepository.SaveAccess(ctx, login, id)
 	if err != nil {
-		logger.Error("error while saving access: ", zap.Error(err))
+		logger.Error("error saving access: ", zap.Error(err))
 
-		return err
+		return fmt.Errorf("error saving access: %w", err)
 	}
 
 	err = f.dataRepository.SaveTextData(ctx, text, login, id)
 	if err != nil {
-		logger.Error("error while saving text data")
+		logger.Error("error saving text data: ", zap.Error(err))
 
-		return err
+		return fmt.Errorf("error saving text data: %w", err)
 	}
 
 	return nil
@@ -113,18 +115,19 @@ func (f *UploadService) SaveLoginPassword(ctx context.Context, data map[string]s
 	// remove @ since this charac is not allowed for Minio bucket name
 	login = strings.Replace(login, "@", "", -1)
 
+	// Save information in storage about authorized user, which has right to access this data.
 	err := f.accessRepository.SaveAccess(ctx, login, id)
 	if err != nil {
-		logger.Error("error while saving access: ", zap.Error(err))
+		logger.Error("error saving access: ", zap.Error(err))
 
-		return err
+		return fmt.Errorf("error saving access: %w", err)
 	}
 
 	err = f.dataRepository.SaveTextData(ctx, data, login, id)
 	if err != nil {
-		logger.Error("error while saving login&password data")
+		logger.Error("error saving credentials data", zap.Error(err))
 
-		return err
+		return fmt.Errorf("error saving credentials data: %w", err)
 	}
 
 	return nil
@@ -136,7 +139,7 @@ func (f *UploadService) SaveFile(stream desc.UploadV1_UploadFileServer) error {
 	fileSize = 0
 	defer func() {
 		if err := file.OutputFile.Close(); err != nil {
-			logger.Error("error", zap.Error(err))
+			logger.Error("error:", zap.Error(err))
 		}
 	}()
 
@@ -151,16 +154,19 @@ func (f *UploadService) SaveFile(stream desc.UploadV1_UploadFileServer) error {
 
 		if err != nil {
 			logger.Error("error", zap.Error(err))
-			return err
+
+			return fmt.Errorf("error receiveing the next request message from the client: %w", err)
 		}
 
 		chunk := req.GetChunk()
 		fileSize += uint32(len(chunk))
-		log.Printf("received a chunk with size: %d\n", fileSize)
+
+		logger.Info("received a chunk with", zap.Any("size: ", fileSize))
 
 		if err := file.Write(chunk); err != nil {
-			log.Println(err)
-			return err
+			logger.Error("error writing chunk to the file:", zap.Error(err))
+
+			return fmt.Errorf("error writing chunk to the file: %d", err)
 		}
 	}
 
@@ -183,9 +189,9 @@ func (f *UploadService) SaveFile(stream desc.UploadV1_UploadFileServer) error {
 
 	err := f.accessRepository.SaveAccess(stream.Context(), login, id)
 	if err != nil {
-		logger.Error("error while saving access: ", zap.Error(err))
+		logger.Error("error saving access: ", zap.Error(err))
 
-		return err
+		return fmt.Errorf("error saving access: %w", err)
 	}
 
 	logger.Info("result:", zap.String("path", file.FilePath), zap.Any("size", fileSize))
@@ -193,16 +199,17 @@ func (f *UploadService) SaveFile(stream desc.UploadV1_UploadFileServer) error {
 
 	err = f.dataRepository.SaveFile(context.TODO(), file, login, id)
 	if err != nil {
-		logger.Error("error while uploading file to Minio: ", zap.Error(err))
+		logger.Error("error uploading file to Minio: ", zap.Error(err))
 
-		return err
+		return fmt.Errorf("error uploading file to Minio: %w", err)
 	}
 
+	// Once file successfully uploaded to Minio storage, temp file in OC will be removed.
 	err = file.Remove()
 	if err != nil {
-		logger.Error("error while removing file: ", zap.Error(err))
+		logger.Error("error deleting file: ", zap.Error(err))
 
-		return err
+		return fmt.Errorf("error deleting file: %w", err)
 	}
 
 	return stream.SendAndClose(&desc.UploadFileResponse{FileName: fileName, Size: fileSize})

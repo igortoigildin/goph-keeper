@@ -1,24 +1,17 @@
 package auth
 
 import (
-	"context"
-
 	desc "github.com/igortoigildin/goph-keeper/pkg/auth_v1"
-)
 
-type AuthService interface {
-	Login(ctx context.Context, username, password string) (string, error)
-	RegisterNewUser(ctx context.Context, email, password string) (int64, error)
-	GetAccessToken(ctx context.Context, refreshToken string) (string, error)
-	GetRefreshToken(ctx context.Context, refreshToken string) (string, error)
-}
+	service "github.com/igortoigildin/goph-keeper/internal/server/service"
+)
 
 type Implementation struct {
 	desc.UnimplementedAuthV1Server
-	authService AuthService
+	authService service.AuthService
 }
 
-func NewImplementation(authService AuthService) *Implementation {
+func NewImplementation(authService service.AuthService) *Implementation {
 	return &Implementation{
 		authService: authService,
 	}

@@ -13,14 +13,14 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+const (
+	login = "login"
+)
+
 type AccessRepository interface {
 	GetAccess(ctx context.Context, login string, id string) (*models.FileInfo, error)
 	SaveAccess(ctx context.Context, login string, id string) error
 }
-
-const (
-	login = "login"
-)
 
 type DownloadService struct {
 	dataRepository   rep.DataRepository
@@ -49,16 +49,16 @@ func (d *DownloadService) DownloadFile(ctx context.Context, id string) ([]byte, 
 	// get metadata about file with provided id
 	fileInfo, err := d.accessRepository.GetAccess(ctx, login, id)
 	if err != nil {
-		logger.Error("failed to get access for file")
+		logger.Error("failed to get access for file", zap.Error(err))
 
 		return nil, fmt.Errorf("error getting access for specific file from repo: %w", err)
 	}
 
 	// check whether user is authorized to get access to this specific file
-	if fileInfo.Id != login {
+	if fileInfo.Login != login {
 		logger.Info("Authorization error")
 
-		return nil, fmt.Errorf("authorization error: %w", err)
+		return nil, errors.New("authorization error")
 	}
 
 	file, err := d.dataRepository.DownloadFile(ctx, login, id)
@@ -87,16 +87,16 @@ func (d *DownloadService) DownloadBankData(ctx context.Context, id string) (map[
 	// get metadata about file with provided id
 	fileInfo, err := d.accessRepository.GetAccess(ctx, login, id)
 	if err != nil {
-		logger.Error("failed to get access for file")
+		logger.Error("failed to get access to file", zap.Error(err))
 
 		return nil, fmt.Errorf("error getting access for specific file from repo: %w", err)
 	}
 
 	// check whether user is authorized to get access to this specific file
-	if fileInfo.Id != login {
+	if fileInfo.Login != login {
 		logger.Info("Authorization error")
 
-		return nil, fmt.Errorf("authorization error: %w", err)
+		return nil, errors.New("authorization error")
 	}
 
 	data, err := d.dataRepository.DownloadTextData(ctx, login, id)
@@ -138,10 +138,10 @@ func (d *DownloadService) DownloadText(ctx context.Context, id string) (string, 
 	}
 
 	// check whether user is authorized to get access to this specific file
-	if fileInfo.Id != login {
+	if fileInfo.Login != login {
 		logger.Info("Authorization error")
 
-		return "", fmt.Errorf("authorization error: %w", err)
+		return "", errors.New("authorization error")
 	}
 
 	data, err := d.dataRepository.DownloadTextData(ctx, login, id)
@@ -174,10 +174,10 @@ func (d *DownloadService) DownloadLoginPassword(ctx context.Context, id string) 
 	}
 
 	// check whether user is authorized to get access to this specific file
-	if fileInfo.Id != login {
+	if fileInfo.Login != login {
 		logger.Info("Authorization error")
 
-		return nil, fmt.Errorf("authorization error: %w", err)
+		return nil, errors.New("authorization error")
 	}
 
 	data, err := d.dataRepository.DownloadTextData(ctx, login, id)

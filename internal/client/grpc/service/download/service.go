@@ -108,7 +108,6 @@ func (s *ClientService) DownloadFile(addr string, id, fileName string) error {
 	fileSize = 0
 	defer func() {
 
-
 		if err := file.OutputFile.Close(); err != nil {
 			logger.Error("error", zap.Error(err))
 		}

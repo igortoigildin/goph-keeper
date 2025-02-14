@@ -8,13 +8,16 @@ import (
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (i *Implementation) DownloadBankData(ctx context.Context, req *desc.DownloadBankDataRequest) (*desc.DownloadBankDataResponse, error) {
 	res, err := i.downloadService.DownloadBankData(ctx, req.GetUuid())
 	if err != nil {
 		logger.Error("error downloading card details:", zap.Error(err))
-		return nil, err
+
+		return nil, status.Error(codes.Unknown, "failed to download bank data")
 	}
 
 	return &desc.DownloadBankDataResponse{
@@ -28,7 +31,8 @@ func (i *Implementation) DownloadPassword(ctx context.Context, req *desc.Downloa
 	res, err := i.downloadService.DownloadLoginPassword(ctx, req.GetUuid())
 	if err != nil {
 		logger.Error("error downloading pass details:", zap.Error(err))
-		return nil, err
+
+		return nil, status.Error(codes.Unknown, "failed to download credentials")
 	}
 
 	return &desc.DownloadPasswordResponse{
@@ -40,7 +44,8 @@ func (i *Implementation) DownloadText(ctx context.Context, req *desc.DownloadTex
 	res, err := i.downloadService.DownloadText(ctx, req.GetUuid())
 	if err != nil {
 		logger.Error("error downloading text:", zap.Error(err))
-		return nil, err
+
+		return nil, status.Error(codes.Unknown, "failed to download text")
 	}
 
 	return &desc.DownloadTextResponse{
@@ -52,7 +57,8 @@ func (i *Implementation) DownloadFile(req *desc.DownloadFileRequest, stream grpc
 	res, err := i.downloadService.DownloadFile(stream.Context(), req.GetUuid())
 	if err != nil {
 		logger.Error("error downloading file:", zap.Error(err))
-		return err
+
+		return status.Error(codes.Unknown, "failed to download bin file")
 	}
 
 	return stream.Send(&desc.DownloadFileResponse{Uuid: req.GetUuid(), Chunk: res})

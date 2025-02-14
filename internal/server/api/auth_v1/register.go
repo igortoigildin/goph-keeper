@@ -16,7 +16,7 @@ func (i *Implementation) Register(ctx context.Context, req *descAuth.RegisterReq
 	id, err := i.authService.RegisterNewUser(ctx, req.Login, req.Password)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			logger.Warn("user already exists", zap.Error(err))
+			logger.Warn("User with such login already exists", zap.Error(err))
 
 			return nil, status.Errorf(codes.AlreadyExists, `User with email %s already exists`, req.Login)
 		} else {

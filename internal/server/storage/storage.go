@@ -25,5 +25,3 @@ type DataRepository interface {
 	SaveTextData(ctx context.Context, data any, login string, id string) error
 	DownloadTextData(ctx context.Context, bucketName, objectName string) ([]byte, error)
 }
-
-
