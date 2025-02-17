@@ -12,6 +12,7 @@ import (
 	"github.com/igortoigildin/goph-keeper/pkg/session"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -31,12 +32,12 @@ type ClientService struct {
 	client desc.DownloadV1Client
 }
 
-func New() Downloader {
+func New() *ClientService {
 	return &ClientService{}
 }
 
 func (s *ClientService) DownloadPassword(addr, id string) error {
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("error dialing client: %w", err)
 	}
@@ -44,6 +45,11 @@ func (s *ClientService) DownloadPassword(addr, id string) error {
 
 	s.client = desc.NewDownloadV1Client(conn)
 	ss, err := session.LoadSession()
+	if err != nil {
+		logger.Error("error loading session", zap.Error(err))
+
+		return fmt.Errorf("error loading session: %w", err)
+	}
 
 	md := metadata.Pairs(login, ss.Login)
 
@@ -64,7 +70,7 @@ func (s *ClientService) DownloadPassword(addr, id string) error {
 }
 
 func (s *ClientService) DownloadText(addr, id string) error {
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("error dialing client: %w", err)
 	}
@@ -72,8 +78,13 @@ func (s *ClientService) DownloadText(addr, id string) error {
 
 	s.client = desc.NewDownloadV1Client(conn)
 	ss, err := session.LoadSession()
+	if err != nil {
+		logger.Error("error loading session", zap.Error(err))
 
-	md := metadata.Pairs("login", ss.Login)
+		return fmt.Errorf("error loading session: %w", err)
+	}
+
+	md := metadata.Pairs(login, ss.Login)
 
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
@@ -92,7 +103,7 @@ func (s *ClientService) DownloadText(addr, id string) error {
 }
 
 func (s *ClientService) DownloadFile(addr string, id, fileName string) error {
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("error dialing client: %w", err)
 	}
@@ -100,6 +111,11 @@ func (s *ClientService) DownloadFile(addr string, id, fileName string) error {
 
 	s.client = desc.NewDownloadV1Client(conn)
 	ss, err := session.LoadSession()
+	if err != nil {
+		logger.Error("error loading session", zap.Error(err))
+
+		return fmt.Errorf("error loading session: %w", err)
+	}
 
 	md := metadata.Pairs(login, ss.Login)
 
@@ -150,7 +166,7 @@ func (s *ClientService) DownloadFile(addr string, id, fileName string) error {
 }
 
 func (s *ClientService) DownloadBankDetails(addr, id string) error {
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("error dialing client: %w", err)
 	}
@@ -158,6 +174,11 @@ func (s *ClientService) DownloadBankDetails(addr, id string) error {
 
 	s.client = desc.NewDownloadV1Client(conn)
 	ss, err := session.LoadSession()
+	if err != nil {
+		logger.Error("error loading session", zap.Error(err))
+
+		return fmt.Errorf("error loading session: %w", err)
+	}
 
 	md := metadata.Pairs(login, ss.Login)
 	ctx := metadata.NewOutgoingContext(context.Background(), md)

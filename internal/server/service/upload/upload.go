@@ -17,6 +17,11 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+const (
+	login = "login"
+	id = "id"
+)
+
 type AccessRepository interface {
 	GetAccess(ctx context.Context, login string, id string) (*models.FileInfo, error)
 	SaveAccess(ctx context.Context, login string, id string) error
@@ -42,8 +47,8 @@ func (f *UploadService) SaveBankData(ctx context.Context, data map[string]string
 
 		return errors.New("md is empty")
 	}
-	login := md["login"][0]
-	id := md["id"][0]
+	login := md[login][0]
+	id := md[id][0]
 	// remove @ since this charac is not allowed for Minio bucket name
 	login = strings.Replace(login, "@", "", -1)
 
@@ -76,8 +81,8 @@ func (f *UploadService) SaveText(ctx context.Context, text string) error {
 
 		return errors.New("md is empty")
 	}
-	login := md["login"][0]
-	id := md["id"][0]
+	login := md[login][0]
+	id := md[id][0]
 	// remove @ since this charac is not allowed for Minio bucket name
 	login = strings.Replace(login, "@", "", -1)
 
@@ -110,8 +115,8 @@ func (f *UploadService) SaveLoginPassword(ctx context.Context, data map[string]s
 
 		return errors.New("metadata is empty")
 	}
-	login := md["login"][0]
-	id := md["id"][0]
+	login := md[login][0]
+	id := md[id][0]
 	// remove @ since this charac is not allowed for Minio bucket name
 	login = strings.Replace(login, "@", "", -1)
 
@@ -181,8 +186,8 @@ func (f *UploadService) SaveFile(stream desc.UploadV1_UploadFileServer) error {
 		return errors.New("md is empty")
 	}
 
-	login := md["login"][0]
-	id := md["id"][0]
+	login := md[login][0]
+	id := md[id][0]
 
 	// remove @ since this charac is not allowed for Minio bucket name
 	login = strings.Replace(login, "@", "", -1)

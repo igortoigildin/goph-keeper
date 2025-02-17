@@ -11,6 +11,7 @@ import (
 	desc "github.com/igortoigildin/goph-keeper/pkg/upload_v1"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -30,12 +31,12 @@ type ClientService struct {
 	client desc.UploadV1Client
 }
 
-func New() Sender {
+func New() *ClientService {
 	return &ClientService{}
 }
 
 func (s *ClientService) SendPassword(addr, loginStr, passStr string, id string) error {
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("error dialing client: %w", err)
 	}
@@ -44,6 +45,11 @@ func (s *ClientService) SendPassword(addr, loginStr, passStr string, id string) 
 	s.client = desc.NewUploadV1Client(conn)
 
 	ss, err := session.LoadSession()
+	if err != nil {
+		logger.Error("error loading session", zap.Error(err))
+
+		return fmt.Errorf("error loading session: %w", err)
+	}
 
 	md := metadata.Pairs(login, ss.Login, "id", id)
 
@@ -74,7 +80,7 @@ func (s *ClientService) uploadPassword(ctx context.Context, loginStr, passStr st
 }
 
 func (s *ClientService) SendBankDetails(addr, cardNumber, cvc, expDate string, id string) error {
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("error dialing client: %w", err)
 	}
@@ -83,6 +89,12 @@ func (s *ClientService) SendBankDetails(addr, cardNumber, cvc, expDate string, i
 	s.client = desc.NewUploadV1Client(conn)
 
 	ss, err := session.LoadSession()
+	if err != nil {
+		logger.Error("error loading session", zap.Error(err))
+
+		return fmt.Errorf("error loading session: %w", err)
+	}
+
 	md := metadata.Pairs(login, ss.Login, "id", id)
 
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
@@ -113,7 +125,7 @@ func (s *ClientService) uploadBankDetails(ctx context.Context, cardNumber, cvc, 
 }
 
 func (s *ClientService) SendText(addr, text string, id string) error {
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("error dialing client: %w", err)
 	}
@@ -122,6 +134,11 @@ func (s *ClientService) SendText(addr, text string, id string) error {
 	s.client = desc.NewUploadV1Client(conn)
 
 	ss, err := session.LoadSession()
+	if err != nil {
+		logger.Error("error loading session", zap.Error(err))
+
+		return fmt.Errorf("error loading session: %w", err)
+	}
 
 	md := metadata.Pairs(login, ss.Login, "id", id)
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
@@ -147,7 +164,7 @@ func (s *ClientService) uploadText(ctx context.Context, text string) error {
 }
 
 func (s *ClientService) SendFile(addr string, filePath string, batchSize int, id string) error {
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("error dialing client: %w", err)
 	}
@@ -156,6 +173,11 @@ func (s *ClientService) SendFile(addr string, filePath string, batchSize int, id
 	s.client = desc.NewUploadV1Client(conn)
 
 	ss, err := session.LoadSession()
+	if err != nil {
+		logger.Error("error loading session", zap.Error(err))
+
+		return fmt.Errorf("error loading session: %w", err)
+	}
 
 	md := metadata.Pairs(login, ss.Login, "id", id)
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
@@ -189,14 +211,14 @@ func (s *ClientService) uploadFile(ctx context.Context, filepath string, batchSi
 			break
 		}
 		if err != nil {
-			return err
+			return fmt.Errorf("error reading buf: %w", err)
 		}
 		chunk := buf[:num]
 
 		if err := stream.Send(&desc.UploadFileRequest{FileName: filepath, Chunk: chunk}); err != nil {
 			logger.Error("error", zap.Error(err))
 
-			return err
+			return fmt.Errorf("error uploading bytes: %w", err)
 		}
 
 		logger.Info("Sent:",
@@ -210,7 +232,7 @@ func (s *ClientService) uploadFile(ctx context.Context, filepath string, batchSi
 	if err != nil {
 		logger.Error("error", zap.Error(err))
 
-		return err
+		return fmt.Errorf("error closing stream: %w", err)
 	}
 
 	logger.Info("Sent:",
