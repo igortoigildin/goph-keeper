@@ -19,7 +19,7 @@ import (
 
 const (
 	login = "login"
-	id = "id"
+	id    = "id"
 )
 
 type AccessRepository interface {

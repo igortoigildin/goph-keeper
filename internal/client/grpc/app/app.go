@@ -2,25 +2,20 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/igortoigildin/goph-keeper/internal/client/config"
 	authService "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/auth"
 	serviceDown "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/download"
 	serviceUp "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/upload"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
 	"github.com/igortoigildin/goph-keeper/pkg/session"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
-)
-
-var (
-	refreshTokenSecretKey = "W4/X+LLjehdxptt4YgGFCvMpq5ewptpZZYRHY6A72g0="
-	accessTokenSecretKey  = "VqvguGiffXILza1f44TWXowDT4zwf03dtXmqWW4SYyE="
-	sessionDuration       = time.Minute * 7
-	batchSize             = 1024 * 1024
-	serverAddr            = ":9000"
 )
 
 var (
@@ -29,6 +24,8 @@ var (
 		Use:   "goph-keeper-app",
 		Short: "My cli app",
 	}
+	sessionDuration = time.Minute * 7
+	batchSize       = 1024 * 1024
 )
 
 // user registration
@@ -51,7 +48,8 @@ var createUserCmd = &cobra.Command{
 			logger.Fatal("failed to get password:", zap.Error(err))
 		}
 
-		authService := authService.New(serverAddr)
+		serverAddr, _ := viper.Get("GRPC_PORT").(string)
+		authService := authService.New(fmt.Sprintf(":%s", serverAddr))
 
 		if err = authService.RegisterNewUser(context.Background(), loginStr, passStr); err != nil {
 			logger.Fatal("registration failed:", zap.Error(err))
@@ -81,7 +79,9 @@ var loginUserCmd = &cobra.Command{
 			logger.Fatal("failed to get password:", zap.Error(err))
 		}
 
-		authService := authService.New(serverAddr)
+		serverAddr, _ := viper.Get("GRPC_PORT").(string)
+
+		authService := authService.New(fmt.Sprintf(":%s", serverAddr))
 		token, err := authService.Login(context.Background(), loginStr, passStr)
 		if err != nil {
 			logger.Fatal("failed to login:", zap.Error(err))
@@ -117,6 +117,8 @@ var downloadPassCmd = &cobra.Command{
 	Use:   "password",
 	Short: "Download login && password from storage",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
+
 		if !session.IsSessionValid(refreshTokenSecretKey) {
 			logger.Fatal("Session expired or not found. Please login again")
 		}
@@ -130,8 +132,9 @@ var downloadPassCmd = &cobra.Command{
 		}
 
 		clientService := serviceDown.New()
+		serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
-		if err := clientService.DownloadPassword(serverAddr, idStr); err != nil {
+		if err := clientService.DownloadPassword(fmt.Sprintf(":%s", serverAddr), idStr); err != nil {
 			logger.Error("failed to obtain requested credentials from goph-keeper", zap.Error(err))
 		}
 	},
@@ -148,6 +151,8 @@ var savePasswordCmd = &cobra.Command{
 	Use:   "password",
 	Short: "Save login && password in storage",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
+
 		if !session.IsSessionValid(refreshTokenSecretKey) {
 			logger.Fatal("Session expired or not found. Please login again")
 		}
@@ -171,8 +176,10 @@ var savePasswordCmd = &cobra.Command{
 		// Creating new uuid for credentials to be saved.
 		id := uuid.New()
 
+		serverAddr, _ := viper.Get("GRPC_PORT").(string)
+
 		// Sending credentials with created uuid to server.
-		if err := clientService.SendPassword(serverAddr, loginStr, passStr, id.String()); err != nil {
+		if err := clientService.SendPassword(fmt.Sprintf(":%s", serverAddr), loginStr, passStr, id.String()); err != nil {
 			logger.Error("failed to send credentials to server:", zap.Error(err))
 		}
 
@@ -186,6 +193,8 @@ var downloadTextCmd = &cobra.Command{
 	Use:   "text",
 	Short: "Download arbitrary text data from storage",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
+
 		if !session.IsSessionValid(refreshTokenSecretKey) {
 			logger.Fatal("Session expired or not found. Please login again")
 		}
@@ -201,8 +210,10 @@ var downloadTextCmd = &cobra.Command{
 		// Initializing download service.
 		clientService := serviceDown.New()
 
+		serverAddr, _ := viper.Get("GRPC_PORT").(string)
+
 		// Requesting text with provided uuid.
-		if err := clientService.DownloadText(serverAddr, idStr); err != nil {
+		if err := clientService.DownloadText(fmt.Sprintf(":%s", serverAddr), idStr); err != nil {
 			logger.Fatal("failed to obtain text data from goph-keeper: ", zap.Error(err))
 		}
 	},
@@ -213,6 +224,8 @@ var saveTextCmd = &cobra.Command{
 	Use:   "text",
 	Short: "Save arbitrary text data in storage",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
+
 		if !session.IsSessionValid(refreshTokenSecretKey) {
 			logger.Error("Session expired or not found. Please login again")
 		}
@@ -231,7 +244,9 @@ var saveTextCmd = &cobra.Command{
 		// Initializing Upload service
 		clientService := serviceUp.New()
 
-		if err := clientService.SendText(serverAddr, textData, id.String()); err != nil {
+		serverAddr, _ := viper.Get("GRPC_PORT").(string)
+
+		if err := clientService.SendText(fmt.Sprintf(":%s", serverAddr), textData, id.String()); err != nil {
 			logger.Fatal("failed to save text", zap.Error(err))
 		}
 
@@ -245,6 +260,8 @@ var downloadBinCmd = &cobra.Command{
 	Use:   "bin",
 	Short: "Download binary data from storage",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
+
 		if !session.IsSessionValid(refreshTokenSecretKey) {
 			logger.Fatal("Session expired or not found. Please login again")
 		}
@@ -265,7 +282,9 @@ var downloadBinCmd = &cobra.Command{
 		// Initializing Download service
 		clientService := serviceDown.New()
 
-		if err := clientService.DownloadFile(serverAddr, idStr, fileNameStr); err != nil {
+		serverAddr, _ := viper.Get("GRPC_PORT").(string)
+
+		if err := clientService.DownloadFile(fmt.Sprintf(":%s", serverAddr), idStr, fileNameStr); err != nil {
 			logger.Fatal("failed to obtain requested binary data from goph-keeper: ", zap.Error(err))
 		}
 	},
@@ -276,6 +295,8 @@ var saveBinCmd = &cobra.Command{
 	Use:   "bin",
 	Short: "Save binary data in storage",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
+
 		if !session.IsSessionValid(refreshTokenSecretKey) {
 			logger.Fatal("Session expired or not found. Please login again")
 		}
@@ -294,7 +315,9 @@ var saveBinCmd = &cobra.Command{
 		// Creating Upload service
 		clientService := serviceUp.New()
 
-		if err := clientService.SendFile(serverAddr, pathStr, batchSize, id.String()); err != nil {
+		serverAddr, _ := viper.Get("GRPC_PORT").(string)
+
+		if err := clientService.SendFile(fmt.Sprintf(":%s", serverAddr), pathStr, batchSize, id.String()); err != nil {
 			logger.Fatal("failed to save binary file: ", zap.Error(err))
 		}
 
@@ -308,6 +331,8 @@ var downloadCardInfoCmd = &cobra.Command{
 	Use:   "card",
 	Short: "Download card details from storage",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
+
 		if !session.IsSessionValid(refreshTokenSecretKey) {
 			logger.Fatal("Session expired or not found. Please login again")
 		}
@@ -323,7 +348,9 @@ var downloadCardInfoCmd = &cobra.Command{
 		// Initializing Download service
 		clientService := serviceDown.New()
 
-		if err := clientService.DownloadBankDetails(serverAddr, idStr); err != nil {
+		serverAddr, _ := viper.Get("GRPC_PORT").(string)
+
+		if err := clientService.DownloadBankDetails(fmt.Sprintf(":%s", serverAddr), idStr); err != nil {
 			logger.Fatal("failed to obtain card details from goph-keeper: ", zap.Error(err))
 		}
 
@@ -335,6 +362,8 @@ var saveCardInfoCmd = &cobra.Command{
 	Use:   "card",
 	Short: "Save bank card details in storage",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
+
 		if !session.IsSessionValid(refreshTokenSecretKey) {
 			logger.Error("Session expired or not found. Please login again")
 		}
@@ -363,7 +392,9 @@ var saveCardInfoCmd = &cobra.Command{
 		// Creating Upload service
 		clientService := serviceUp.New()
 
-		if err := clientService.SendBankDetails(serverAddr, cardNumber, cvc, expDate, id.String()); err != nil {
+		serverAddr, _ := viper.Get("GRPC_PORT").(string)
+
+		if err := clientService.SendBankDetails(fmt.Sprintf(":%s", serverAddr), cardNumber, cvc, expDate, id.String()); err != nil {
 			logger.Fatal("failed to save bank details: ", zap.Error(err))
 		}
 
@@ -381,8 +412,11 @@ func Execute() {
 func init() {
 	logger.Initialize(loggerLevel)
 
+	if err := config.LoadConfig(); err != nil {
+		logger.Fatal("error loading config", zap.Error(err))
+	}
+
 	rootCmd.Flags().StringVarP(&loggerLevel, "log", "l", "info", "logger level")
-	rootCmd.Flags().IntVarP(&batchSize, "batch", "b", batchSize, "batch size for sending")
 	rootCmd.AddCommand(createCmd)
 	createCmd.AddCommand(createUserCmd)
 	createUserCmd.Flags().StringP("login", "l", "", "User login")
