@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"log"
-	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -17,17 +16,15 @@ import (
 )
 
 var (
-	// File to store JWT token
-	tokenFile             = ".jwt_token"
 	refreshTokenSecretKey = "W4/X+LLjehdxptt4YgGFCvMpq5ewptpZZYRHY6A72g0="
 	accessTokenSecretKey  = "VqvguGiffXILza1f44TWXowDT4zwf03dtXmqWW4SYyE="
 	sessionDuration       = time.Minute * 7
+	batchSize = 1024*1024
+	serverAddr = ":9000"
 )
 
 var (
-	batchSize   int
 	loggerLevel string
-	serverAddr  string
 	rootCmd     = &cobra.Command{
 		Use:   "goph-keeper-app",
 		Short: "My cli app",
@@ -46,21 +43,21 @@ var createUserCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		loginStr, err := cmd.Flags().GetString("login")
 		if err != nil {
-			log.Fatalf("failed to get login: %s\n", err.Error())
+			logger.Fatal("failed to get login:", zap.Error(err))
 		}
 
 		passStr, err := cmd.Flags().GetString("password")
 		if err != nil {
-			log.Fatalf("failed to get password: %s\n", err.Error())
+			logger.Fatal("failed to get password:", zap.Error(err))
 		}
 
 		authService := authService.New(serverAddr)
 
 		if err = authService.RegisterNewUser(context.Background(), loginStr, passStr); err != nil {
-			log.Fatalf("registration failed: %s\n", err.Error())
+			logger.Fatal("registration failed:", zap.Error(err))
 		}
 
-		log.Printf("user with %s login created successfully\n", loginStr)
+		logger.Info("User created successfully:", zap.String("login", loginStr))
 	},
 }
 
@@ -76,20 +73,22 @@ var loginUserCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		loginStr, err := cmd.Flags().GetString("login")
 		if err != nil {
-			log.Fatalf("failed to get login: %s\n", err.Error())
+			logger.Fatal("failed to get login:", zap.Error(err))
 		}
 
 		passStr, err := cmd.Flags().GetString("password")
 		if err != nil {
-			log.Fatalf("failed to get password: %s\n", err.Error())
+			logger.Fatal("failed to get password:", zap.Error(err))
 		}
 
 		authService := authService.New(serverAddr)
 		token, err := authService.Login(context.Background(), loginStr, passStr)
 		if err != nil {
-			log.Fatalf("failed to login: %s\n", err.Error())
-		} else if token == "" {
-			log.Fatalf("got invalid jwt token: %s\n", err.Error())
+			logger.Fatal("failed to login:", zap.Error(err))
+		}
+		
+		if token == "" {
+			logger.Fatal("failed to login, jwt token has not been received")
 		}
 
 		sessionData := &session.Session{
@@ -103,7 +102,7 @@ var loginUserCmd = &cobra.Command{
 			logger.Error("failed to save sesson", zap.Error(err))
 		}
 
-		log.Printf("user with %s login logged in successfully. Session saved\n", loginStr)
+		logger.Info("Session saved. User logged in successfully:", zap.String("login", loginStr))
 	},
 }
 
@@ -119,10 +118,7 @@ var downloadPassCmd = &cobra.Command{
 	Short: "Download login && password from storage",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if !session.IsSessionValid(refreshTokenSecretKey) {
-			logger.Error("Session expired or not found. Please login again")
-
-			os.Exit(1)
-			return
+			logger.Fatal("Session expired or not found. Please login again")
 		}
 
 		logger.Info("Session is valid")
@@ -130,16 +126,13 @@ var downloadPassCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		idStr, err := cmd.Flags().GetString("id")
 		if err != nil {
-			log.Fatalf("failed to get password uuid: %s\n", err.Error())
+			logger.Fatal("failed to get credentials id", zap.Error(err))
 		}
-
-		// TODO
-		serverAddr = ":9000" // TO BE UPDATED
 
 		clientService := serviceDown.New()
 
 		if err := clientService.DownloadPassword(serverAddr, idStr); err != nil {
-			log.Fatal("failed to obtain password data from goph-keeper: ", zap.Error(err))
+			logger.Error("failed to obtain requested credentials from goph-keeper", zap.Error(err))
 		}
 	},
 }
@@ -156,10 +149,7 @@ var savePasswordCmd = &cobra.Command{
 	Short: "Save login && password in storage",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if !session.IsSessionValid(refreshTokenSecretKey) {
-			logger.Error("Session expired or not found. Please login again")
-
-			os.Exit(1)
-			return
+			logger.Fatal("Session expired or not found. Please login again")
 		}
 
 		logger.Info("Session is valid")
@@ -167,27 +157,27 @@ var savePasswordCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		loginStr, err := cmd.Flags().GetString("login")
 		if err != nil {
-			log.Fatalf("failed to get login: %s\n", err.Error())
+			logger.Fatal("failed to get login:", zap.Error(err))
 		}
 
 		passStr, err := cmd.Flags().GetString("password")
 		if err != nil {
-			log.Fatalf("failed to get password: %s\n", err.Error())
+			logger.Fatal("failed to get password:", zap.Error(err))
 		}
 
-		serverAddr = ":9000" // TO BE UPDATED
-
+		// Initializing Upload service.
 		clientService := serviceUp.New()
 
+		// Creating new uuid for credentials to be saved.
 		id := uuid.New()
 
+		// Sending credentials with created uuid to server.
 		if err := clientService.SendPassword(serverAddr, loginStr, passStr, id.String()); err != nil {
-			log.Fatal("failed to send password: ", zap.Error(err))
+			logger.Error("failed to send credentials to server:", zap.Error(err))
 		}
 
-		log.Printf("login %s && password %s saved successfully\n", loginStr, passStr)
-
-		log.Printf("Your uuid is %s\n", id.String())
+		logger.Info("Credentials saved successfully. Please save your uuid and use it to retrive your data back from Goph-keeper.",
+		 zap.String("uuid:", id.String()))
 	},
 }
 
@@ -197,10 +187,7 @@ var downloadTextCmd = &cobra.Command{
 	Short: "Download arbitrary text data from storage",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if !session.IsSessionValid(refreshTokenSecretKey) {
-			logger.Error("Session expired or not found. Please login again")
-
-			os.Exit(1)
-			return
+			logger.Fatal("Session expired or not found. Please login again")
 		}
 
 		logger.Info("Session is valid")
@@ -208,16 +195,15 @@ var downloadTextCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		idStr, err := cmd.Flags().GetString("id")
 		if err != nil {
-			log.Fatalf("failed to get password uuid: %s\n", err.Error())
+			logger.Fatal("failed to get text uuid:", zap.Error(err))
 		}
 
-		// TODO
-		serverAddr = ":9000" // TO BE UPDATED
-
+		// Initializing download service.
 		clientService := serviceDown.New()
 
+		// Requesting text with provided uuid.
 		if err := clientService.DownloadText(serverAddr, idStr); err != nil {
-			log.Fatal("failed to obtain text data from goph-keeper: ", zap.Error(err))
+			logger.Fatal("failed to obtain text data from goph-keeper: ", zap.Error(err))
 		}
 	},
 }
@@ -229,33 +215,28 @@ var saveTextCmd = &cobra.Command{
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if !session.IsSessionValid(refreshTokenSecretKey) {
 			logger.Error("Session expired or not found. Please login again")
-
-			os.Exit(1)
-			return
 		}
 
 		logger.Info("Session is valid")
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-
 		textData, err := cmd.Flags().GetString("text")
 		if err != nil {
-			log.Fatalf("failed to get text: %s\n", err.Error())
+			logger.Fatal("failed to get text to be saved:", zap.Error(err))
 		}
-
-		serverAddr = ":9000" // TO BE UPDATED
-
+		
+		// Creating new uuid for text to be saved
 		id := uuid.New()
 
+		// Initializing Upload service
 		clientService := serviceUp.New()
 
 		if err := clientService.SendText(serverAddr, textData, id.String()); err != nil {
-			log.Fatal("failed to send text: ", zap.Error(err))
+			logger.Fatal("failed to save text", zap.Error(err))
 		}
 
-		log.Println("text saved successfully\n")
-
-		log.Printf("Your uuid is %s\n", id.String())
+		logger.Info("Your text saved successfully. Please save your uuid and use it to retrive your data back from Goph-keeper.",
+		 zap.String("uuid:", id.String()))
 	},
 }
 
@@ -265,10 +246,7 @@ var downloadBinCmd = &cobra.Command{
 	Short: "Download binary data from storage",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if !session.IsSessionValid(refreshTokenSecretKey) {
-			logger.Error("Session expired or not found. Please login again")
-
-			os.Exit(1)
-			return
+			logger.Fatal("Session expired or not found. Please login again")
 		}
 
 		logger.Info("Session is valid")
@@ -276,23 +254,20 @@ var downloadBinCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		idStr, err := cmd.Flags().GetString("id")
 		if err != nil {
-			log.Fatalf("failed to get password uuid: %s\n", err.Error())
+			logger.Fatal("failed to get file uuid:", zap.Error(err))
 		}
 
 		fileNameStr, err := cmd.Flags().GetString("file_name")
 		if err != nil {
-			log.Fatalf("failed to get file_name: %s\n", err.Error())
+			logger.Fatal("failed to get file_name:", zap.Error(err))
 		}
 
-		// TODO
-		serverAddr = ":9000" // TO BE UPDATED
-
+		// Initializing Download service
 		clientService := serviceDown.New()
 
 		if err := clientService.DownloadFile(serverAddr, idStr, fileNameStr); err != nil {
-			log.Fatal("failed to obtain bin data from goph-keeper: ", zap.Error(err))
+			logger.Fatal("failed to obtain requested binary data from goph-keeper: ", zap.Error(err))
 		}
-
 	},
 }
 
@@ -302,10 +277,7 @@ var saveBinCmd = &cobra.Command{
 	Short: "Save binary data in storage",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if !session.IsSessionValid(refreshTokenSecretKey) {
-			logger.Error("Session expired or not found. Please login again")
-
-			os.Exit(1)
-			return
+			logger.Fatal("Session expired or not found. Please login again")
 		}
 
 		logger.Info("Session is valid")
@@ -316,19 +288,18 @@ var saveBinCmd = &cobra.Command{
 			log.Fatalf("failed to get path: %s\n", err.Error())
 		}
 
-		serverAddr = ":9000" // TO BE UPDATED
-
+		// Creating new uuid for the file to be saved
 		id := uuid.New()
 
+		// Creating Upload service
 		clientService := serviceUp.New()
 
 		if err := clientService.SendFile(serverAddr, pathStr, batchSize, id.String()); err != nil {
-			log.Fatal("failed to send binary file: ", zap.Error(err))
+			logger.Fatal("failed to save binary file: ", zap.Error(err))
 		}
 
-		log.Printf("biniry data %s saved successfully\n", pathStr)
-
-		log.Printf("Your uuid is %s\n", id.String())
+		logger.Info("Your file saved successfully. Please keep your uuid and use it to retrive your data back from Goph-keeper.",
+		 zap.String("uuid:", id.String()))
 	},
 }
 
@@ -338,10 +309,7 @@ var downloadCardInfoCmd = &cobra.Command{
 	Short: "Download card details from storage",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if !session.IsSessionValid(refreshTokenSecretKey) {
-			logger.Error("Session expired or not found. Please login again")
-
-			os.Exit(1)
-			return
+			logger.Fatal("Session expired or not found. Please login again")
 		}
 
 		logger.Info("Session is valid")
@@ -349,16 +317,14 @@ var downloadCardInfoCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		idStr, err := cmd.Flags().GetString("id")
 		if err != nil {
-			log.Fatalf("failed to get password uuid: %s\n", err.Error())
+			logger.Fatal("failed to get bank details uuid:", zap.Error(err))
 		}
 
-		// TODO
-		serverAddr = ":9000" // TO BE UPDATED
-
+		// Initializing Download service
 		clientService := serviceDown.New()
 
 		if err := clientService.DownloadBankDetails(serverAddr, idStr); err != nil {
-			log.Fatal("failed to obtain card details from goph-keeper: ", zap.Error(err))
+			logger.Fatal("failed to obtain card details from goph-keeper: ", zap.Error(err))
 		}
 
 	},
@@ -371,9 +337,6 @@ var saveCardInfoCmd = &cobra.Command{
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if !session.IsSessionValid(refreshTokenSecretKey) {
 			logger.Error("Session expired or not found. Please login again")
-
-			os.Exit(1)
-			return
 		}
 
 		logger.Info("Session is valid")
@@ -381,57 +344,54 @@ var saveCardInfoCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cardNumber, err := cmd.Flags().GetString("card_number")
 		if err != nil {
-			log.Fatalf("failed to get card_number: %s\n", err.Error())
+			logger.Fatal("failed to get card_number", zap.Error(err))
 		}
 
 		cvc, err := cmd.Flags().GetString("CVC")
 		if err != nil {
-			log.Fatalf("failed to get path: %s\n", err.Error())
+			logger.Fatal("failed to get CVC", zap.Error(err))
 		}
 
 		expDate, err := cmd.Flags().GetString("expiration_date")
 		if err != nil {
-			log.Fatalf("failed to get path: %s\n", err.Error())
+			logger.Fatal("failed to get expiration_date", zap.Error(err))
 		}
 
-		serverAddr = ":9000" // TO BE UPDATED
-
+		// Creating new uuid for the bank details to be saved
 		id := uuid.New()
 
+		// Creating Upload service
 		clientService := serviceUp.New()
 
 		if err := clientService.SendBankDetails(serverAddr, cardNumber, cvc, expDate, id.String()); err != nil {
-			log.Fatal("failed to send binary file: ", zap.Error(err))
+			logger.Fatal("failed to save bank details: ", zap.Error(err))
 		}
 
-		log.Println("bank card details saved successfully\n")
-
-		log.Printf("Your uuid is %s\n", id.String())
+		logger.Info("Your bank details saved successfully. Please keep your uuid and use it to retrive your data back from Goph-keeper.",
+		 zap.String("uuid:", id.String()))
 	},
 }
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		logger.Error("error while executing root cmd", zap.Error(err))
-		os.Exit(1)
+		logger.Fatal("error executing root cmd",zap.Error(err))
 	}
 }
 
 func init() {
+	logger.Initialize(loggerLevel)
+
 	rootCmd.Flags().StringVarP(&loggerLevel, "log", "l", "info", "logger level")
-	// rootCmd.Flags().StringVarP(&filePath, "file", "f", "", "file path")
-	rootCmd.Flags().IntVarP(&batchSize, "batch", "b", 1024*1024, "batch size for sending")
+	rootCmd.Flags().IntVarP(&batchSize, "batch", "b", batchSize, "batch size for sending")
 	rootCmd.AddCommand(createCmd)
 	createCmd.AddCommand(createUserCmd)
 	createUserCmd.Flags().StringP("login", "l", "", "User login")
 	createUserCmd.Flags().StringP("password", "p", "", "User password")
-	createUserCmd.Flags().StringVarP(&serverAddr, "addr", "a", "", "server address")
 
 	rootCmd.AddCommand(loginCmd)
 	loginCmd.AddCommand(loginUserCmd)
 	loginUserCmd.Flags().StringP("login", "l", "", "User login")
 	loginUserCmd.Flags().StringP("password", "p", "", "User password")
-	loginUserCmd.Flags().StringVarP(&serverAddr, "addr", "a", "", "server address")
 
 	rootCmd.AddCommand(saveCmd)
 
@@ -439,7 +399,6 @@ func init() {
 	saveCmd.AddCommand(savePasswordCmd)
 	savePasswordCmd.Flags().StringP("login", "l", "", "Login to be saved")
 	savePasswordCmd.Flags().StringP("password", "p", "", "Password to be saved")
-	savePasswordCmd.Flags().StringVarP(&serverAddr, "addr", "a", "", "server address")
 
 	rootCmd.AddCommand(downloadCmd)
 
@@ -475,9 +434,4 @@ func init() {
 	downloadCmd.AddCommand(downloadCardInfoCmd)
 	downloadCardInfoCmd.Flags().StringP("id", "i", "", "A Universally Unique Identifier of the saved card details")
 
-	logger.Initialize(loggerLevel)
-
-	if err := createUserCmd.MarkFlagRequired("addr"); err != nil {
-		log.Fatal(err)
-	}
 }
