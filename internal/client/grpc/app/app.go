@@ -19,8 +19,8 @@ var (
 	refreshTokenSecretKey = "W4/X+LLjehdxptt4YgGFCvMpq5ewptpZZYRHY6A72g0="
 	accessTokenSecretKey  = "VqvguGiffXILza1f44TWXowDT4zwf03dtXmqWW4SYyE="
 	sessionDuration       = time.Minute * 7
-	batchSize = 1024*1024
-	serverAddr = ":9000"
+	batchSize             = 1024 * 1024
+	serverAddr            = ":9000"
 )
 
 var (
@@ -86,7 +86,7 @@ var loginUserCmd = &cobra.Command{
 		if err != nil {
 			logger.Fatal("failed to login:", zap.Error(err))
 		}
-		
+
 		if token == "" {
 			logger.Fatal("failed to login, jwt token has not been received")
 		}
@@ -177,7 +177,7 @@ var savePasswordCmd = &cobra.Command{
 		}
 
 		logger.Info("Credentials saved successfully. Please save your uuid and use it to retrive your data back from Goph-keeper.",
-		 zap.String("uuid:", id.String()))
+			zap.String("uuid:", id.String()))
 	},
 }
 
@@ -224,7 +224,7 @@ var saveTextCmd = &cobra.Command{
 		if err != nil {
 			logger.Fatal("failed to get text to be saved:", zap.Error(err))
 		}
-		
+
 		// Creating new uuid for text to be saved
 		id := uuid.New()
 
@@ -236,7 +236,7 @@ var saveTextCmd = &cobra.Command{
 		}
 
 		logger.Info("Your text saved successfully. Please save your uuid and use it to retrive your data back from Goph-keeper.",
-		 zap.String("uuid:", id.String()))
+			zap.String("uuid:", id.String()))
 	},
 }
 
@@ -299,7 +299,7 @@ var saveBinCmd = &cobra.Command{
 		}
 
 		logger.Info("Your file saved successfully. Please keep your uuid and use it to retrive your data back from Goph-keeper.",
-		 zap.String("uuid:", id.String()))
+			zap.String("uuid:", id.String()))
 	},
 }
 
@@ -368,13 +368,13 @@ var saveCardInfoCmd = &cobra.Command{
 		}
 
 		logger.Info("Your bank details saved successfully. Please keep your uuid and use it to retrive your data back from Goph-keeper.",
-		 zap.String("uuid:", id.String()))
+			zap.String("uuid:", id.String()))
 	},
 }
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		logger.Fatal("error executing root cmd",zap.Error(err))
+		logger.Fatal("error executing root cmd", zap.Error(err))
 	}
 }
 

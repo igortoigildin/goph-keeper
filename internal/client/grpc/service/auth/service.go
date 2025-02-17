@@ -28,7 +28,7 @@ func New(addr string) *AuthService {
 func (auth *AuthService) RegisterNewUser(ctx context.Context, login, pass string) error {
 	conn, err := grpc.Dial(auth.addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return err
+		return fmt.Errorf("error dialing client: %w", err)
 	}
 	defer conn.Close()
 
@@ -59,7 +59,7 @@ func (auth *AuthService) RegisterNewUser(ctx context.Context, login, pass string
 func (auth *AuthService) Login(ctx context.Context, login, pass string) (string, error) {
 	conn, err := grpc.Dial(auth.addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error dialing client: %w", err)
 	}
 	defer conn.Close()
 
@@ -69,6 +69,7 @@ func (auth *AuthService) Login(ctx context.Context, login, pass string) (string,
 
 	if err != nil {
 		logger.Error("login error", zap.Error(err))
+
 		return "", errors.New("failed to login")
 	}
 

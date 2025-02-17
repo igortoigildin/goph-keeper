@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 
 	desc "github.com/igortoigildin/goph-keeper/pkg/download_v1"
 	fl "github.com/igortoigildin/goph-keeper/pkg/file"
@@ -14,6 +13,11 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+)
+
+const (
+	login    = "login"
+	password = "password"
 )
 
 type Downloader interface {
@@ -34,25 +38,25 @@ func New() Downloader {
 func (s *ClientService) DownloadPassword(addr, id string) error {
 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
 	if err != nil {
-		return err
+		return fmt.Errorf("error dialing client: %w", err)
 	}
 	defer conn.Close()
 
 	s.client = desc.NewDownloadV1Client(conn)
 	ss, err := session.LoadSession()
 
-	md := metadata.Pairs("login", ss.Login)
+	md := metadata.Pairs(login, ss.Login)
 
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
 	resp, err := s.client.DownloadPassword(ctx, &desc.DownloadPasswordRequest{Uuid: id})
 	if err != nil {
-		logger.Fatal("error while receiving password", zap.Error(err))
+		logger.Error("error receiving password", zap.Error(err))
+
+		return fmt.Errorf("error downloading password: %w", err)
 	}
 
 	data := resp.GetData()
-
-	fmt.Println(data)
 
 	logger.Info("Your data: ", zap.Any("login", data["login"]), zap.Any("password", data["password"]))
 
@@ -62,7 +66,7 @@ func (s *ClientService) DownloadPassword(addr, id string) error {
 func (s *ClientService) DownloadText(addr, id string) error {
 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
 	if err != nil {
-		return err
+		return fmt.Errorf("error dialing client: %w", err)
 	}
 	defer conn.Close()
 
@@ -75,7 +79,9 @@ func (s *ClientService) DownloadText(addr, id string) error {
 
 	resp, err := s.client.DownloadText(ctx, &desc.DownloadTextRequest{Uuid: id})
 	if err != nil {
-		logger.Fatal("error while receiving text", zap.Error(err))
+		logger.Error("error while receiving text", zap.Error(err))
+
+		return fmt.Errorf("error downloading text: %w", err)
 	}
 
 	data := resp.GetText()
@@ -88,26 +94,27 @@ func (s *ClientService) DownloadText(addr, id string) error {
 func (s *ClientService) DownloadFile(addr string, id, fileName string) error {
 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
 	if err != nil {
-		return err
+		return fmt.Errorf("error dialing client: %w", err)
 	}
 	defer conn.Close()
 
 	s.client = desc.NewDownloadV1Client(conn)
 	ss, err := session.LoadSession()
 
-	md := metadata.Pairs("login", ss.Login)
+	md := metadata.Pairs(login, ss.Login)
 
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 	stream, err := s.client.DownloadFile(ctx, &desc.DownloadFileRequest{Uuid: id})
 	if err != nil {
-		logger.Fatal("error while receiving file", zap.Error(err))
+		logger.Error("error downloading file", zap.Error(err))
+
+		return fmt.Errorf("error downloading file: %w", err)
 	}
 
 	file := fl.NewFile()
 	var fileSize uint32
 	fileSize = 0
 	defer func() {
-
 		if err := file.OutputFile.Close(); err != nil {
 			logger.Error("error", zap.Error(err))
 		}
@@ -124,16 +131,18 @@ func (s *ClientService) DownloadFile(addr string, id, fileName string) error {
 
 		if err != nil {
 			logger.Error("error", zap.Error(err))
-			return err
+
+			return fmt.Errorf("error receiving byte chunk:", zap.Error(err))
 		}
 
 		chunk := req.GetChunk()
 		fileSize += uint32(len(chunk))
-		log.Printf("received a chunk with size: %d\n", fileSize)
+		logger.Info("received a chunk with size:", zap.Uint32("size", fileSize))
 
 		if err := file.Write(chunk); err != nil {
-			log.Println(err)
-			return err
+			logger.Error("error:", zap.Error(err))
+
+			return fmt.Errorf("error adding byte chunk to file: %w", err)
 		}
 	}
 
@@ -143,19 +152,21 @@ func (s *ClientService) DownloadFile(addr string, id, fileName string) error {
 func (s *ClientService) DownloadBankDetails(addr, id string) error {
 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
 	if err != nil {
-		return err
+		return fmt.Errorf("error dialing client: %w", err)
 	}
 	defer conn.Close()
 
 	s.client = desc.NewDownloadV1Client(conn)
 	ss, err := session.LoadSession()
 
-	md := metadata.Pairs("login", ss.Login)
+	md := metadata.Pairs(login, ss.Login)
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
 	resp, err := s.client.DownloadBankData(ctx, &desc.DownloadBankDataRequest{Uuid: id})
 	if err != nil {
-		logger.Fatal("error while receiving text", zap.Error(err))
+		logger.Error("error downloading text", zap.Error(err))
+
+		return fmt.Errorf("erorr downloading text: %w", err)
 	}
 
 	data := resp.GetData()
