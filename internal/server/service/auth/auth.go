@@ -88,7 +88,7 @@ func (a *authServ) RegisterNewUser(ctx context.Context, login string, pass strin
 	if err != nil {
 		logger.Error("failed to generate password hash", zap.Error(err))
 
-		return 0, fmt.Errorf("%s: %w", op, zap.Error(err))
+		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
 	id, err := a.userRepo.SaveUser(ctx, login, passHash)

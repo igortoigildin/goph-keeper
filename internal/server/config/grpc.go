@@ -16,9 +16,9 @@ type GRPCConfig interface {
 	Address() string
 }
 
-type grpcConfig struct {
-	host string
-	port string
+type GrpcConfig struct {
+	Host string
+	Port string  `yaml:"port"`
 }
 
 func NewGRPCConfig() (GRPCConfig, error) {
@@ -32,12 +32,12 @@ func NewGRPCConfig() (GRPCConfig, error) {
 		return nil, errors.New("grpc port not found")
 	}
 
-	return &grpcConfig{
-		host: host,
-		port: port,
+	return &GrpcConfig{
+		Host: host,
+		Port: port,
 	}, nil
 }
 
-func (cfg *grpcConfig) Address() string {
-	return net.JoinHostPort(cfg.host, cfg.port)
+func (cfg *GrpcConfig) Address() string {
+	return net.JoinHostPort(cfg.Host, cfg.Port)
 }

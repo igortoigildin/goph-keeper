@@ -134,7 +134,7 @@ func (s *ClientService) DownloadFile(addr string, id, fileName string) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error receiving byte chunk:", zap.Error(err))
+			return fmt.Errorf("error receiving byte chunk: %w", err)
 		}
 
 		chunk := req.GetChunk()

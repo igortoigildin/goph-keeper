@@ -11,10 +11,9 @@ import (
 )
 
 func (i *Implementation) Login(ctx context.Context, req *descAuth.LoginRequest) (*descAuth.LoginResponse, error) {
-
 	tkn, err := i.authService.Login(ctx, req.Login, req.Password)
 	if err != nil {
-		if errors.As(err, &auth.ErrInvalidCredentials) {
+		if errors.Is(err, auth.ErrInvalidCredentials) {
 			return nil, status.Error(codes.Unauthenticated, "invalid credentials")
 		} else {
 			return nil, status.Error(codes.Unknown, "failed to login")

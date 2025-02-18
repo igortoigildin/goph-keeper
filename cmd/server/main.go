@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"log"
 
 	"github.com/igortoigildin/goph-keeper/internal/server/app"
@@ -10,25 +9,24 @@ import (
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
 )
 
-var configPath string
+// var configPath string
 
-func init() {
-	flag.StringVar(&configPath, "config-path", ".env", "path to config file")
-}
+// func init() {
+// 	flag.StringVar(&configPath, "config-path", ".env", "path to config file")
+// }
 
 func main() {
-	ctx := context.Background()
-	cfg := config.LoadConfig()
+	cfg := config.MustLoad()
 	logger.Initialize(cfg.FlagLogLevel)
 
-	a, err := app.NewApp(ctx)
+	app, err := app.NewApp(context.Background())
 	if err != nil {
 		log.Fatalf("failed to init app: %s", err.Error())
 	}
 
 	logger.Info("app initialized successfully")
 
-	err = a.Run()
+	err = app.Run()
 	if err != nil {
 		log.Fatalf("failed to run app: %s", err.Error())
 	}
