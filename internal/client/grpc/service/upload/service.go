@@ -46,8 +46,6 @@ func (s *ClientService) SendPassword(addr, loginStr, passStr string, id string) 
 
 	ss, err := session.LoadSession()
 	if err != nil {
-		logger.Error("error loading session", zap.Error(err))
-
 		return fmt.Errorf("error loading session: %w", err)
 	}
 
@@ -56,7 +54,9 @@ func (s *ClientService) SendPassword(addr, loginStr, passStr string, id string) 
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
 	if err = s.uploadPassword(ctx, loginStr, passStr); err != nil {
-		logger.Fatal("error sending file", zap.Error(err))
+		logger.Error("error sending file", zap.Error(err))
+
+		return err
 	}
 
 	return nil
@@ -69,8 +69,6 @@ func (s *ClientService) uploadPassword(ctx context.Context, loginStr, passStr st
 
 	_, err := s.client.UploadPassword(ctx, &desc.UploadPasswordRequest{Data: data})
 	if err != nil {
-		logger.Error("error", zap.Error(err))
-
 		return fmt.Errorf("error uploading credentials: %w", err)
 	}
 
@@ -90,8 +88,6 @@ func (s *ClientService) SendBankDetails(addr, cardNumber, cvc, expDate string, i
 
 	ss, err := session.LoadSession()
 	if err != nil {
-		logger.Error("error loading session", zap.Error(err))
-
 		return fmt.Errorf("error loading session: %w", err)
 	}
 
@@ -100,7 +96,9 @@ func (s *ClientService) SendBankDetails(addr, cardNumber, cvc, expDate string, i
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
 	if err = s.uploadBankDetails(ctx, cardNumber, cvc, expDate); err != nil {
-		logger.Fatal("error while sending file", zap.Error(err))
+		logger.Error("error while sending file", zap.Error(err))
+
+		return err
 	}
 
 	return nil
@@ -114,8 +112,6 @@ func (s *ClientService) uploadBankDetails(ctx context.Context, cardNumber, cvc, 
 
 	_, err := s.client.UploadBankData(ctx, &desc.UploadBankDataRequest{Data: data})
 	if err != nil {
-		logger.Error("error", zap.Error(err))
-
 		return fmt.Errorf("error uploading bank details: %w", err)
 	}
 
@@ -135,8 +131,6 @@ func (s *ClientService) SendText(addr, text string, id string) error {
 
 	ss, err := session.LoadSession()
 	if err != nil {
-		logger.Error("error loading session", zap.Error(err))
-
 		return fmt.Errorf("error loading session: %w", err)
 	}
 
@@ -144,7 +138,9 @@ func (s *ClientService) SendText(addr, text string, id string) error {
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
 	if err = s.uploadText(ctx, text); err != nil {
-		logger.Fatal("error while sending file", zap.Error(err))
+		logger.Error("error while sending file", zap.Error(err))
+
+		return err
 	}
 
 	return nil
@@ -153,8 +149,6 @@ func (s *ClientService) SendText(addr, text string, id string) error {
 func (s *ClientService) uploadText(ctx context.Context, text string) error {
 	_, err := s.client.UploadText(ctx, &desc.UploadTextRequest{Text: text})
 	if err != nil {
-		logger.Error("error", zap.Error(err))
-
 		return fmt.Errorf("error uploading text: %w", err)
 	}
 
@@ -174,8 +168,6 @@ func (s *ClientService) SendFile(addr string, filePath string, batchSize int, id
 
 	ss, err := session.LoadSession()
 	if err != nil {
-		logger.Error("error loading session", zap.Error(err))
-
 		return fmt.Errorf("error loading session: %w", err)
 	}
 
@@ -183,7 +175,9 @@ func (s *ClientService) SendFile(addr string, filePath string, batchSize int, id
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
 	if err = s.uploadFile(ctx, filePath, batchSize); err != nil {
-		logger.Fatal("error while sending file", zap.Error(err))
+		logger.Error("error while sending file", zap.Error(err))
+
+		return err
 	}
 
 	return nil
@@ -192,15 +186,11 @@ func (s *ClientService) SendFile(addr string, filePath string, batchSize int, id
 func (s *ClientService) uploadFile(ctx context.Context, filepath string, batchSize int) error {
 	stream, err := s.client.UploadFile(ctx)
 	if err != nil {
-		logger.Error("error", zap.Error(err))
-
 		return fmt.Errorf("error uploading file: %w", err)
 	}
 
 	file, err := os.Open(filepath)
 	if err != nil {
-		logger.Error("error", zap.Error(err))
-
 		return fmt.Errorf("error opening file: %w", err)
 	}
 	buf := make([]byte, batchSize)
@@ -216,8 +206,6 @@ func (s *ClientService) uploadFile(ctx context.Context, filepath string, batchSi
 		chunk := buf[:num]
 
 		if err := stream.Send(&desc.UploadFileRequest{FileName: filepath, Chunk: chunk}); err != nil {
-			logger.Error("error", zap.Error(err))
-
 			return fmt.Errorf("error uploading bytes: %w", err)
 		}
 
@@ -230,8 +218,6 @@ func (s *ClientService) uploadFile(ctx context.Context, filepath string, batchSi
 	}
 	res, err := stream.CloseAndRecv()
 	if err != nil {
-		logger.Error("error", zap.Error(err))
-
 		return fmt.Errorf("error closing stream: %w", err)
 	}
 

@@ -2,12 +2,9 @@ package register
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	desc "github.com/igortoigildin/goph-keeper/pkg/auth_v1"
-	"github.com/igortoigildin/goph-keeper/pkg/logger"
-	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -38,17 +35,11 @@ func (auth *AuthService) RegisterNewUser(ctx context.Context, login, pass string
 	if err != nil {
 		if e, ok := status.FromError(err); ok {
 			if e.Code() == codes.AlreadyExists {
-				logger.Error(`User already exists`, zap.String("error", e.Message()))
-
 				return fmt.Errorf("failed to create user: %s", err)
 			} else {
-				logger.Error(e.Message(), zap.Any("status", e.Code()))
-
 				return fmt.Errorf("failed to create user: %s", err)
 			}
 		} else {
-			logger.Error("failed to parse error", zap.Error(err))
-
 			return fmt.Errorf("failed to create user: %s", err)
 		}
 	}
@@ -66,11 +57,8 @@ func (auth *AuthService) Login(ctx context.Context, login, pass string) (string,
 	auth.client = desc.NewAuthV1Client(conn)
 
 	resp, err := auth.client.Login(ctx, &desc.LoginRequest{Login: login, Password: pass})
-
 	if err != nil {
-		logger.Error("login error", zap.Error(err))
-
-		return "", errors.New("failed to login")
+		return "", fmt.Errorf("authentication error: %w", err)
 	}
 
 	return resp.RefreshToken, nil

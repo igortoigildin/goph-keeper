@@ -7,8 +7,8 @@ import (
 
 	desc "github.com/igortoigildin/goph-keeper/pkg/download_v1"
 	fl "github.com/igortoigildin/goph-keeper/pkg/file"
-
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
+
 	"github.com/igortoigildin/goph-keeper/pkg/session"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -46,8 +46,6 @@ func (s *ClientService) DownloadPassword(addr, id string) error {
 	s.client = desc.NewDownloadV1Client(conn)
 	ss, err := session.LoadSession()
 	if err != nil {
-		logger.Error("error loading session", zap.Error(err))
-
 		return fmt.Errorf("error loading session: %w", err)
 	}
 
@@ -57,8 +55,6 @@ func (s *ClientService) DownloadPassword(addr, id string) error {
 
 	resp, err := s.client.DownloadPassword(ctx, &desc.DownloadPasswordRequest{Uuid: id})
 	if err != nil {
-		logger.Error("error receiving password", zap.Error(err))
-
 		return fmt.Errorf("error downloading password: %w", err)
 	}
 
@@ -79,8 +75,6 @@ func (s *ClientService) DownloadText(addr, id string) error {
 	s.client = desc.NewDownloadV1Client(conn)
 	ss, err := session.LoadSession()
 	if err != nil {
-		logger.Error("error loading session", zap.Error(err))
-
 		return fmt.Errorf("error loading session: %w", err)
 	}
 
@@ -90,8 +84,6 @@ func (s *ClientService) DownloadText(addr, id string) error {
 
 	resp, err := s.client.DownloadText(ctx, &desc.DownloadTextRequest{Uuid: id})
 	if err != nil {
-		logger.Error("error while receiving text", zap.Error(err))
-
 		return fmt.Errorf("error downloading text: %w", err)
 	}
 
@@ -112,8 +104,6 @@ func (s *ClientService) DownloadFile(addr string, id, fileName string) error {
 	s.client = desc.NewDownloadV1Client(conn)
 	ss, err := session.LoadSession()
 	if err != nil {
-		logger.Error("error loading session", zap.Error(err))
-
 		return fmt.Errorf("error loading session: %w", err)
 	}
 
@@ -122,8 +112,6 @@ func (s *ClientService) DownloadFile(addr string, id, fileName string) error {
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 	stream, err := s.client.DownloadFile(ctx, &desc.DownloadFileRequest{Uuid: id})
 	if err != nil {
-		logger.Error("error downloading file", zap.Error(err))
-
 		return fmt.Errorf("error downloading file: %w", err)
 	}
 
@@ -146,8 +134,6 @@ func (s *ClientService) DownloadFile(addr string, id, fileName string) error {
 		}
 
 		if err != nil {
-			logger.Error("error", zap.Error(err))
-
 			return fmt.Errorf("error receiving byte chunk:", zap.Error(err))
 		}
 
@@ -156,8 +142,6 @@ func (s *ClientService) DownloadFile(addr string, id, fileName string) error {
 		logger.Info("received a chunk with size:", zap.Uint32("size", fileSize))
 
 		if err := file.Write(chunk); err != nil {
-			logger.Error("error:", zap.Error(err))
-
 			return fmt.Errorf("error adding byte chunk to file: %w", err)
 		}
 	}
@@ -175,8 +159,6 @@ func (s *ClientService) DownloadBankDetails(addr, id string) error {
 	s.client = desc.NewDownloadV1Client(conn)
 	ss, err := session.LoadSession()
 	if err != nil {
-		logger.Error("error loading session", zap.Error(err))
-
 		return fmt.Errorf("error loading session: %w", err)
 	}
 
@@ -185,8 +167,6 @@ func (s *ClientService) DownloadBankDetails(addr, id string) error {
 
 	resp, err := s.client.DownloadBankData(ctx, &desc.DownloadBankDataRequest{Uuid: id})
 	if err != nil {
-		logger.Error("error downloading text", zap.Error(err))
-
 		return fmt.Errorf("erorr downloading text: %w", err)
 	}
 
