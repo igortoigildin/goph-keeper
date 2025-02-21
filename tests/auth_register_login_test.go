@@ -37,6 +37,28 @@ func TestRegisterLogin_Login_HappyPath(t *testing.T) {
 	require.NotEmpty(t, token)
 }
 
+func TestRegisterLogin_DuplicatedRegistration(t *testing.T) {
+	ctx, st := suite.New(t)
+
+	login := gofakeit.Bird()
+	pass := randomFakePassword()
+
+	resReg, err := st.AuthClient.Register(ctx, &auth_v1.RegisterRequest{
+		Login: login,
+		Password: pass,
+	})
+	require.NoError(t, err)
+	assert.NotEmpty(t, resReg.GetUserId())
+
+	resReg, err = st.AuthClient.Register(ctx, &auth_v1.RegisterRequest{
+		Login: login,
+		Password: pass,
+	})
+	require.Error(t, err)
+	assert.Empty(t, resReg.GetUserId())
+	assert.ErrorContains(t, err, "already exists")
+}
+
 func randomFakePassword() string {
 	return gofakeit.Password(true, true, true, true, false, passDefaultLen)
 }

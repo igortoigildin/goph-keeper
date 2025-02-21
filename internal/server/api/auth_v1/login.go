@@ -11,7 +11,15 @@ import (
 )
 
 func (i *Implementation) Login(ctx context.Context, req *descAuth.LoginRequest) (*descAuth.LoginResponse, error) {
-	tkn, err := i.authService.Login(ctx, req.Login, req.Password)
+	if req.GetLogin() == "" {
+		return nil, status.Error(codes.InvalidArgument, "login is requeired")
+	}
+
+	if req.GetPassword() == "" {
+		return nil, status.Error(codes.InvalidArgument, "password is required")
+	}
+
+	tkn, err := i.authService.Login(ctx, req.GetLogin(), req.GetPassword())
 	if err != nil {
 		if errors.Is(err, auth.ErrInvalidCredentials) {
 			return nil, status.Error(codes.Unauthenticated, "invalid credentials")

@@ -35,12 +35,14 @@ func (auth *AuthService) RegisterNewUser(ctx context.Context, login, pass string
 	if err != nil {
 		if e, ok := status.FromError(err); ok {
 			if e.Code() == codes.AlreadyExists {
-				return fmt.Errorf("failed to create user: %s", err)
+				return fmt.Errorf("failed to create user: %w", err) 
+			} else if e.Code() == codes.InvalidArgument {
+				return fmt.Errorf("invalid argument: %w", err)
 			} else {
-				return fmt.Errorf("failed to create user: %s", err)
+				return fmt.Errorf("failed to create user: %w", err)
 			}
 		} else {
-			return fmt.Errorf("failed to create user: %s", err)
+			return fmt.Errorf("failed to create user: %w", err)
 		}
 	}
 

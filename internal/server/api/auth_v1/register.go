@@ -13,6 +13,14 @@ import (
 )
 
 func (i *Implementation) Register(ctx context.Context, req *descAuth.RegisterRequest) (*descAuth.RegisterResponse, error) {
+	if req.GetLogin() == "" {
+		return nil, status.Error(codes.InvalidArgument, "login is requeired")
+	}
+
+	if req.GetPassword() == "" {
+		return nil, status.Error(codes.InvalidArgument, "password is required")
+	}
+	
 	id, err := i.authService.RegisterNewUser(ctx, req.Login, req.Password)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
