@@ -51,8 +51,8 @@ func MustLoadPath(configPath string) *Config {
 		panic("cannot read config: " + err.Error())
 	}
 
-	flag.StringVar(&cfg.FlagLogLevel, "l", "info", "log level")
-	flag.Parse()
+	// flag.StringVar(&cfg.FlagLogLevel, "l", "info", "log level")
+	// flag.Parse()
 
 	if envLogLevel := os.Getenv("LOG_LEVEL"); envLogLevel != "" {
 		cfg.FlagLogLevel = envLogLevel

@@ -14,7 +14,7 @@ import (
 
 func (i *Implementation) Register(ctx context.Context, req *descAuth.RegisterRequest) (*descAuth.RegisterResponse, error) {
 	if req.GetLogin() == "" {
-		return nil, status.Error(codes.InvalidArgument, "login is requeired")
+		return nil, status.Error(codes.InvalidArgument, "login is required")
 	}
 
 	if req.GetPassword() == "" {

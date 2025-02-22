@@ -12,7 +12,7 @@ import (
 
 func (i *Implementation) Login(ctx context.Context, req *descAuth.LoginRequest) (*descAuth.LoginResponse, error) {
 	if req.GetLogin() == "" {
-		return nil, status.Error(codes.InvalidArgument, "login is requeired")
+		return nil, status.Error(codes.InvalidArgument, "login is required")
 	}
 
 	if req.GetPassword() == "" {
