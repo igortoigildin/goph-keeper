@@ -100,5 +100,5 @@ clear-client:
 ### Run test coverage command
 ### Derectories with code for init server and client were excluded from coverage.
 test-cover:
-	go test -cover -v -coverpkg=./internal/server/service...,./internal/server/storage...,./internal/client/grpc/service...,./tests... -coverprofile=profile.cov ./...
+	go test -v -coverpkg=./... -coverprofile=profile.cov ./...
 	go tool cover -func profile.cov

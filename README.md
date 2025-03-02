@@ -9,7 +9,7 @@ The project implements a storage system for storing different types of data, suc
 1. **Storage System**
 
    - Before using this CLI app, every user should register and log in with their credentials.
-   - Using GophKeeper, users can save their passwords, text, bank card details, or any type of binary files.
+   - Using GophKeeper, users are able to save their passwords, text, bank card details, or any type of binary files.
    - After uploading their data, each user will receive a unique ID to download their data later.
 
 2. **Technologies**
@@ -90,6 +90,11 @@ The project implements a storage system for storing different types of data, suc
    make migration-up
    ```
 
+9. Run tests (docker and server must be running):
+   ```bash
+   make test-cover
+   ```
+
 ### Commands Examples
 
 #### Registration and Login
@@ -106,22 +111,53 @@ The project implements a storage system for storing different types of data, suc
     bin/client login user -l temp_login -p 123
 ```
 
-#### Save commands
+#### Save and download text data
+
+1. Save text data
 
 ```bash
     bin/client save text -t sample_text
+```
+
+2. Download text data. Your should use your unique id for data to make downloads as per below example.
+
+```bash
+   bin/client download password -i cb4b3e82-fd37-4faa-8d38-603a65990a57
+```
+
+3. Save login&password data
+
+```bash
     bin/client save password -l fakelogin -p 1234
-    bin/client save bin -n migration -p migration.sh
+```
+
+4. Download login&password data. Your should use your unique id for data to make downloads as per below example.
+
+```bash
+   bin/client download password -i cb4b3e82-fd37-4faa-8d38-603a65990a57
+```
+
+5. Save bank details
+
+```bash
     bin/client save card -n 1234 -c 329 -e 12/04/1005
 ```
 
-#### Download commands
-
-Your should use your unique id for data to make downloads as per below examples.
+6. Download bank details. Your should use your unique id for data to make downloads as per below example.
 
 ```bash
-    bin/client download password -i cb4b3e82-fd37-4faa-8d38-603a65990a57
-    bin/client download text -i 80a0766f-1b53-4603-9738-1bcc954fa4d3
     bin/client download card -i 0d9efc10-36cc-425b-a599-465b21855977
-    bin/client download bin -i 092049f9-2719-44eb-aa12-25e167dcba13 -n samplename
+```
+
+7. Save binary data
+
+```bash
+    bin/client save bin -n migration -p migration.sh
+```
+
+8. Download binary data. Your should use your unique id for data to make downloads as per below example.
+   The file will be downloaded to client_files directory.
+
+```bash
+    bin/client download bin -i 092049f9-2719-44eb-aa12-25e167dcba13 -n tempname
 ```
