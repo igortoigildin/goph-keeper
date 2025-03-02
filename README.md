@@ -160,5 +160,5 @@ Please note, that you should use your unique id for data to make downloads as pe
 8. Download binary data. The file will be downloaded to client_files directory.
 
 ```bash
-    bin/client download bin -i 092049f9-2719-44eb-aa12-25e167dcba13 -n tempname
+    bin/client download bin -n tempname -i 092049f9-2719-44eb-aa12-25e167dcba13
 ```
