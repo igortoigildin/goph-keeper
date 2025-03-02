@@ -2,8 +2,7 @@
 
 ## Project Description
 
-The project implements storage system for keeping different types of data, such as passwords,
-text and binary data.
+The project implements a storage system for storing different types of data, such as passwords, text, and binary data.
 
 ## Features
 
