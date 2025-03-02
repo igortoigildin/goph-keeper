@@ -18,7 +18,7 @@ type GRPCConfig interface {
 
 type GrpcConfig struct {
 	Host string
-	Port string  `yaml:"port"`
+	Port string `yaml:"port"`
 }
 
 func NewGRPCConfig() (GRPCConfig, error) {

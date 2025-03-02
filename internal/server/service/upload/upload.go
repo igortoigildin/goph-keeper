@@ -96,8 +96,8 @@ func (f *UploadService) SaveText(ctx context.Context, text string) error {
 		logger.Error("metada is emty")
 
 		return errors.New("md is empty")
-	} 
-	
+	}
+
 	if _, ok = md[login]; !ok {
 		logger.Error("login not provided")
 

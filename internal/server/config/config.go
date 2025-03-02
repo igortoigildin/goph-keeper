@@ -19,16 +19,14 @@ func LoadFromFile(path string) error {
 }
 
 type Config struct {
-	FlagLogLevel string
-	Env 	string	`yaml:"env" env-default:"local"`
-	StoragePath	string `yaml:"storage_path" env-required:"true"`
-	GRPC 		GrpcConfig `yaml:"grpc"`
-	Timeout time.Duration `yaml:"timeout"`
-	MigrationsPath string 
-	TokenTTL	time.Duration	`yaml:"token_ttl" env-default:"1h"`
+	FlagLogLevel   string
+	Env            string        `yaml:"env" env-default:"local"`
+	StoragePath    string        `yaml:"storage_path" env-required:"true"`
+	GRPC           GrpcConfig    `yaml:"grpc"`
+	Timeout        time.Duration `yaml:"timeout"`
+	MigrationsPath string
+	TokenTTL       time.Duration `yaml:"token_ttl" env-default:"1h"`
 }
-
-
 
 func MustLoad() *Config {
 	configPath := fetchConfigPath()
@@ -36,11 +34,11 @@ func MustLoad() *Config {
 		panic("config path is empty")
 	}
 
-	return MustLoadPath(configPath) 
+	return MustLoadPath(configPath)
 }
 
 func MustLoadPath(configPath string) *Config {
-	// check if file exists 
+	// check if file exists
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		panic("config file does not exist: " + configPath)
 	}
@@ -72,4 +70,4 @@ func fetchConfigPath() string {
 	}
 
 	return res
-} 
+}

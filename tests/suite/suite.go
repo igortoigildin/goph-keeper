@@ -14,10 +14,10 @@ import (
 )
 
 type Suite struct {
-	T *testing.T
-	Cfg *config.Config
-	AuthClient	auth.AuthV1Client
-	UploadClient upload.UploadV1Client
+	T              *testing.T
+	Cfg            *config.Config
+	AuthClient     auth.AuthV1Client
+	UploadClient   upload.UploadV1Client
 	DownloadClient download.DownloadV1Client
 }
 
@@ -30,7 +30,7 @@ func New(t *testing.T) (context.Context, *Suite) {
 	t.Helper()
 	t.Parallel()
 
-	cfg := config.MustLoadPath(configPath()) 
+	cfg := config.MustLoadPath(configPath())
 
 	ctx, cancelCtx := context.WithTimeout(context.Background(), cfg.Timeout)
 
@@ -39,7 +39,7 @@ func New(t *testing.T) (context.Context, *Suite) {
 		cancelCtx()
 	})
 
-	cc, err := grpc.DialContext(context.Background(), 
+	cc, err := grpc.DialContext(context.Background(),
 		cfg.GRPC.Address(),
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -47,10 +47,10 @@ func New(t *testing.T) (context.Context, *Suite) {
 	}
 
 	return ctx, &Suite{
-		T: 		t,
-		Cfg: 	cfg,
-		AuthClient: auth.NewAuthV1Client(cc),
-		UploadClient: upload.NewUploadV1Client(cc),
+		T:              t,
+		Cfg:            cfg,
+		AuthClient:     auth.NewAuthV1Client(cc),
+		UploadClient:   upload.NewUploadV1Client(cc),
 		DownloadClient: download.NewDownloadV1Client(cc),
 	}
 }
@@ -64,4 +64,3 @@ func configPath() string {
 
 	return "../config/local_tests.yaml"
 }
-

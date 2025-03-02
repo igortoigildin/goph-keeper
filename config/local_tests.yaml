@@ -1,5 +1,5 @@
 env: "local"
 storage_path: "./storage/goph.db"
-timeout: 5s
+timeout: 15s
 grpc:
   port: 9000

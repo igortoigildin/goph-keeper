@@ -6,10 +6,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/igortoigildin/goph-keeper/pkg/logger"
 	"github.com/igortoigildin/goph-keeper/pkg/session"
 	desc "github.com/igortoigildin/goph-keeper/pkg/upload_v1"
-	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
@@ -54,7 +52,6 @@ func (s *ClientService) SendPassword(addr, loginStr, passStr string, id string) 
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
 	if err = s.uploadPassword(ctx, loginStr, passStr); err != nil {
-		logger.Error("error sending file", zap.Error(err))
 
 		return err
 	}
@@ -71,8 +68,6 @@ func (s *ClientService) uploadPassword(ctx context.Context, loginStr, passStr st
 	if err != nil {
 		return fmt.Errorf("error uploading credentials: %w", err)
 	}
-
-	logger.Info("Login && password data sent successfully")
 
 	return nil
 }
@@ -96,8 +91,6 @@ func (s *ClientService) SendBankDetails(addr, cardNumber, cvc, expDate string, i
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
 	if err = s.uploadBankDetails(ctx, cardNumber, cvc, expDate); err != nil {
-		logger.Error("error while sending file", zap.Error(err))
-
 		return err
 	}
 
@@ -114,8 +107,6 @@ func (s *ClientService) uploadBankDetails(ctx context.Context, cardNumber, cvc, 
 	if err != nil {
 		return fmt.Errorf("error uploading bank details: %w", err)
 	}
-
-	logger.Info("Login && password data sent successfully")
 
 	return nil
 }
@@ -138,8 +129,6 @@ func (s *ClientService) SendText(addr, text string, id string) error {
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
 	if err = s.uploadText(ctx, text); err != nil {
-		logger.Error("error while sending file", zap.Error(err))
-
 		return err
 	}
 
@@ -151,8 +140,6 @@ func (s *ClientService) uploadText(ctx context.Context, text string) error {
 	if err != nil {
 		return fmt.Errorf("error uploading text: %w", err)
 	}
-
-	logger.Info("Text data sent successfully")
 
 	return nil
 }
@@ -175,8 +162,6 @@ func (s *ClientService) SendFile(addr string, filePath string, batchSize int, id
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
 	if err = s.uploadFile(ctx, filePath, batchSize); err != nil {
-		logger.Error("error while sending file", zap.Error(err))
-
 		return err
 	}
 
@@ -209,22 +194,12 @@ func (s *ClientService) uploadFile(ctx context.Context, filepath string, batchSi
 			return fmt.Errorf("error uploading bytes: %w", err)
 		}
 
-		logger.Info("Sent:",
-			zap.Int("batch", batchNumber),
-			zap.Int("size", len(chunk)),
-		)
-
 		batchNumber += 1
 	}
-	res, err := stream.CloseAndRecv()
+	_, err = stream.CloseAndRecv()
 	if err != nil {
 		return fmt.Errorf("error closing stream: %w", err)
 	}
-
-	logger.Info("Sent:",
-		zap.Int("bytes", int(res.GetSize())),
-		zap.String("file name", res.GetFileName()),
-	)
 
 	return nil
 }

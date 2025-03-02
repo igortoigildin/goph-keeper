@@ -34,8 +34,6 @@ func (rep *UserRepository) SaveUser(ctx context.Context, login string, passHash 
 		Values(login, passHash).
 		Suffix("ON CONFLICT DO NOTHING RETURNING user_id")
 
-	fmt.Printf("builder: %v\n", builder)
-
 	query, args, err := builder.ToSql()
 	if err != nil {
 		return 0, fmt.Errorf("error building SQL query: %w", err)

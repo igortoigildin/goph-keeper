@@ -21,14 +21,14 @@ func TestSaveText_Happy(t *testing.T) {
 	pass := randomFakePassword()
 
 	resReg, err := st.AuthClient.Register(ctx, &auth_v1.RegisterRequest{
-		Login: login,
+		Login:    login,
 		Password: pass,
 	})
 	require.NoError(t, err)
 	assert.NotEmpty(t, resReg.GetUserId())
 
 	_, err = st.AuthClient.Login(ctx, &auth_v1.LoginRequest{
-		Login: login,
+		Login:    login,
 		Password: pass,
 	})
 	require.NoError(t, err)
@@ -52,14 +52,14 @@ func TestDownloadText_Happy(t *testing.T) {
 	pass := randomFakePassword()
 
 	resReg, err := st.AuthClient.Register(ctx, &auth_v1.RegisterRequest{
-		Login: login,
+		Login:    login,
 		Password: pass,
 	})
 	require.NoError(t, err)
 	assert.NotEmpty(t, resReg.GetUserId())
 
 	_, err = st.AuthClient.Login(ctx, &auth_v1.LoginRequest{
-		Login: login,
+		Login:    login,
 		Password: pass,
 	})
 	require.NoError(t, err)
@@ -67,7 +67,7 @@ func TestDownloadText_Happy(t *testing.T) {
 	text := gofakeit.Adverb()
 	id := gofakeit.Number(23, 1948)
 	idUpd := strconv.Itoa(id)
-	
+
 	md := metadata.Pairs("login", login, "id", idUpd)
 
 	ctx = metadata.NewOutgoingContext(context.Background(), md)
@@ -94,14 +94,14 @@ func TestSaveText_Empty_Login(t *testing.T) {
 	pass := randomFakePassword()
 
 	resReg, err := st.AuthClient.Register(ctx, &auth_v1.RegisterRequest{
-		Login: login,
+		Login:    login,
 		Password: pass,
 	})
 	require.NoError(t, err)
 	assert.NotEmpty(t, resReg.GetUserId())
 
 	_, err = st.AuthClient.Login(ctx, &auth_v1.LoginRequest{
-		Login: login,
+		Login:    login,
 		Password: pass,
 	})
 	require.NoError(t, err)
@@ -125,14 +125,14 @@ func TestSaveText_Empty_Id(t *testing.T) {
 	pass := randomFakePassword()
 
 	resReg, err := st.AuthClient.Register(ctx, &auth_v1.RegisterRequest{
-		Login: login,
+		Login:    login,
 		Password: pass,
 	})
 	require.NoError(t, err)
 	assert.NotEmpty(t, resReg.GetUserId())
 
 	_, err = st.AuthClient.Login(ctx, &auth_v1.LoginRequest{
-		Login: login,
+		Login:    login,
 		Password: pass,
 	})
 	require.NoError(t, err)
@@ -154,21 +154,22 @@ func TestSaveBankDetails_Happy(t *testing.T) {
 	ctx, st := suite.New(t)
 	login := gofakeit.Email()
 	pass := randomFakePassword()
+	id := strconv.Itoa(gofakeit.Number(100, 1000))
 
 	resReg, err := st.AuthClient.Register(ctx, &auth_v1.RegisterRequest{
-		Login: login,
+		Login:    login,
 		Password: pass,
 	})
 	require.NoError(t, err)
 	assert.NotEmpty(t, resReg.GetUserId())
 
 	_, err = st.AuthClient.Login(ctx, &auth_v1.LoginRequest{
-		Login: login,
+		Login:    login,
 		Password: pass,
 	})
 	require.NoError(t, err)
 
-	md := metadata.Pairs("login", login)
+	md := metadata.Pairs("login", login, "id", id)
 
 	ctx = metadata.NewOutgoingContext(context.Background(), md)
 
@@ -187,17 +188,17 @@ func TestDownloadBankDetails_Happy(t *testing.T) {
 	ctx, st := suite.New(t)
 	login := gofakeit.Email()
 	pass := randomFakePassword()
-	id := gofakeit.Digit()
+	id := strconv.Itoa(gofakeit.Number(100, 1000))
 
 	resReg, err := st.AuthClient.Register(ctx, &auth_v1.RegisterRequest{
-		Login: login,
+		Login:    login,
 		Password: pass,
 	})
 	require.NoError(t, err)
 	assert.NotEmpty(t, resReg.GetUserId())
 
 	_, err = st.AuthClient.Login(ctx, &auth_v1.LoginRequest{
-		Login: login,
+		Login:    login,
 		Password: pass,
 	})
 	require.NoError(t, err)
@@ -226,21 +227,22 @@ func TestSaveBankDetails_Emty_Login(t *testing.T) {
 	ctx, st := suite.New(t)
 	login := gofakeit.Email()
 	pass := randomFakePassword()
+	id := strconv.Itoa(gofakeit.Number(100, 1000))
 
 	resReg, err := st.AuthClient.Register(ctx, &auth_v1.RegisterRequest{
-		Login: login,
+		Login:    login,
 		Password: pass,
 	})
 	require.NoError(t, err)
 	assert.NotEmpty(t, resReg.GetUserId())
 
 	_, err = st.AuthClient.Login(ctx, &auth_v1.LoginRequest{
-		Login: login,
+		Login:    login,
 		Password: pass,
 	})
 	require.NoError(t, err)
 
-	md := metadata.Pairs("login", "")
+	md := metadata.Pairs("login", "", "id", id)
 
 	ctx = metadata.NewOutgoingContext(context.Background(), md)
 
@@ -259,21 +261,22 @@ func TestSaveBankDetails_Emty_Bank_details(t *testing.T) {
 	ctx, st := suite.New(t)
 	login := gofakeit.Email()
 	pass := randomFakePassword()
+	id := strconv.Itoa(gofakeit.Number(100, 1000))
 
 	resReg, err := st.AuthClient.Register(ctx, &auth_v1.RegisterRequest{
-		Login: login,
+		Login:    login,
 		Password: pass,
 	})
 	require.NoError(t, err)
 	assert.NotEmpty(t, resReg.GetUserId())
 
 	_, err = st.AuthClient.Login(ctx, &auth_v1.LoginRequest{
-		Login: login,
+		Login:    login,
 		Password: pass,
 	})
 	require.NoError(t, err)
 
-	md := metadata.Pairs("login",  login)
+	md := metadata.Pairs("login", login, "id", id)
 
 	ctx = metadata.NewOutgoingContext(context.Background(), md)
 

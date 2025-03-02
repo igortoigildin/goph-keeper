@@ -21,18 +21,18 @@ func TestRegisterLogin_Login_HappyPath(t *testing.T) {
 	pass := randomFakePassword()
 
 	resReg, err := st.AuthClient.Register(ctx, &auth_v1.RegisterRequest{
-		Login: login,
+		Login:    login,
 		Password: pass,
 	})
 	require.NoError(t, err)
 	assert.NotEmpty(t, resReg.GetUserId())
 
 	respLogin, err := st.AuthClient.Login(ctx, &auth_v1.LoginRequest{
-		Login: login,
+		Login:    login,
 		Password: pass,
 	})
 	require.NoError(t, err)
-	
+
 	token := respLogin.GetRefreshToken()
 	require.NotEmpty(t, token)
 }
@@ -44,14 +44,14 @@ func TestRegisterLogin_DuplicatedRegistration(t *testing.T) {
 	pass := randomFakePassword()
 
 	resReg, err := st.AuthClient.Register(ctx, &auth_v1.RegisterRequest{
-		Login: login,
+		Login:    login,
 		Password: pass,
 	})
 	require.NoError(t, err)
 	assert.NotEmpty(t, resReg.GetUserId())
 
 	resReg, err = st.AuthClient.Register(ctx, &auth_v1.RegisterRequest{
-		Login: login,
+		Login:    login,
 		Password: pass,
 	})
 	require.Error(t, err)
@@ -90,8 +90,8 @@ func TestRegister_FailCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-				_, err := st.AuthClient.Register(ctx, &auth_v1.RegisterRequest{
-				Login: tt.login,
+			_, err := st.AuthClient.Register(ctx, &auth_v1.RegisterRequest{
+				Login:    tt.login,
 				Password: tt.password,
 			})
 			require.Error(t, err)
@@ -122,7 +122,7 @@ func TestLogin_FailCases(t *testing.T) {
 			password:    randomFakePassword(),
 			expectedErr: "login is required",
 		},
-		{	
+		{
 			name:        "Login with both empty login && password",
 			login:       "",
 			password:    "",
@@ -139,13 +139,13 @@ func TestLogin_FailCases(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := st.AuthClient.Register(ctx, &auth_v1.RegisterRequest{
-				Login: gofakeit.Email(),
+				Login:    gofakeit.Email(),
 				Password: randomFakePassword(),
 			})
 			require.NoError(t, err)
 
 			_, err = st.AuthClient.Login(ctx, &auth_v1.LoginRequest{
-				Login: tt.login,
+				Login:    tt.login,
 				Password: tt.password,
 			})
 			require.Error(t, err)
