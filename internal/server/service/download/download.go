@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	models "github.com/igortoigildin/goph-keeper/internal/server/models"
 	rep "github.com/igortoigildin/goph-keeper/internal/server/storage"
@@ -44,7 +45,16 @@ func (d *DownloadService) DownloadFile(ctx context.Context, id string) ([]byte, 
 
 		return nil, errors.New("md is empty")
 	}
+
+	if _, ok = md[login]; !ok {
+		logger.Error("login not provided")
+
+		return nil, errors.New("login is needed")
+	}
+
 	login := md[login][0]
+	// remove @ since this charac is not allowed for Minio bucket name
+	login = strings.Replace(login, "@", "", -1)
 
 	// get metadata about file with provided id
 	fileInfo, err := d.accessRepository.GetAccess(ctx, login, id)
@@ -82,7 +92,16 @@ func (d *DownloadService) DownloadBankData(ctx context.Context, id string) (map[
 
 		return nil, errors.New("md is empty")
 	}
+
+	if _, ok = md[login]; !ok {
+		logger.Error("login not provided")
+
+		return nil, errors.New("login is needed")
+	}
+
 	login := md["login"][0]
+	// remove @ since this charac is not allowed for Minio bucket name
+	login = strings.Replace(login, "@", "", -1)
 
 	// get metadata about file with provided id
 	fileInfo, err := d.accessRepository.GetAccess(ctx, login, id)
@@ -127,7 +146,16 @@ func (d *DownloadService) DownloadText(ctx context.Context, id string) (string, 
 
 		return "", errors.New("md is empty")
 	}
+
+	if _, ok = md[login]; !ok {
+		logger.Error("login not provided")
+
+		return "", errors.New("login is needed")
+	}
+
 	login := md["login"][0]
+	// remove @ since this charac is not allowed for Minio bucket name
+	login = strings.Replace(login, "@", "", -1)
 
 	// get metadata about file with provided id
 	fileInfo, err := d.accessRepository.GetAccess(ctx, login, id)
@@ -136,6 +164,8 @@ func (d *DownloadService) DownloadText(ctx context.Context, id string) (string, 
 
 		return "", fmt.Errorf("error getting access for specific file from repo: %w", err)
 	}
+
+	fmt.Println(fileInfo)
 
 	// check whether user is authorized to get access to this specific file
 	if fileInfo.Login != login {
@@ -163,7 +193,16 @@ func (d *DownloadService) DownloadLoginPassword(ctx context.Context, id string) 
 
 		return nil, errors.New("md is empty")
 	}
+
+	if _, ok = md[login]; !ok {
+		logger.Error("login not provided")
+
+		return nil, errors.New("login is needed")
+	}
+
 	login := md["login"][0]
+	// remove @ since this charac is not allowed for Minio bucket name
+	login = strings.Replace(login, "@", "", -1)
 
 	// get metadata about file with provided id
 	fileInfo, err := d.accessRepository.GetAccess(ctx, login, id)

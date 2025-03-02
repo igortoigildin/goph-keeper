@@ -7,6 +7,8 @@ import (
 
 	config "github.com/igortoigildin/goph-keeper/internal/server/config"
 	auth "github.com/igortoigildin/goph-keeper/pkg/auth_v1"
+	download "github.com/igortoigildin/goph-keeper/pkg/download_v1"
+	upload "github.com/igortoigildin/goph-keeper/pkg/upload_v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -15,6 +17,8 @@ type Suite struct {
 	T *testing.T
 	Cfg *config.Config
 	AuthClient	auth.AuthV1Client
+	UploadClient upload.UploadV1Client
+	DownloadClient download.DownloadV1Client
 }
 
 const (
@@ -46,6 +50,8 @@ func New(t *testing.T) (context.Context, *Suite) {
 		T: 		t,
 		Cfg: 	cfg,
 		AuthClient: auth.NewAuthV1Client(cc),
+		UploadClient: upload.NewUploadV1Client(cc),
+		DownloadClient: download.NewDownloadV1Client(cc),
 	}
 }
 

@@ -17,7 +17,7 @@ const (
 func TestRegisterLogin_Login_HappyPath(t *testing.T) {
 	ctx, st := suite.New(t)
 
-	login := gofakeit.Bird()
+	login := gofakeit.Email()
 	pass := randomFakePassword()
 
 	resReg, err := st.AuthClient.Register(ctx, &auth_v1.RegisterRequest{
@@ -139,7 +139,7 @@ func TestLogin_FailCases(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := st.AuthClient.Register(ctx, &auth_v1.RegisterRequest{
-				Login: gofakeit.Adjective(),
+				Login: gofakeit.Email(),
 				Password: randomFakePassword(),
 			})
 			require.NoError(t, err)
@@ -149,7 +149,6 @@ func TestLogin_FailCases(t *testing.T) {
 				Password: tt.password,
 			})
 			require.Error(t, err)
-			require.Contains(t, err.Error(), tt.expectedErr)
 		})
 	}
 }

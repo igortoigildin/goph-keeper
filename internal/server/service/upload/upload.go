@@ -47,8 +47,24 @@ func (f *UploadService) SaveBankData(ctx context.Context, data map[string]string
 
 		return errors.New("md is empty")
 	}
+
+	if _, ok = md[login]; !ok {
+		logger.Error("login not provided")
+
+		return errors.New("login is needed")
+	} else if len(data) == 0 {
+		logger.Error("bank data not provided")
+
+		return errors.New("bank details not provided")
+	} else if _, ok = md[id]; !ok {
+		logger.Error("item id not provided")
+
+		return errors.New("item id needed")
+	}
+
 	login := md[login][0]
 	id := md[id][0]
+
 	// remove @ since this charac is not allowed for Minio bucket name
 	login = strings.Replace(login, "@", "", -1)
 
@@ -80,7 +96,18 @@ func (f *UploadService) SaveText(ctx context.Context, text string) error {
 		logger.Error("metada is emty")
 
 		return errors.New("md is empty")
+	} 
+	
+	if _, ok = md[login]; !ok {
+		logger.Error("login not provided")
+
+		return errors.New("login is needed")
+	} else if _, ok = md[id]; !ok {
+		logger.Error("item id not provided")
+
+		return errors.New("item id needed")
 	}
+
 	login := md[login][0]
 	id := md[id][0]
 	// remove @ since this charac is not allowed for Minio bucket name
@@ -115,6 +142,13 @@ func (f *UploadService) SaveLoginPassword(ctx context.Context, data map[string]s
 
 		return errors.New("metadata is empty")
 	}
+
+	if _, ok = md[login]; !ok {
+		logger.Error("login not provided")
+
+		return errors.New("login is needed")
+	}
+
 	login := md[login][0]
 	id := md[id][0]
 	// remove @ since this charac is not allowed for Minio bucket name
@@ -184,6 +218,11 @@ func (f *UploadService) SaveFile(stream desc.UploadV1_UploadFileServer) error {
 		logger.Error("md is emty")
 
 		return errors.New("md is empty")
+	}
+	if _, ok = md[login]; !ok {
+		logger.Error("login not provided")
+
+		return errors.New("login is needed")
 	}
 
 	login := md[login][0]
