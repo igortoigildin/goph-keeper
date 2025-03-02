@@ -78,7 +78,7 @@ The project implements a storage system for storing different types of data, suc
    make get-deps
    ```
 
-7. Generate all api for gRPC:
+7. Generate api:
 
    ```bash
    make generate
@@ -113,13 +113,15 @@ The project implements a storage system for storing different types of data, suc
 
 #### Save and download text data
 
+Please note, that you should use your unique id for data to make downloads as per below examples.
+
 1. Save text data
 
 ```bash
     bin/client save text -t sample_text
 ```
 
-2. Download text data. Your should use your unique id for data to make downloads as per below example.
+2. Download text data.
 
 ```bash
    bin/client download password -i cb4b3e82-fd37-4faa-8d38-603a65990a57
@@ -131,7 +133,7 @@ The project implements a storage system for storing different types of data, suc
     bin/client save password -l fakelogin -p 1234
 ```
 
-4. Download login&password data. Your should use your unique id for data to make downloads as per below example.
+4. Download login&password data.
 
 ```bash
    bin/client download password -i cb4b3e82-fd37-4faa-8d38-603a65990a57
@@ -143,7 +145,7 @@ The project implements a storage system for storing different types of data, suc
     bin/client save card -n 1234 -c 329 -e 12/04/1005
 ```
 
-6. Download bank details. Your should use your unique id for data to make downloads as per below example.
+6. Download bank details.
 
 ```bash
     bin/client download card -i 0d9efc10-36cc-425b-a599-465b21855977
@@ -155,8 +157,7 @@ The project implements a storage system for storing different types of data, suc
     bin/client save bin -n migration -p migration.sh
 ```
 
-8. Download binary data. Your should use your unique id for data to make downloads as per below example.
-   The file will be downloaded to client_files directory.
+8. Download binary data. The file will be downloaded to client_files directory.
 
 ```bash
     bin/client download bin -i 092049f9-2719-44eb-aa12-25e167dcba13 -n tempname
