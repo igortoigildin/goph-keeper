@@ -14,9 +14,9 @@ The project implements a storage system for storing different types of data, suc
 
 2. **Technologies**
    - **Go** — backend language for the application’s business logic.
-   - **PostgreSQL** — database for storing workshop and booking information.
+   - **PostgreSQL** — database for storing user's information.
    - **pgx** — library used for database operations.
-   - **grpc** — framework used for communication between server and cli client.
+   - **grpc** — protocol used for communication between server and cli client.
    - **Cobra** — library used for building cli commands.
    - **Viper** — package used for managing configuration.
    - **Minio** — object storage system that is compatible with the Amazon S3 (Simple Storage Service) API.
