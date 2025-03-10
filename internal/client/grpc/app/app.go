@@ -190,6 +190,11 @@ var savePasswordCmd = &cobra.Command{
 			logger.Fatal("failed to get password:", zap.Error(err))
 		}
 
+		meta, err := cmd.Flags().GetString("destination")
+		if err != nil {
+			logger.Fatal("failed to get metadata", zap.Error(err))
+		}
+
 		// Initializing Upload service.
 		clientService := serviceUp.New()
 
@@ -256,6 +261,11 @@ var saveTextCmd = &cobra.Command{
 		textData, err := cmd.Flags().GetString("text")
 		if err != nil {
 			logger.Fatal("failed to get text to be saved:", zap.Error(err))
+		}
+
+		meta, err := cmd.Flags().GetString("info")
+		if err != nil {
+			logger.Fatal("failed to get metadata", zap.Error(err))
 		}
 
 		// Creating new uuid for text to be saved
@@ -327,6 +337,11 @@ var saveBinCmd = &cobra.Command{
 		pathStr, err := cmd.Flags().GetString("file_path")
 		if err != nil {
 			log.Fatalf("failed to get path: %s\n", err.Error())
+		}
+
+		meta, err := cmd.Flags().GetString("info")
+		if err != nil {
+			logger.Fatal("failed to get metadata", zap.Error(err))
 		}
 
 		// Creating new uuid for the file to be saved
@@ -406,6 +421,11 @@ var saveCardInfoCmd = &cobra.Command{
 			logger.Fatal("failed to get expiration_date", zap.Error(err))
 		}
 
+		meta, err := cmd.Flags().GetString("info")
+		if err != nil {
+			logger.Fatal("failed to get metadata", zap.Error(err))
+		}
+
 		// Creating new uuid for the bank details to be saved
 		id := uuid.New()
 
@@ -456,6 +476,8 @@ func init() {
 	saveCmd.AddCommand(savePasswordCmd)
 	savePasswordCmd.Flags().StringP("login", "l", "", "Login to be saved")
 	savePasswordCmd.Flags().StringP("password", "p", "", "Password to be saved")
+	savePasswordCmd.Flags().StringP("destination", "d", "", `Name of the site, app, or other platform
+	 for which the login and password were created.`)
 
 	rootCmd.AddCommand(downloadCmd)
 
@@ -466,6 +488,7 @@ func init() {
 	// save text data
 	saveCmd.AddCommand(saveTextCmd)
 	saveTextCmd.Flags().StringP("text", "t", "", "Text which need to be saved")
+	saveTextCmd.Flags().StringP("info", "i", "", "Additional metadata, if necessary")
 
 	// download text
 	downloadCmd.AddCommand(downloadTextCmd)
@@ -475,6 +498,7 @@ func init() {
 	saveCmd.AddCommand(saveBinCmd)
 	saveBinCmd.Flags().StringP("file_name", "n", "", "Name of the file to be saved")
 	saveBinCmd.Flags().StringP("file_path", "p", "", "Path to the binary file, which need to be saved")
+	saveBinCmd.Flags().StringP("info", "i", "", "Additional metadata, if necessary")
 
 	// download binary data
 	downloadCmd.AddCommand(downloadBinCmd)
@@ -486,9 +510,9 @@ func init() {
 	saveCardInfoCmd.Flags().StringP("card_number", "n", "", "Card number to be saved")
 	saveCardInfoCmd.Flags().StringP("CVC", "c", "", "CVC to be saved")
 	saveCardInfoCmd.Flags().StringP("expiration_date", "e", "", "expiration_date to be saved")
+	saveCardInfoCmd.Flags().StringP("info", "i", "", "Additional metadata, if necessary")
 
 	// download card details
 	downloadCmd.AddCommand(downloadCardInfoCmd)
 	downloadCardInfoCmd.Flags().StringP("id", "i", "", "A Universally Unique Identifier of the saved card details")
-
 }
