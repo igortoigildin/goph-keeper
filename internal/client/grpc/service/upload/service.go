@@ -33,7 +33,7 @@ func New() *ClientService {
 	return &ClientService{}
 }
 
-func (s *ClientService) SendPassword(addr, loginStr, passStr string, id string) error {
+func (s *ClientService) SendPassword(addr, loginStr, passStr string, id string, meta string) error {
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("error dialing client: %w", err)
@@ -51,7 +51,7 @@ func (s *ClientService) SendPassword(addr, loginStr, passStr string, id string) 
 
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
-	if err = s.uploadPassword(ctx, loginStr, passStr); err != nil {
+	if err = s.uploadPassword(ctx, loginStr, passStr, meta); err != nil {
 
 		return err
 	}
@@ -59,12 +59,12 @@ func (s *ClientService) SendPassword(addr, loginStr, passStr string, id string) 
 	return nil
 }
 
-func (s *ClientService) uploadPassword(ctx context.Context, loginStr, passStr string) error {
+func (s *ClientService) uploadPassword(ctx context.Context, loginStr, passStr, meta string) error {
 	data := make(map[string]string, 2)
 	data[login] = loginStr
 	data[password] = passStr
 
-	_, err := s.client.UploadPassword(ctx, &desc.UploadPasswordRequest{Data: data})
+	_, err := s.client.UploadPassword(ctx, &desc.UploadPasswordRequest{Data: data, Metadata: meta})
 	if err != nil {
 		return fmt.Errorf("error uploading credentials: %w", err)
 	}
@@ -72,7 +72,7 @@ func (s *ClientService) uploadPassword(ctx context.Context, loginStr, passStr st
 	return nil
 }
 
-func (s *ClientService) SendBankDetails(addr, cardNumber, cvc, expDate string, id string) error {
+func (s *ClientService) SendBankDetails(addr, cardNumber, cvc, expDate string, id, meta string) error {
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("error dialing client: %w", err)
@@ -90,20 +90,20 @@ func (s *ClientService) SendBankDetails(addr, cardNumber, cvc, expDate string, i
 
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
-	if err = s.uploadBankDetails(ctx, cardNumber, cvc, expDate); err != nil {
+	if err = s.uploadBankDetails(ctx, cardNumber, cvc, expDate, meta); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s *ClientService) uploadBankDetails(ctx context.Context, cardNumber, cvc, expDate string) error {
+func (s *ClientService) uploadBankDetails(ctx context.Context, cardNumber, cvc, expDate, meta string) error {
 	data := make(map[string]string, 3)
 	data["card_number"] = cardNumber
 	data["CVC"] = cvc
 	data["expiration_date"] = expDate
 
-	_, err := s.client.UploadBankData(ctx, &desc.UploadBankDataRequest{Data: data})
+	_, err := s.client.UploadBankData(ctx, &desc.UploadBankDataRequest{Data: data, Metadata: meta})
 	if err != nil {
 		return fmt.Errorf("error uploading bank details: %w", err)
 	}
@@ -111,7 +111,7 @@ func (s *ClientService) uploadBankDetails(ctx context.Context, cardNumber, cvc, 
 	return nil
 }
 
-func (s *ClientService) SendText(addr, text string, id string) error {
+func (s *ClientService) SendText(addr, text string, id string, meta string) error {
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("error dialing client: %w", err)
@@ -128,15 +128,15 @@ func (s *ClientService) SendText(addr, text string, id string) error {
 	md := metadata.Pairs(login, ss.Login, "id", id)
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
-	if err = s.uploadText(ctx, text); err != nil {
+	if err = s.uploadText(ctx, text, meta); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s *ClientService) uploadText(ctx context.Context, text string) error {
-	_, err := s.client.UploadText(ctx, &desc.UploadTextRequest{Text: text})
+func (s *ClientService) uploadText(ctx context.Context, text, meta string) error {
+	_, err := s.client.UploadText(ctx, &desc.UploadTextRequest{Text: text, Metadata: meta})
 	if err != nil {
 		return fmt.Errorf("error uploading text: %w", err)
 	}
@@ -144,7 +144,7 @@ func (s *ClientService) uploadText(ctx context.Context, text string) error {
 	return nil
 }
 
-func (s *ClientService) SendFile(addr string, filePath string, batchSize int, id string) error {
+func (s *ClientService) SendFile(addr string, filePath string, batchSize int, id, meta string) error {
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("error dialing client: %w", err)
@@ -161,14 +161,14 @@ func (s *ClientService) SendFile(addr string, filePath string, batchSize int, id
 	md := metadata.Pairs(login, ss.Login, "id", id)
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
-	if err = s.uploadFile(ctx, filePath, batchSize); err != nil {
+	if err = s.uploadFile(ctx, filePath, batchSize, meta); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s *ClientService) uploadFile(ctx context.Context, filepath string, batchSize int) error {
+func (s *ClientService) uploadFile(ctx context.Context, filepath string, batchSize int, meta string) error {
 	stream, err := s.client.UploadFile(ctx)
 	if err != nil {
 		return fmt.Errorf("error uploading file: %w", err)
@@ -190,7 +190,7 @@ func (s *ClientService) uploadFile(ctx context.Context, filepath string, batchSi
 		}
 		chunk := buf[:num]
 
-		if err := stream.Send(&desc.UploadFileRequest{FileName: filepath, Chunk: chunk}); err != nil {
+		if err := stream.Send(&desc.UploadFileRequest{FileName: filepath, Chunk: chunk, Metadata: meta}); err != nil {
 			return fmt.Errorf("error uploading bytes: %w", err)
 		}
 

@@ -13,6 +13,7 @@ service DownloadV1 {
 
 message DownloadFileRequest {
     string uuid = 1;
+    string metadata = 2;
 }
 
 message DownloadFileResponse {
@@ -22,25 +23,31 @@ message DownloadFileResponse {
 
 message DownloadPasswordRequest {
     string uuid = 1;
+    string metadata = 2;
 }
 
 message DownloadPasswordResponse {
     map<string, string> data = 1;
+    string metadata = 2;
 }
 
 message DownloadTextRequest {
     string uuid = 1;
+    string metadata = 2;
 }
 
 message DownloadTextResponse {
     string text = 1;
+    string metadata = 2;
 }
 
 message DownloadBankDataRequest {
     string uuid = 1;
+    string metadata = 2;
 }
 
 message DownloadBankDataResponse {
     map<string, string> data = 1;
+    string metadata = 2;
 }
 

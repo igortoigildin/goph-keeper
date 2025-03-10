@@ -204,7 +204,7 @@ var savePasswordCmd = &cobra.Command{
 		serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
 		// Sending credentials with created uuid to server.
-		if err := clientService.SendPassword(fmt.Sprintf(":%s", serverAddr), loginStr, passStr, id.String()); err != nil {
+		if err := clientService.SendPassword(fmt.Sprintf(":%s", serverAddr), loginStr, passStr, id.String(), meta); err != nil {
 			logger.Error("failed to send credentials to server:", zap.Error(err))
 		}
 
@@ -276,7 +276,7 @@ var saveTextCmd = &cobra.Command{
 
 		serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
-		if err := clientService.SendText(fmt.Sprintf(":%s", serverAddr), textData, id.String()); err != nil {
+		if err := clientService.SendText(fmt.Sprintf(":%s", serverAddr), textData, id.String(), meta); err != nil {
 			logger.Fatal("failed to save text", zap.Error(err))
 		}
 
@@ -352,7 +352,7 @@ var saveBinCmd = &cobra.Command{
 
 		serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
-		if err := clientService.SendFile(fmt.Sprintf(":%s", serverAddr), pathStr, batchSize, id.String()); err != nil {
+		if err := clientService.SendFile(fmt.Sprintf(":%s", serverAddr), pathStr, batchSize, id.String(), meta); err != nil {
 			logger.Fatal("failed to save binary file: ", zap.Error(err))
 		}
 
@@ -434,7 +434,7 @@ var saveCardInfoCmd = &cobra.Command{
 
 		serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
-		if err := clientService.SendBankDetails(fmt.Sprintf(":%s", serverAddr), cardNumber, cvc, expDate, id.String()); err != nil {
+		if err := clientService.SendBankDetails(fmt.Sprintf(":%s", serverAddr), cardNumber, cvc, expDate, id.String(), meta); err != nil {
 			logger.Fatal("failed to save bank details: ", zap.Error(err))
 		}
 
