@@ -15,9 +15,9 @@ type AuthService interface {
 
 type UploadService interface {
 	SaveFile(stream desc.UploadV1_UploadFileServer) error
-	SaveBankData(ctx context.Context, data map[string]string) error
-	SaveText(ctx context.Context, text string) error
-	SaveLoginPassword(ctx context.Context, data map[string]string) error
+	SaveBankData(ctx context.Context, data map[string]string, info string) error
+	SaveText(ctx context.Context, text string, info string) error
+	SaveLoginPassword(ctx context.Context, data map[string]string, info string) error
 }
 
 type DownloadService interface {

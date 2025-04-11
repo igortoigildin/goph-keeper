@@ -20,8 +20,8 @@ type UserRepository interface {
 }
 
 type DataRepository interface {
-	SaveFile(ctx context.Context, file *fl.File, login string, id string) error
+	SaveFile(ctx context.Context, file *fl.File, login string, id string, meta string) error
 	DownloadFile(ctx context.Context, bucketName, objectName string) (*bytes.Buffer, error)
-	SaveTextData(ctx context.Context, data any, login string, id string) error
+	SaveTextData(ctx context.Context, data any, login string, id string, info string) error
 	DownloadTextData(ctx context.Context, bucketName, objectName string) ([]byte, error)
 }

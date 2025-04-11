@@ -19,10 +19,10 @@ const (
 )
 
 type Sender interface {
-	SendPassword(addr, loginStr, passStr string, id string) error
-	SendText(addr, text string, id string) error
-	SendFile(addr string, filePath string, batchSize int, id string) error
-	SendBankDetails(addr, cardNumber, cvc, expDate string, id string) error
+	SendPassword(addr, loginStr, passStr string, id string, meta string) error
+	SendText(addr, text string, id string, meta string) error
+	SendFile(addr string, filePath string, batchSize int, id, meta string) error
+	SendBankDetails(addr, cardNumber, cvc, expDate string, id, meta string) error
 }
 
 type ClientService struct {
@@ -63,6 +63,7 @@ func (s *ClientService) uploadPassword(ctx context.Context, loginStr, passStr, m
 	data := make(map[string]string, 2)
 	data[login] = loginStr
 	data[password] = passStr
+	data["metadata"] = meta
 
 	_, err := s.client.UploadPassword(ctx, &desc.UploadPasswordRequest{Data: data, Metadata: meta})
 	if err != nil {
@@ -102,6 +103,7 @@ func (s *ClientService) uploadBankDetails(ctx context.Context, cardNumber, cvc, 
 	data["card_number"] = cardNumber
 	data["CVC"] = cvc
 	data["expiration_date"] = expDate
+	data["metadata"] = meta
 
 	_, err := s.client.UploadBankData(ctx, &desc.UploadBankDataRequest{Data: data, Metadata: meta})
 	if err != nil {
@@ -111,7 +113,7 @@ func (s *ClientService) uploadBankDetails(ctx context.Context, cardNumber, cvc, 
 	return nil
 }
 
-func (s *ClientService) SendText(addr, text string, id string, meta string) error {
+func (s *ClientService) SendText(addr, text string, id string, info string) error {
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("error dialing client: %w", err)
@@ -128,15 +130,15 @@ func (s *ClientService) SendText(addr, text string, id string, meta string) erro
 	md := metadata.Pairs(login, ss.Login, "id", id)
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
-	if err = s.uploadText(ctx, text, meta); err != nil {
+	if err = s.uploadText(ctx, text, info); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s *ClientService) uploadText(ctx context.Context, text, meta string) error {
-	_, err := s.client.UploadText(ctx, &desc.UploadTextRequest{Text: text, Metadata: meta})
+func (s *ClientService) uploadText(ctx context.Context, text, info string) error {
+	_, err := s.client.UploadText(ctx, &desc.UploadTextRequest{Text: text, Metadata: info})
 	if err != nil {
 		return fmt.Errorf("error uploading text: %w", err)
 	}
@@ -144,7 +146,7 @@ func (s *ClientService) uploadText(ctx context.Context, text, meta string) error
 	return nil
 }
 
-func (s *ClientService) SendFile(addr string, filePath string, batchSize int, id, meta string) error {
+func (s *ClientService) SendFile(addr string, filePath string, batchSize int, id, info string) error {
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("error dialing client: %w", err)
@@ -161,14 +163,14 @@ func (s *ClientService) SendFile(addr string, filePath string, batchSize int, id
 	md := metadata.Pairs(login, ss.Login, "id", id)
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
-	if err = s.uploadFile(ctx, filePath, batchSize, meta); err != nil {
+	if err = s.uploadFile(ctx, filePath, batchSize, info); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s *ClientService) uploadFile(ctx context.Context, filepath string, batchSize int, meta string) error {
+func (s *ClientService) uploadFile(ctx context.Context, filepath string, batchSize int, info string) error {
 	stream, err := s.client.UploadFile(ctx)
 	if err != nil {
 		return fmt.Errorf("error uploading file: %w", err)
@@ -190,7 +192,7 @@ func (s *ClientService) uploadFile(ctx context.Context, filepath string, batchSi
 		}
 		chunk := buf[:num]
 
-		if err := stream.Send(&desc.UploadFileRequest{FileName: filepath, Chunk: chunk, Metadata: meta}); err != nil {
+		if err := stream.Send(&desc.UploadFileRequest{FileName: filepath, Chunk: chunk, Metadata: info}); err != nil {
 			return fmt.Errorf("error uploading bytes: %w", err)
 		}
 

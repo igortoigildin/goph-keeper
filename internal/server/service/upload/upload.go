@@ -36,14 +36,14 @@ func New(ctx context.Context, dataRep rep.DataRepository, accessRep AccessReposi
 	return &UploadService{dataRepository: dataRep, accessRepository: accessRep}
 }
 
-func (f *UploadService) SaveBankData(ctx context.Context, data map[string]string) error {
+func (f *UploadService) SaveBankData(ctx context.Context, data map[string]string, info string) error {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		logger.Error("metada is not received from incoming context")
 
 		return errors.New("metada not received from md")
 	} else if md.Len() == 0 {
-		logger.Error("metada is emty")
+		logger.Error("metada is empty")
 
 		return errors.New("md is empty")
 	}
@@ -76,7 +76,7 @@ func (f *UploadService) SaveBankData(ctx context.Context, data map[string]string
 		return fmt.Errorf("error saving access: %w", err)
 	}
 
-	err = f.dataRepository.SaveTextData(ctx, data, login, id)
+	err = f.dataRepository.SaveTextData(ctx, data, login, id, info)
 	if err != nil {
 		logger.Error("error saving bank data:", zap.Error(err))
 
@@ -86,7 +86,7 @@ func (f *UploadService) SaveBankData(ctx context.Context, data map[string]string
 	return nil
 }
 
-func (f *UploadService) SaveText(ctx context.Context, text string) error {
+func (f *UploadService) SaveText(ctx context.Context, text string, info string) error {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		logger.Error("metada is not received from incoming context")
@@ -121,7 +121,7 @@ func (f *UploadService) SaveText(ctx context.Context, text string) error {
 		return fmt.Errorf("error saving access: %w", err)
 	}
 
-	err = f.dataRepository.SaveTextData(ctx, text, login, id)
+	err = f.dataRepository.SaveTextData(ctx, text, login, id, info)
 	if err != nil {
 		logger.Error("error saving text data: ", zap.Error(err))
 
@@ -131,7 +131,7 @@ func (f *UploadService) SaveText(ctx context.Context, text string) error {
 	return nil
 }
 
-func (f *UploadService) SaveLoginPassword(ctx context.Context, data map[string]string) error {
+func (f *UploadService) SaveLoginPassword(ctx context.Context, data map[string]string, info string) error {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		logger.Error("metadata is not received from incoming context")
@@ -162,7 +162,7 @@ func (f *UploadService) SaveLoginPassword(ctx context.Context, data map[string]s
 		return fmt.Errorf("error saving access: %w", err)
 	}
 
-	err = f.dataRepository.SaveTextData(ctx, data, login, id)
+	err = f.dataRepository.SaveTextData(ctx, data, login, id, info)
 	if err != nil {
 		logger.Error("error saving credentials data", zap.Error(err))
 
@@ -182,12 +182,15 @@ func (f *UploadService) SaveFile(stream desc.UploadV1_UploadFileServer) error {
 		}
 	}()
 
+	// get addtional user info regarding file received
+	var info string
 	for {
 		req, err := stream.Recv()
 		if file.FilePath == "" {
 			file.SetFile(req.GetFileName(), "client_files")
 		}
 		if err == io.EOF {
+			info = req.GetMetadata()
 			break
 		}
 
@@ -241,7 +244,7 @@ func (f *UploadService) SaveFile(stream desc.UploadV1_UploadFileServer) error {
 	logger.Info("result:", zap.String("path", file.FilePath), zap.Any("size", fileSize))
 	fileName := filepath.Base(file.FilePath)
 
-	err = f.dataRepository.SaveFile(context.TODO(), file, login, id)
+	err = f.dataRepository.SaveFile(context.TODO(), file, login, id, info)
 	if err != nil {
 		logger.Error("error uploading file to Minio: ", zap.Error(err))
 

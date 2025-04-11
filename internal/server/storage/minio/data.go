@@ -29,7 +29,7 @@ func NewRepository() *DataRepository {
 	return &DataRepository{}
 }
 
-func (d *DataRepository) SaveFile(ctx context.Context, file *fl.File, login string, id string) error {
+func (d *DataRepository) SaveFile(ctx context.Context, file *fl.File, login string, id string, meta string) error {
 	client, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure: useSSL,
@@ -56,6 +56,10 @@ func (d *DataRepository) SaveFile(ctx context.Context, file *fl.File, login stri
 		}
 	}
 
+	meatadata := map[string]string{
+		"meta": meta,
+	}
+
 	// Open the file to upload
 	f, err := os.Open(file.FilePath)
 	if err != nil {
@@ -72,7 +76,7 @@ func (d *DataRepository) SaveFile(ctx context.Context, file *fl.File, login stri
 		objectName,
 		f,
 		-1,
-		minio.PutObjectOptions{ContentType: "application/octet-stream"},
+		minio.PutObjectOptions{ContentType: "application/octet-stream", UserMetadata: meatadata},
 	)
 	if err != nil {
 		logger.Error("error while uploading file to MinIO", zap.Error(err))
@@ -116,7 +120,7 @@ func (d *DataRepository) DownloadFile(ctx context.Context, bucketName, objectNam
 	return buf, nil
 }
 
-func (d *DataRepository) SaveTextData(ctx context.Context, data any, login string, id string) error {
+func (d *DataRepository) SaveTextData(ctx context.Context, data any, login string, id string, info string) error {
 	client, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure: useSSL,
@@ -154,9 +158,14 @@ func (d *DataRepository) SaveTextData(ctx context.Context, data any, login strin
 		}
 	}
 
+	// Save additional info about data to be saved
+	meatadata := map[string]string{
+		"info": info,
+	}
+
 	_, err = client.PutObject(ctx, bucketName, objectName, buf,
 		int64(buf.Len()),
-		minio.PutObjectOptions{ContentType: "application/json"})
+		minio.PutObjectOptions{ContentType: "application/json", UserMetadata: meatadata})
 	if err != nil {
 		logger.Error("error while uploading object to minio: ", zap.Error(err))
 

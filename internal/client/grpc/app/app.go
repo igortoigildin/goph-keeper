@@ -263,9 +263,9 @@ var saveTextCmd = &cobra.Command{
 			logger.Fatal("failed to get text to be saved:", zap.Error(err))
 		}
 
-		meta, err := cmd.Flags().GetString("info")
+		info, err := cmd.Flags().GetString("info")
 		if err != nil {
-			logger.Fatal("failed to get metadata", zap.Error(err))
+			logger.Fatal("failed to get additional information", zap.Error(err))
 		}
 
 		// Creating new uuid for text to be saved
@@ -276,12 +276,11 @@ var saveTextCmd = &cobra.Command{
 
 		serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
-		if err := clientService.SendText(fmt.Sprintf(":%s", serverAddr), textData, id.String(), meta); err != nil {
+		if err := clientService.SendText(fmt.Sprintf(":%s", serverAddr), textData, id.String(), info); err != nil {
 			logger.Fatal("failed to save text", zap.Error(err))
 		}
 
-		logger.Info("Your text saved successfully. Please save your uuid and use it to retrive your data back from Goph-keeper.",
-			zap.String("uuid:", id.String()))
+		logger.Info("Your text saved successfully", zap.String("uuid:", id.String()))
 	},
 }
 
@@ -339,7 +338,7 @@ var saveBinCmd = &cobra.Command{
 			log.Fatalf("failed to get path: %s\n", err.Error())
 		}
 
-		meta, err := cmd.Flags().GetString("info")
+		info, err := cmd.Flags().GetString("info")
 		if err != nil {
 			logger.Fatal("failed to get metadata", zap.Error(err))
 		}
@@ -352,7 +351,7 @@ var saveBinCmd = &cobra.Command{
 
 		serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
-		if err := clientService.SendFile(fmt.Sprintf(":%s", serverAddr), pathStr, batchSize, id.String(), meta); err != nil {
+		if err := clientService.SendFile(fmt.Sprintf(":%s", serverAddr), pathStr, batchSize, id.String(), info); err != nil {
 			logger.Fatal("failed to save binary file: ", zap.Error(err))
 		}
 

@@ -19,7 +19,7 @@ func (i *Implementation) UploadFile(stream desc.UploadV1_UploadFileServer) error
 }
 
 func (i *Implementation) UploadBankData(ctx context.Context, req *desc.UploadBankDataRequest) (*emptypb.Empty, error) {
-	err := i.uploadService.SaveBankData(ctx, req.GetData())
+	err := i.uploadService.SaveBankData(ctx, req.GetData(), req.Metadata)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "failed to upload bank data")
 	}
@@ -28,7 +28,7 @@ func (i *Implementation) UploadBankData(ctx context.Context, req *desc.UploadBan
 }
 
 func (i *Implementation) UploadPassword(ctx context.Context, req *desc.UploadPasswordRequest) (*emptypb.Empty, error) {
-	err := i.uploadService.SaveLoginPassword(ctx, req.GetData())
+	err := i.uploadService.SaveLoginPassword(ctx, req.GetData(), req.Metadata)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "failed to upload credentials")
 	}
@@ -37,7 +37,7 @@ func (i *Implementation) UploadPassword(ctx context.Context, req *desc.UploadPas
 }
 
 func (i *Implementation) UploadText(ctx context.Context, req *desc.UploadTextRequest) (*emptypb.Empty, error) {
-	err := i.uploadService.SaveText(ctx, req.GetText())
+	err := i.uploadService.SaveText(ctx, req.GetText(), req.GetMetadata())
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "failed to upload text")
 	}
