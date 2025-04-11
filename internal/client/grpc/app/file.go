@@ -1,0 +1,64 @@
+package app
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/google/uuid"
+	serviceUp "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/upload"
+	"github.com/igortoigildin/goph-keeper/pkg/logger"
+	"github.com/igortoigildin/goph-keeper/pkg/session"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"go.uber.org/zap"
+)
+
+func saveBinCmd(app *App) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "bin",
+		Short: "Save binary data in storage",
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
+
+			if !session.IsSessionValid(refreshTokenSecretKey) {
+				logger.Fatal("Session expired or not found. Please login again")
+			}
+
+			logger.Info("Session is valid")
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			pathStr, err := cmd.Flags().GetString("file_path")
+			if err != nil {
+				log.Fatalf("failed to get path: %s\n", err.Error())
+			}
+
+			info, err := cmd.Flags().GetString("info")
+			if err != nil {
+				logger.Fatal("failed to get metadata", zap.Error(err))
+			}
+
+			// Creating new uuid for the file to be saved
+			id := uuid.New()
+
+			// Creating Upload service
+			clientService := serviceUp.New()
+
+			serverAddr, _ := viper.Get("GRPC_PORT").(string)
+
+			//TODO save file locally using sqlite
+
+			if err := clientService.SendFile(fmt.Sprintf(":%s", serverAddr), pathStr, batchSize, id.String(), info); err != nil {
+				logger.Fatal("failed to save binary file: ", zap.Error(err))
+			}
+
+			logger.Info("Your file saved successfully. Please keep your uuid and use it to retrive your data back from Goph-keeper.",
+				zap.String("uuid:", id.String()))
+		},
+	}
+
+	cmd.Flags().StringP("file_name", "n", "", "Name of the file to be saved")
+	cmd.Flags().StringP("file_path", "p", "", "Path to the binary file, which need to be saved")
+	cmd.Flags().StringP("info", "i", "", "Additional metadata, if necessary")
+
+	return cmd
+}
