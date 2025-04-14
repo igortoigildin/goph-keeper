@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"os"
 	"time"
@@ -30,7 +29,6 @@ var (
 )
 
 type App struct {
-	DB     *sql.DB
 	DBPath string
 	Saver
 	Downloader
@@ -40,7 +38,7 @@ type Saver interface {
 	SaveText(id, info, text string) error
 	SaveCredentials(id, service, username, password string) error
 	SaveBankDetails(cardNumber, cvc, expDate string, id, bankName string) error
-	SaveFile(file models.File) error
+	SaveFile(id, filePath string) error
 }
 
 type Downloader interface {
@@ -54,14 +52,15 @@ type Downloader interface {
 }
 
 func NewApp(dbPath string) (*App, error) {
-	db, err := storage.InitDB(dbPath)
+	storage, err := storage.NewClientRepository(dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("Ошибка при подключении к базе данных: %w", err)
 	}
 
 	return &App{
-		DB:     db,
-		DBPath: dbPath,
+		Saver:      storage,
+		Downloader: storage,
+		DBPath:     dbPath,
 	}, nil
 }
 

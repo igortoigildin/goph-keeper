@@ -7,6 +7,5 @@ type File struct {
 	ID        string
 	Filename  string
 	Data      []byte
-	Password  string
 	UpdatedAt time.Time
 }

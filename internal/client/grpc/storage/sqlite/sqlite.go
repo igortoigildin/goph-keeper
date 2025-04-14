@@ -4,9 +4,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	models "github.com/igortoigildin/goph-keeper/internal/client/grpc/models"
+	"github.com/igortoigildin/goph-keeper/pkg/logger"
+	"go.uber.org/zap"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -221,9 +224,22 @@ func (rep *ClientRepository) GetBankDetails(id string) (models.BankDetails, erro
 	return b, nil
 }
 
-func (rep *ClientRepository) SaveFile(file models.File) error {
-	_, err := rep.db.Exec("INSERT OR REPLACE INTO files (id, filename, data, updated_at) VALUES (?, ?, ?, ?)",
-		file.ID, file.Filename, file.Data, file.UpdatedAt)
+func (rep *ClientRepository) SaveFile(id, filePath string) error {
+	fileData, err := os.ReadFile(filePath)
+	if err != nil {
+		logger.Error("error while reading file", zap.Error(err))
+		return err
+	}
+
+	f := models.File{
+		ID:        id,
+		Filename:  filePath,
+		Data:      fileData,
+		UpdatedAt: time.Now(),
+	}
+
+	_, err = rep.db.Exec("INSERT OR REPLACE INTO files (id, filename, data, updated_at) VALUES (?, ?, ?, ?)",
+		f.ID, f.Filename, f.Data, f.UpdatedAt)
 	return err
 }
 

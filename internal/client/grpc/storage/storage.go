@@ -6,7 +6,7 @@ type Saver interface {
 	SaveText(id, info, text string) error
 	SaveCredentials(id, service, username, password string) error
 	SaveBankDetails(cardNumber, cvc, expDate string, id, bankName string) error
-	SaveFile(file models.File) error
+	SaveFile(id, filePath string) error
 }
 
 type Downloader interface {

@@ -45,7 +45,11 @@ func saveBinCmd(app *App) *cobra.Command {
 
 			serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
-			//TODO save file locally using sqlite
+			// save file to local client's storage
+			err = app.Saver.SaveFile(id.String(), pathStr)
+			if err != nil {
+				logger.Error("error saving file locally", zap.Error(err))
+			}
 
 			if err := clientService.SendFile(fmt.Sprintf(":%s", serverAddr), pathStr, batchSize, id.String(), info); err != nil {
 				logger.Fatal("failed to save binary file: ", zap.Error(err))
