@@ -80,7 +80,7 @@ func InitDB(path string) (*sql.DB, error) {
 func (rep *ClientRepository) SaveText(id, info, text string) error {
 	_, err := rep.db.Exec(`
 		INSERT INTO texts (id, info, text, created_at)
-		VALUES (?, ?, ?, ?, ?)`,
+		VALUES (?, ?, ?, ?)`,
 		id, info, text, time.Now())
 
 	return err
@@ -177,8 +177,8 @@ func (rep *ClientRepository) GetCredential(id string) (models.Credential, error)
 
 func (rep *ClientRepository) SaveBankDetails(cardNumber, cvc, expDate string, id, bankName string) error {
 	_, err := rep.db.Exec(`
-		INSERT INTO bank_data (id, bank_name, card_number, expiry, cvv, created_at)
-		VALUES (?, ?, ?, ?, ?)`,
+		INSERT INTO bank_data (id, bank_name, card_number, expiry, cvc, created_at)
+		VALUES (?, ?, ?, ?, ?, ?)`,
 		id, bankName, cardNumber, expDate, cvc, time.Now())
 
 	return err
