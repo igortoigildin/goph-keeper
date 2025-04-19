@@ -88,8 +88,9 @@ func (s *ClientService) DownloadText(addr, id string) error {
 	}
 
 	data := resp.GetText()
+	metadata := resp.GetMetadata()
 
-	logger.Info("Your data: ", zap.Any("text", data))
+	logger.Info("Your data: ", zap.Any("text", data), zap.Any("metadata", metadata))
 
 	return nil
 }

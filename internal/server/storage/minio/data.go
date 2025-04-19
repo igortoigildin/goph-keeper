@@ -89,7 +89,7 @@ func (d *DataRepository) SaveFile(ctx context.Context, file *fl.File, login stri
 	return nil
 }
 
-func (d *DataRepository) DownloadFile(ctx context.Context, bucketName, objectName string) (*bytes.Buffer, error) {
+func (d *DataRepository) DownloadFile(ctx context.Context, bucketName, objectName string) (*bytes.Buffer, string, error) {
 	client, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure: useSSL,
@@ -97,12 +97,12 @@ func (d *DataRepository) DownloadFile(ctx context.Context, bucketName, objectNam
 	if err != nil {
 		logger.Error("error creating minio client: ", zap.Error(err))
 
-		return nil, errors.New("error instantiating Minio client with options")
+		return nil, "", errors.New("error instantiating Minio client with options")
 	}
 
 	obj, err := client.GetObject(ctx, bucketName, objectName, minio.GetObjectOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("error downloading object from Minio: %w", err)
+		return nil, "", fmt.Errorf("error downloading object from Minio: %w", err)
 	}
 	defer obj.Close()
 
@@ -112,12 +112,21 @@ func (d *DataRepository) DownloadFile(ctx context.Context, bucketName, objectNam
 	if err != nil {
 		logger.Error("copy file error: ", zap.Error(err))
 
-		return nil, fmt.Errorf("copy file error: %w", err)
+		return nil, "", fmt.Errorf("copy file error: %w", err)
 	}
+
+	info, err := client.StatObject(ctx, bucketName, objectName, minio.GetObjectOptions{})
+	if err != nil {
+		logger.Error("error getting object metadata: ", zap.Error(err))
+
+		return nil, "", fmt.Errorf("error getting object metadata: %w", err)
+	}
+
+	metadata := info.UserMetadata["info"]
 
 	logger.Info("Object downloaded successfully:", zap.String("id:", objectName))
 
-	return buf, nil
+	return buf, metadata, nil
 }
 
 func (d *DataRepository) SaveTextData(ctx context.Context, data any, login string, id string, info string) error {
@@ -177,7 +186,7 @@ func (d *DataRepository) SaveTextData(ctx context.Context, data any, login strin
 	return nil
 }
 
-func (d *DataRepository) DownloadTextData(ctx context.Context, bucketName, objectName string) ([]byte, error) {
+func (d *DataRepository) DownloadTextData(ctx context.Context, bucketName, objectName string) ([]byte, string, error) {
 	client, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure: useSSL,
@@ -185,16 +194,25 @@ func (d *DataRepository) DownloadTextData(ctx context.Context, bucketName, objec
 	if err != nil {
 		logger.Error("error while creating minio client: ", zap.Error(err))
 
-		return nil, fmt.Errorf("error instantiating Minio client with options: %w", err)
+		return nil, "", fmt.Errorf("error instantiating Minio client with options: %w", err)
 	}
 
 	obj, err := client.GetObject(ctx, bucketName, objectName, minio.GetObjectOptions{})
 	if err != nil {
 		logger.Error("error opening targeted file: ", zap.Error(err))
 
-		return nil, fmt.Errorf("error opening targeted file: %w", err)
+		return nil, "", fmt.Errorf("error opening targeted file: %w", err)
 	}
 	defer obj.Close()
+
+	info, err := client.StatObject(ctx, bucketName, objectName, minio.GetObjectOptions{})
+	if err != nil {
+		logger.Error("error getting object metadata: ", zap.Error(err))
+
+		return nil, "", fmt.Errorf("error getting object metadata: %w", err)
+	}
+
+	metadata := info.UserMetadata["info"]
 
 	// Read the object data into a byte buffer
 	buf := new(bytes.Buffer)
@@ -202,12 +220,12 @@ func (d *DataRepository) DownloadTextData(ctx context.Context, bucketName, objec
 	if err != nil {
 		logger.Error("error copying targeted file: ", zap.Error(err))
 
-		return nil, fmt.Errorf("error copying targeted file: %w", err)
+		return nil, "", fmt.Errorf("error copying targeted file: %w", err)
 	}
 
 	res := buf.Bytes()
 
 	logger.Info("Object downloaded successfully: ", zap.String("id:", objectName))
 
-	return res, nil
+	return res, metadata, nil
 }

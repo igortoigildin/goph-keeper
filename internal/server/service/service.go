@@ -21,8 +21,8 @@ type UploadService interface {
 }
 
 type DownloadService interface {
-	DownloadFile(ctx context.Context, id string) ([]byte, error)
-	DownloadBankData(ctx context.Context, id string) (map[string]string, error)
-	DownloadText(ctx context.Context, id string) (string, error)
-	DownloadLoginPassword(ctx context.Context, id string) (map[string]string, error)
+	DownloadFile(ctx context.Context, id string) ([]byte, string, error)
+	DownloadBankData(ctx context.Context, id string) (map[string]string, string, error)
+	DownloadText(ctx context.Context, id string) (string, string, error)
+	DownloadLoginPassword(ctx context.Context, id string) (map[string]string, string, error)
 }

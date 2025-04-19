@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	serviceDown "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/download"
 	serviceUp "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/upload"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
 	"github.com/igortoigildin/goph-keeper/pkg/session"
@@ -73,4 +74,35 @@ func saveCardInfoCmd(app *App) *cobra.Command {
 	cmd.Flags().StringP("info", "i", "", "Additional metadata, if necessary")
 
 	return cmd
+}
+
+// download card details subcommand
+var downloadCardInfoCmd = &cobra.Command{
+	Use:   "card",
+	Short: "Download card details from storage",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
+
+		if !session.IsSessionValid(refreshTokenSecretKey) {
+			logger.Fatal("Session expired or not found. Please login again")
+		}
+
+		logger.Info("Session is valid")
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		idStr, err := cmd.Flags().GetString("id")
+		if err != nil {
+			logger.Fatal("failed to get bank details uuid:", zap.Error(err))
+		}
+
+		// Initializing Download service
+		clientService := serviceDown.New()
+
+		serverAddr, _ := viper.Get("GRPC_PORT").(string)
+
+		if err := clientService.DownloadBankDetails(fmt.Sprintf(":%s", serverAddr), idStr); err != nil {
+			logger.Fatal("failed to obtain card details from goph-keeper: ", zap.Error(err))
+		}
+
+	},
 }

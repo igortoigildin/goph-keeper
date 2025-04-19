@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/google/uuid"
+	serviceDown "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/download"
 	serviceUp "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/upload"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
 	"github.com/igortoigildin/goph-keeper/pkg/session"
@@ -65,4 +66,39 @@ func saveBinCmd(app *App) *cobra.Command {
 	cmd.Flags().StringP("info", "i", "", "Additional metadata, if necessary")
 
 	return cmd
+}
+
+// download binary data subcommand
+var downloadBinCmd = &cobra.Command{
+	Use:   "bin",
+	Short: "Download binary data from storage",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
+
+		if !session.IsSessionValid(refreshTokenSecretKey) {
+			logger.Fatal("Session expired or not found. Please login again")
+		}
+
+		logger.Info("Session is valid")
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		idStr, err := cmd.Flags().GetString("id")
+		if err != nil {
+			logger.Fatal("failed to get file uuid:", zap.Error(err))
+		}
+
+		fileNameStr, err := cmd.Flags().GetString("file_name")
+		if err != nil {
+			logger.Fatal("failed to get file_name:", zap.Error(err))
+		}
+
+		// Initializing Download service
+		clientService := serviceDown.New()
+
+		serverAddr, _ := viper.Get("GRPC_PORT").(string)
+
+		if err := clientService.DownloadFile(fmt.Sprintf(":%s", serverAddr), idStr, fileNameStr); err != nil {
+			logger.Fatal("failed to obtain requested binary data from goph-keeper: ", zap.Error(err))
+		}
+	},
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	serviceDown "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/download"
 	serviceUp "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/upload"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
 	"github.com/igortoigildin/goph-keeper/pkg/session"
@@ -71,4 +72,32 @@ func savePasswordCmd(app *App) *cobra.Command {
 	for which the login and password were created.`)
 
 	return cmd
+}
+
+// download password subcommmand
+var downloadPassCmd = &cobra.Command{
+	Use:   "password",
+	Short: "Download login && password from storage",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
+
+		if !session.IsSessionValid(refreshTokenSecretKey) {
+			logger.Fatal("Session expired or not found. Please login again")
+		}
+
+		logger.Info("Session is valid")
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		idStr, err := cmd.Flags().GetString("id")
+		if err != nil {
+			logger.Fatal("failed to get credentials id", zap.Error(err))
+		}
+
+		clientService := serviceDown.New()
+		serverAddr, _ := viper.Get("GRPC_PORT").(string)
+
+		if err := clientService.DownloadPassword(fmt.Sprintf(":%s", serverAddr), idStr); err != nil {
+			logger.Error("failed to obtain requested credentials from goph-keeper", zap.Error(err))
+		}
+	},
 }

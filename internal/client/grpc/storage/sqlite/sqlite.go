@@ -114,7 +114,7 @@ func (rep *ClientRepository) GetText(id string) (models.Text, error) {
 		SELECT id, info, text, created_at
 		FROM texts
 		WHERE id = ?
-	`, id).Scan(&t.ID, &t.Info, &t.Text, &t.Text)
+	`, id).Scan(&t.ID, &t.Info, &t.Text, &t.CreatedAt)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

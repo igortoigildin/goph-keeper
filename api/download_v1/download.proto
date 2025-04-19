@@ -19,6 +19,7 @@ message DownloadFileRequest {
 message DownloadFileResponse {
     string uuid = 1;
     bytes chunk = 2;
+    string metadata = 3;
 }
 
 message DownloadPasswordRequest {

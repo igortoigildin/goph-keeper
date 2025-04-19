@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	serviceDown "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/download"
 	serviceUp "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/upload"
 
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
@@ -63,3 +64,87 @@ func saveTextCmd(app *App) *cobra.Command {
 
 	return cmd
 }
+
+func downloadTextCmd(app *App) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "text",
+		Short: "Download arbitrary text data from storage",
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
+
+			if !session.IsSessionValid(refreshTokenSecretKey) {
+				logger.Fatal("Session expired or not found. Please login again")
+			}
+
+			logger.Info("Session is valid")
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			idStr, err := cmd.Flags().GetString("id")
+			if err != nil {
+				logger.Fatal("failed to get text uuid:", zap.Error(err))
+			}
+
+			// Initializing download service.
+			clientService := serviceDown.New()
+
+			serverAddr, _ := viper.Get("GRPC_PORT").(string)
+
+			res, err := app.Downloader.GetText(idStr)
+			if err != nil {
+				logger.Error("failed to obtain text data from local storage: ", zap.Error(err))
+			}
+
+			logger.Info("your data:", zap.String("text:", res.Text), zap.String("metadata:", res.Info))
+
+			// Requesting text with provided uuid.
+			if err := clientService.DownloadText(fmt.Sprintf(":%s", serverAddr), idStr); err != nil {
+				logger.Error("failed to obtain text data from remote server: ", zap.Error(err))
+
+				res, err := app.Downloader.GetText(idStr)
+				if err != nil {
+					logger.Error("failed to obtain text data from local storage: ", zap.Error(err))
+				}
+
+				logger.Info("your data:", zap.String("text:", res.Text), zap.String("metadata:", res.Info))
+
+			}
+		},
+	}
+
+	cmd.Flags().StringP("id", "i", "", "A Universally Unique Identifier of saved text")
+
+	return cmd
+}
+
+// downloadTextCmd.Flags().StringP("id", "i", "", "A Universally Unique Identifier of saved text")
+
+// download text subcommand
+// var downloadTextCmd = &cobra.Command{
+// 	Use:   "text",
+// 	Short: "Download arbitrary text data from storage",
+// 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+// 		refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
+
+// 		if !session.IsSessionValid(refreshTokenSecretKey) {
+// 			logger.Fatal("Session expired or not found. Please login again")
+// 		}
+
+// 		logger.Info("Session is valid")
+// 	},
+// 	Run: func(cmd *cobra.Command, args []string) {
+// 		idStr, err := cmd.Flags().GetString("id")
+// 		if err != nil {
+// 			logger.Fatal("failed to get text uuid:", zap.Error(err))
+// 		}
+
+// 		// Initializing download service.
+// 		clientService := serviceDown.New()
+
+// 		serverAddr, _ := viper.Get("GRPC_PORT").(string)
+
+// 		// Requesting text with provided uuid.
+// 		if err := clientService.DownloadText(fmt.Sprintf(":%s", serverAddr), idStr); err != nil {
+// 			logger.Fatal("failed to obtain text data from goph-keeper: ", zap.Error(err))
+// 		}
+// 	},
+// }
