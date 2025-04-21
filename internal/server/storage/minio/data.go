@@ -212,7 +212,7 @@ func (d *DataRepository) DownloadTextData(ctx context.Context, bucketName, objec
 		return nil, "", fmt.Errorf("error getting object metadata: %w", err)
 	}
 
-	metadata := info.UserMetadata["info"]
+	metadata := info.UserMetadata["Info"]
 
 	// Read the object data into a byte buffer
 	buf := new(bytes.Buffer)

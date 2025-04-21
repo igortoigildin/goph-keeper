@@ -55,13 +55,15 @@ func saveCardInfoCmd(app *App) *cobra.Command {
 
 			serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
+			// Save data to local storate
 			err = app.Saver.SaveBankDetails(cardNumber, cvc, expDate, id.String(), meta)
 			if err != nil {
 				logger.Error("failed to save bank details locally", zap.Error(err))
 			}
 
+			// Upload data to remote server
 			if err := clientService.SendBankDetails(fmt.Sprintf(":%s", serverAddr), cardNumber, cvc, expDate, id.String(), meta); err != nil {
-				logger.Fatal("failed to save bank details: ", zap.Error(err))
+				logger.Error("failed to save bank details: ", zap.Error(err))
 			}
 
 			logger.Info("Your bank details saved successfully. Please keep your uuid and use it to retrive your data back from Goph-keeper.",
@@ -76,33 +78,49 @@ func saveCardInfoCmd(app *App) *cobra.Command {
 	return cmd
 }
 
-// download card details subcommand
-var downloadCardInfoCmd = &cobra.Command{
-	Use:   "card",
-	Short: "Download card details from storage",
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
+func downloadCardInfoCmd(app *App) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "card",
+		Short: "Download card details from storage",
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
 
-		if !session.IsSessionValid(refreshTokenSecretKey) {
-			logger.Fatal("Session expired or not found. Please login again")
-		}
+			if !session.IsSessionValid(refreshTokenSecretKey) {
+				logger.Fatal("Session expired or not found. Please login again")
+			}
 
-		logger.Info("Session is valid")
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		idStr, err := cmd.Flags().GetString("id")
-		if err != nil {
-			logger.Fatal("failed to get bank details uuid:", zap.Error(err))
-		}
+			logger.Info("Session is valid")
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			idStr, err := cmd.Flags().GetString("id")
+			if err != nil {
+				logger.Fatal("failed to get bank details uuid:", zap.Error(err))
+			}
 
-		// Initializing Download service
-		clientService := serviceDown.New()
+			// Initializing Download service
+			clientService := serviceDown.New()
 
-		serverAddr, _ := viper.Get("GRPC_PORT").(string)
+			serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
-		if err := clientService.DownloadBankDetails(fmt.Sprintf(":%s", serverAddr), idStr); err != nil {
-			logger.Fatal("failed to obtain card details from goph-keeper: ", zap.Error(err))
-		}
+			// obtain data from remote server
+			if err := clientService.DownloadBankDetails(fmt.Sprintf(":%s", serverAddr), idStr); err != nil {
+				logger.Error("failed to obtain card details from goph-keeper: ", zap.Error(err))
 
-	},
+				// if remote server not responding, try reach local storage
+				logger.Info("trying to obtain data locally")
+
+				res, err := app.Downloader.GetBankDetails(idStr)
+				if err != nil {
+					logger.Error("failed to download bank details locally: ", zap.Error(err))
+				}
+
+				logger.Info("data from local storage:", zap.Any("bank details", res))
+
+			}
+
+		},
+	}
+	cmd.Flags().StringP("id", "i", "", "A Universally Unique Identifier of the saved card details")
+
+	return cmd
 }

@@ -20,7 +20,7 @@ func (i *Implementation) DownloadBankData(ctx context.Context, req *desc.Downloa
 	}
 
 	return &desc.DownloadBankDataResponse{
-		Data: res,
+		Data:     res,
 		Metadata: metadata,
 	}, nil
 }
@@ -34,7 +34,7 @@ func (i *Implementation) DownloadPassword(ctx context.Context, req *desc.Downloa
 	}
 
 	return &desc.DownloadPasswordResponse{
-		Data: res,
+		Data:     res,
 		Metadata: metadata,
 	}, nil
 }
@@ -48,7 +48,7 @@ func (i *Implementation) DownloadText(ctx context.Context, req *desc.DownloadTex
 	}
 
 	return &desc.DownloadTextResponse{
-		Text: res,
+		Text:     res,
 		Metadata: metadata,
 	}, nil
 }

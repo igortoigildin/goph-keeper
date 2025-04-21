@@ -112,28 +112,23 @@ func init() {
 	rootCmd.AddCommand(downloadCmd)
 
 	// download login && password
-	downloadCmd.AddCommand(downloadPassCmd)
-	downloadPassCmd.Flags().StringP("id", "i", "", "A Universally Unique Identifier of the saved password")
+	downloadCmd.AddCommand(downloadPassCmd(app))
 
 	// save text data
 	saveCmd.AddCommand(saveTextCmd(app))
 
 	// download text
 	downloadCmd.AddCommand(downloadTextCmd(app))
-	// downloadTextCmd.Flags().StringP("id", "i", "", "A Universally Unique Identifier of saved text")
 
 	// save binary data
 	saveCmd.AddCommand(saveBinCmd(app))
 
 	// download binary data
-	downloadCmd.AddCommand(downloadBinCmd)
-	downloadBinCmd.Flags().StringP("id", "i", "", "A Universally Unique Identifier of needed binary")
-	downloadBinCmd.Flags().StringP("file_name", "n", "", "Name of the file")
+	downloadCmd.AddCommand(downloadBinCmd(app))
 
 	// save card details
 	saveCmd.AddCommand(saveCardInfoCmd(app))
 
 	// download card details
-	downloadCmd.AddCommand(downloadCardInfoCmd)
-	downloadCardInfoCmd.Flags().StringP("id", "i", "", "A Universally Unique Identifier of the saved card details")
+	downloadCmd.AddCommand(downloadCardInfoCmd(app))
 }

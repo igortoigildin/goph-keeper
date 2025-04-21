@@ -2,9 +2,12 @@ package file
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/igortoigildin/goph-keeper/internal/client/grpc/models"
 )
 
 type File struct {
@@ -51,5 +54,15 @@ func (f *File) Remove() error {
 		return err
 	}
 
+	return nil
+}
+
+func SaveFileToDisk(file models.File, dir string) error {
+	path := filepath.Join(dir, file.Filename)
+
+	err := os.WriteFile(path, file.Data, 0644)
+	if err != nil {
+		return fmt.Errorf("ошибка при сохранении файла '%s': %w", path, err)
+	}
 	return nil
 }

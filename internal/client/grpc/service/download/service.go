@@ -59,8 +59,11 @@ func (s *ClientService) DownloadPassword(addr, id string) error {
 	}
 
 	data := resp.GetData()
+	metadata := resp.GetMetadata()
 
-	logger.Info("Your data: ", zap.Any("login", data["login"]), zap.Any("password", data["password"]))
+	logger.Info("Your data: ", zap.Any("login", data["login"]), zap.Any("password", data["password"]),
+		zap.Any("info: ", metadata),
+	)
 
 	return nil
 }
@@ -172,10 +175,12 @@ func (s *ClientService) DownloadBankDetails(addr, id string) error {
 	}
 
 	data := resp.GetData()
+	metadata := resp.GetMetadata()
 
 	logger.Info("Your data: ", zap.Any("card_number: ", data["card_number"]),
 		zap.Any("CVC: ", data["CVC"]),
 		zap.Any("expiration_date: ", data["expiration_date"]),
+		zap.Any("metadata: ", metadata),
 	)
 
 	return nil

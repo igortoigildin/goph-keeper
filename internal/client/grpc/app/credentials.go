@@ -74,30 +74,44 @@ func savePasswordCmd(app *App) *cobra.Command {
 	return cmd
 }
 
-// download password subcommmand
-var downloadPassCmd = &cobra.Command{
-	Use:   "password",
-	Short: "Download login && password from storage",
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
+func downloadPassCmd(app *App) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "password",
+		Short: "Download login && password from storage",
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
 
-		if !session.IsSessionValid(refreshTokenSecretKey) {
-			logger.Fatal("Session expired or not found. Please login again")
-		}
+			if !session.IsSessionValid(refreshTokenSecretKey) {
+				logger.Fatal("Session expired or not found. Please login again")
+			}
 
-		logger.Info("Session is valid")
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		idStr, err := cmd.Flags().GetString("id")
-		if err != nil {
-			logger.Fatal("failed to get credentials id", zap.Error(err))
-		}
+			logger.Info("Session is valid")
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			idStr, err := cmd.Flags().GetString("id")
+			if err != nil {
+				logger.Fatal("failed to get credentials id", zap.Error(err))
+			}
 
-		clientService := serviceDown.New()
-		serverAddr, _ := viper.Get("GRPC_PORT").(string)
+			clientService := serviceDown.New()
+			serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
-		if err := clientService.DownloadPassword(fmt.Sprintf(":%s", serverAddr), idStr); err != nil {
-			logger.Error("failed to obtain requested credentials from goph-keeper", zap.Error(err))
-		}
-	},
+			if err := clientService.DownloadPassword(fmt.Sprintf(":%s", serverAddr), idStr); err != nil {
+				logger.Error("failed to obtain requested credentials from goph-keeper", zap.Error(err))
+
+				// if remote server is not available, try reach local storage
+				res, err := app.GetCredential(idStr)
+				if err != nil {
+					logger.Error("failed to download date from local storage", zap.Error(err))
+				}
+
+				logger.Info("data from local storage:", zap.Any("data:", res))
+
+			}
+		},
+	}
+
+	cmd.Flags().StringP("id", "i", "", "A Universally Unique Identifier of the saved password")
+
+	return cmd
 }

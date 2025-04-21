@@ -165,7 +165,6 @@ func (d *DownloadService) DownloadText(ctx context.Context, id string) (string, 
 		return "", "", fmt.Errorf("error getting access for specific file from repo: %w", err)
 	}
 
-
 	// check whether user is authorized to get access to this specific file
 	if fileInfo.Login != login {
 		logger.Info("Authorization error")

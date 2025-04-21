@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	serviceDown "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/download"
 	serviceUp "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/upload"
+	fl "github.com/igortoigildin/goph-keeper/pkg/file"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
 	"github.com/igortoigildin/goph-keeper/pkg/session"
 	"github.com/spf13/cobra"
@@ -68,37 +69,56 @@ func saveBinCmd(app *App) *cobra.Command {
 	return cmd
 }
 
-// download binary data subcommand
-var downloadBinCmd = &cobra.Command{
-	Use:   "bin",
-	Short: "Download binary data from storage",
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
+func downloadBinCmd(app *App) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "bin",
+		Short: "Download binary data from storage",
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
 
-		if !session.IsSessionValid(refreshTokenSecretKey) {
-			logger.Fatal("Session expired or not found. Please login again")
-		}
+			if !session.IsSessionValid(refreshTokenSecretKey) {
+				logger.Fatal("Session expired or not found. Please login again")
+			}
 
-		logger.Info("Session is valid")
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		idStr, err := cmd.Flags().GetString("id")
-		if err != nil {
-			logger.Fatal("failed to get file uuid:", zap.Error(err))
-		}
+			logger.Info("Session is valid")
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			idStr, err := cmd.Flags().GetString("id")
+			if err != nil {
+				logger.Fatal("failed to get file uuid:", zap.Error(err))
+			}
 
-		fileNameStr, err := cmd.Flags().GetString("file_name")
-		if err != nil {
-			logger.Fatal("failed to get file_name:", zap.Error(err))
-		}
+			fileNameStr, err := cmd.Flags().GetString("file_name")
+			if err != nil {
+				logger.Fatal("failed to get file_name:", zap.Error(err))
+			}
 
-		// Initializing Download service
-		clientService := serviceDown.New()
+			// Initializing Download service
+			clientService := serviceDown.New()
 
-		serverAddr, _ := viper.Get("GRPC_PORT").(string)
+			serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
-		if err := clientService.DownloadFile(fmt.Sprintf(":%s", serverAddr), idStr, fileNameStr); err != nil {
-			logger.Fatal("failed to obtain requested binary data from goph-keeper: ", zap.Error(err))
-		}
-	},
+			if err := clientService.DownloadFile(fmt.Sprintf(":%s", serverAddr), idStr, fileNameStr); err != nil {
+				logger.Error("failed to obtain requested binary data from goph-keeper: ", zap.Error(err))
+
+				// if remote server not responding, try to reach local storage
+				res, err := app.GetFile(idStr)
+				if err != nil {
+					logger.Error("failed to obtain requested binary data from goph-keeper: ", zap.Error(err))
+				}
+
+				err = fl.SaveFileToDisk(res, "client_files")
+				if err != nil {
+					logger.Error("file saved locally")
+				}
+
+			}
+
+		},
+	}
+
+	cmd.Flags().StringP("id", "i", "", "A Universally Unique Identifier of needed binary")
+	cmd.Flags().StringP("file_name", "n", "", "Name of the file")
+
+	return cmd
 }

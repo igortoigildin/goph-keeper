@@ -212,7 +212,7 @@ func (rep *ClientRepository) GetBankDetails(id string) (models.BankDetails, erro
 		SELECT id, bank_name, card_number, expiry, cvc, created_at
 		FROM bank_data
 		WHERE id = ?
-	`, id).Scan(&b.ID, &b.Info, &b.CardNumber, b.ExpDate, &b.Cvc, &b.CreatedAt)
+	`, id).Scan(&b.ID, &b.Info, &b.CardNumber, &b.ExpDate, &b.Cvc, &b.CreatedAt)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
