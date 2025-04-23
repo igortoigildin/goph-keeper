@@ -27,13 +27,14 @@ type App struct {
 	DBPath string
 	Saver
 	Downloader
+	Receiver
 }
 
 type Saver interface {
 	SaveText(id, info, text string) error
 	SaveCredentials(id, service, username, password string) error
 	SaveBankDetails(cardNumber, cvc, expDate string, id, bankName string) error
-	SaveFile(id, filePath string) error
+	SaveFile(id, filePath, info string) error
 }
 
 type Downloader interface {
@@ -46,16 +47,24 @@ type Downloader interface {
 	GetFile(id string) (models.File, error)
 }
 
+type Receiver interface {
+	GetAllTexts() ([]models.Text, error)
+	GetAllCredentials() ([]models.Credential, error)
+	GetAllBankDetails() ([]models.BankDetails, error)
+	ListAllFiles() ([]models.File, error)
+}
+
 func NewApp(dbPath string) (*App, error) {
 	storage, err := storage.NewClientRepository(dbPath)
 	if err != nil {
-		return nil, fmt.Errorf("Ошибка при подключении к базе данных: %w", err)
+		return nil, fmt.Errorf("Failed to connect to DB: %w", err)
 	}
 
 	return &App{
 		Saver:      storage,
 		Downloader: storage,
 		DBPath:     dbPath,
+		Receiver:   storage,
 	}, nil
 }
 
@@ -89,7 +98,7 @@ func init() {
 
 	app, err := NewApp("sqlite3")
 	if err != nil {
-		fmt.Println("Ошибка при инициализации приложения:", err)
+		fmt.Println("Failed to init app:", err)
 		os.Exit(1)
 	}
 
@@ -131,4 +140,9 @@ func init() {
 
 	// download card details
 	downloadCmd.AddCommand(downloadCardInfoCmd(app))
+
+	// list all saved secrets
+	listCmd.AddCommand(listAllSavedSecrets(app))
+
+	rootCmd.AddCommand(listCmd)
 }

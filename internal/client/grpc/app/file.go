@@ -48,7 +48,7 @@ func saveBinCmd(app *App) *cobra.Command {
 			serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
 			// save file to local client's storage
-			err = app.Saver.SaveFile(id.String(), pathStr)
+			err = app.Saver.SaveFile(id.String(), pathStr, info)
 			if err != nil {
 				logger.Error("error saving file locally", zap.Error(err))
 			}

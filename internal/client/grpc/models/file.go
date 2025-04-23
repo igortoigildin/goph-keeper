@@ -8,4 +8,5 @@ type File struct {
 	Filename  string
 	Data      []byte
 	UpdatedAt time.Time
+	Info      string
 }

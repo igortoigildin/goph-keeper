@@ -66,6 +66,7 @@ func InitDB(path string) (*sql.DB, error) {
 		id TEXT PRIMARY KEY,
 		filename TEXT,
 		data BLOB,
+		info TEXT,
 		updated_at DATETIME
 	);
 	`
@@ -185,7 +186,7 @@ func (rep *ClientRepository) SaveBankDetails(cardNumber, cvc, expDate string, id
 }
 
 func (rep *ClientRepository) GetAllBankDetails() ([]models.BankDetails, error) {
-	rows, err := rep.db.Query("SELECT id, service, username, password, created_at FROM bank_data")
+	rows, err := rep.db.Query("SELECT id, bank_name, card_number, expiry, cvc, created_at FROM bank_data")
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +225,7 @@ func (rep *ClientRepository) GetBankDetails(id string) (models.BankDetails, erro
 	return b, nil
 }
 
-func (rep *ClientRepository) SaveFile(id, filePath string) error {
+func (rep *ClientRepository) SaveFile(id, filePath, info string) error {
 	fileData, err := os.ReadFile(filePath)
 	if err != nil {
 		logger.Error("error while reading file", zap.Error(err))
@@ -236,15 +237,16 @@ func (rep *ClientRepository) SaveFile(id, filePath string) error {
 		Filename:  filePath,
 		Data:      fileData,
 		UpdatedAt: time.Now(),
+		Info:      info,
 	}
 
-	_, err = rep.db.Exec("INSERT OR REPLACE INTO files (id, filename, data, updated_at) VALUES (?, ?, ?, ?)",
-		f.ID, f.Filename, f.Data, f.UpdatedAt)
+	_, err = rep.db.Exec("INSERT OR REPLACE INTO files (id, filename, data, updated_at, info) VALUES (?, ?, ?, ?, ?)",
+		f.ID, f.Filename, f.Data, f.UpdatedAt, f.Info)
 	return err
 }
 
-func (rep *ClientRepository) ListAllFiles(db *sql.DB) ([]models.File, error) {
-	rows, err := db.Query("SELECT id, filename, data, updated_at FROM files")
+func (rep *ClientRepository) ListAllFiles() ([]models.File, error) {
+	rows, err := rep.db.Query("SELECT id, filename, data, info, updated_at FROM files")
 	if err != nil {
 		return nil, err
 	}
@@ -254,7 +256,7 @@ func (rep *ClientRepository) ListAllFiles(db *sql.DB) ([]models.File, error) {
 	for rows.Next() {
 		var f models.File
 		var ignored []byte
-		err = rows.Scan(&f.ID, &f.Filename, &ignored, &f.UpdatedAt)
+		err = rows.Scan(&f.ID, &f.Filename, &ignored, &f.Info, &f.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -267,16 +269,16 @@ func (rep *ClientRepository) GetFile(id string) (models.File, error) {
 	var f models.File
 
 	err := rep.db.QueryRow(`
-		SELECT id, filename, data, updated_at
+		SELECT id, filename, data, updated_at, info
 		FROM files
 		WHERE id = ?
-	`, id).Scan(&f.ID, &f.Filename, &f.Data, &f.UpdatedAt)
+	`, id).Scan(&f.ID, &f.Filename, &f.Data, &f.UpdatedAt, &f.Info)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return models.File{}, fmt.Errorf("файл с id '%s' не найден или уже синхронизирован", id)
+			return models.File{}, fmt.Errorf("file with id '%s' not found", id)
 		}
-		return models.File{}, fmt.Errorf("ошибка при получении файла: %w", err)
+		return models.File{}, fmt.Errorf("error requesting file: %w", err)
 	}
 	return f, nil
 }

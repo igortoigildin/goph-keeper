@@ -33,6 +33,8 @@ The project implements a storage system for storing different types of data, suc
 - `internal/client` — core application logic for client.
   - `/grpc/app` — cobra commands initialization for client.
   - `/grpc/service` — client service functions.
+  - `/grpc/models` — ubiquitous domain client models.
+  - `/grpc/storage` — module for client local database interactions.
 
 ## Getting Started
 
@@ -113,12 +115,13 @@ The project implements a storage system for storing different types of data, suc
 
 #### Save and download text data
 
-Please note, that you should use your unique id for data to make downloads as per below examples.
+Please note, that you should use your unique id for data to make downloads.
+You also my add your optional additional metadata for your secrets with flags -i or -d. Please see examplse below.
 
 1. Save text data
 
 ```bash
-    bin/client save text -t sample_text
+    bin/client save text -t sample_text -i optinal_metadata
 ```
 
 2. Download text data.
@@ -130,7 +133,7 @@ Please note, that you should use your unique id for data to make downloads as pe
 3. Save login&password data
 
 ```bash
-    bin/client save password -l fakelogin -p 1234
+    bin/client save password -l fakelogin -p 1234 -d optinal_metadata
 ```
 
 4. Download login&password data.
@@ -142,7 +145,7 @@ Please note, that you should use your unique id for data to make downloads as pe
 5. Save bank details
 
 ```bash
-    bin/client save card -n 1234 -c 329 -e 12/04/1005
+    bin/client save card -n 1234 -c 329 -e 12/04/1005  -i optinal_metadata
 ```
 
 6. Download bank details.
@@ -154,11 +157,17 @@ Please note, that you should use your unique id for data to make downloads as pe
 7. Save binary data
 
 ```bash
-    bin/client save bin -n migration -p migration.sh
+    bin/client save bin -n migration -p migration.sh -i optinal_metadata
 ```
 
 8. Download binary data. The file will be downloaded to 'client_files' directory.
 
 ```bash
     bin/client download bin -n tempname -i 092049f9-2719-44eb-aa12-25e167dcba13
+```
+
+9. List all secrets saved
+
+```bash
+    bin/client list all
 ```

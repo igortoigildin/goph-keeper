@@ -10,11 +10,15 @@ type Saver interface {
 }
 
 type Downloader interface {
-	GetAllTexts() ([]models.Text, error)
 	GetText(id string) (models.Text, error)
-	GetAllCredentials() ([]models.Credential, error)
 	GetCredential(id string) (models.Credential, error)
-	GetAllBankDetails() ([]models.BankDetails, error)
 	GetBankDetails(id string) (models.BankDetails, error)
 	GetFile(id string) (models.File, error)
+}
+
+type SecretsReceiver interface {
+	GetAllTexts() ([]models.Text, error)
+	GetAllCredentials() ([]models.Credential, error)
+	GetAllBankDetails() ([]models.BankDetails, error)
+	ListAllFiles() ([]models.File, error)
 }

@@ -47,7 +47,7 @@ func (rep *AccessRepository) GetAccess(ctx context.Context, login string, id str
 	var file models.FileInfo
 	err = rep.db.DB().ScanOneContext(ctx, &file, qr, args...)
 	if err != nil {
-		return nil, fmt.Errorf("error retrieving info about sepcified user: %w", err)
+		return nil, fmt.Errorf("error retrieving info about specified user: %w", err)
 	}
 
 	return &file, nil
