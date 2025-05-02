@@ -102,3 +102,15 @@ clear-client:
 test-cover:
 	go test -v -coverpkg=./... -coverprofile=profile.cov ./...
 	go tool cover -func profile.cov
+
+.PHONY: certs clean-certs
+
+certs: generate-certs.sh
+	@if [ ! -x ./generate-certs.sh ]; then \
+		echo "Set  permissions for generate-certs.sh..."; \
+		chmod +x ./generate-certs.sh; \
+	fi
+	@./generate-certs.sh
+
+clean-certs:
+	rm -rf certs/*.crt certs/*.key

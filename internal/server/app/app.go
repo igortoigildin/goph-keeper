@@ -14,7 +14,7 @@ import (
 	"go.uber.org/zap"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -74,7 +74,15 @@ func (a *App) initConfig(_ context.Context) error {
 }
 
 func (a *App) initGRPCServer(ctx context.Context) error {
-	a.grpcServer = grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
+
+	creds, err := credentials.NewServerTLSFromFile("certs/server.crt", "certs/server.key")
+	if err != nil {
+		logger.Error("failed to load TLS certificates: %w", zap.Error(err))
+
+		return fmt.Errorf("failed to load TLS certificates: %w", err)
+	}
+
+	a.grpcServer = grpc.NewServer(grpc.Creds(creds))
 
 	reflection.Register(a.grpcServer)
 
@@ -86,7 +94,7 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 }
 
 func (a *App) runGRPCServer() error {
-	logger.Info("GRPC server is running on:", zap.Any("address:", a.serviceProvider.GRPCConfig().Address()))
+	logger.Info("GRPC server with TLS is running on:", zap.Any("address:", a.serviceProvider.GRPCConfig().Address()))
 
 	list, err := net.Listen("tcp", a.serviceProvider.GRPCConfig().Address())
 	if err != nil {

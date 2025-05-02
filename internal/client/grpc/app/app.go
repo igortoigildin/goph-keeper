@@ -98,7 +98,7 @@ func init() {
 
 	app, err := NewApp("sqlite3")
 	if err != nil {
-		fmt.Println("Failed to init app:", err)
+		logger.Error("Failed to init app", zap.Error(err))
 		os.Exit(1)
 	}
 

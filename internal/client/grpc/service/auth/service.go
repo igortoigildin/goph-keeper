@@ -5,9 +5,11 @@ import (
 	"fmt"
 
 	desc "github.com/igortoigildin/goph-keeper/pkg/auth_v1"
+	"github.com/igortoigildin/goph-keeper/pkg/logger"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/status"
 )
 
@@ -23,7 +25,15 @@ func New(addr string) *AuthService {
 }
 
 func (auth *AuthService) RegisterNewUser(ctx context.Context, login, pass string) error {
-	conn, err := grpc.NewClient(auth.addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// Load TLS credentials
+	creds, err := credentials.NewClientTLSFromFile("certs/server.crt", "")
+	if err != nil {
+		logger.Error("failed to load TLS certificates: %w", zap.Error(err))
+		return fmt.Errorf("failed to load TLS certificates: %w", err)
+	}
+
+	// Create gRPC connection with TLS
+	conn, err := grpc.Dial(auth.addr, grpc.WithTransportCredentials(creds))
 	if err != nil {
 		return fmt.Errorf("error dialing client: %w", err)
 	}
@@ -50,7 +60,15 @@ func (auth *AuthService) RegisterNewUser(ctx context.Context, login, pass string
 }
 
 func (auth *AuthService) Login(ctx context.Context, login, pass string) (string, error) {
-	conn, err := grpc.NewClient(auth.addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// Load TLS credentials
+	creds, err := credentials.NewClientTLSFromFile("certs/server.crt", "")
+	if err != nil {
+		logger.Error("failed to load TLS certificates: %w", zap.Error(err))
+		return "", fmt.Errorf("failed to load TLS certificates: %w", err)
+	}
+
+	// Create gRPC connection with TLS
+	conn, err := grpc.Dial(auth.addr, grpc.WithTransportCredentials(creds))
 	if err != nil {
 		return "", fmt.Errorf("error dialing client: %w", err)
 	}
@@ -63,5 +81,5 @@ func (auth *AuthService) Login(ctx context.Context, login, pass string) (string,
 		return "", fmt.Errorf("authentication error: %w", err)
 	}
 
-	return resp.RefreshToken, nil
+	return resp.GetRefreshToken(), nil
 }

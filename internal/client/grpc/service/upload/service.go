@@ -6,10 +6,12 @@ import (
 	"io"
 	"os"
 
+	"github.com/igortoigildin/goph-keeper/pkg/logger"
 	"github.com/igortoigildin/goph-keeper/pkg/session"
 	desc "github.com/igortoigildin/goph-keeper/pkg/upload_v1"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -34,7 +36,15 @@ func New() *ClientService {
 }
 
 func (s *ClientService) SendPassword(addr, loginStr, passStr string, id string, meta string) error {
-	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// Load TLS credentials
+	creds, err := credentials.NewClientTLSFromFile("certs/server.crt", "")
+	if err != nil {
+		logger.Error("failed to load TLS certificates: %w", zap.Error(err))
+		return fmt.Errorf("failed to load TLS certificates: %w", err)
+	}
+
+	// Create gRPC connection with TLS
+	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(creds))
 	if err != nil {
 		return fmt.Errorf("error dialing client: %w", err)
 	}
@@ -52,7 +62,6 @@ func (s *ClientService) SendPassword(addr, loginStr, passStr string, id string, 
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
 	if err = s.uploadPassword(ctx, loginStr, passStr, meta); err != nil {
-
 		return err
 	}
 
@@ -74,7 +83,14 @@ func (s *ClientService) uploadPassword(ctx context.Context, loginStr, passStr, m
 }
 
 func (s *ClientService) SendBankDetails(addr, cardNumber, cvc, expDate string, id, meta string) error {
-	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	creds, err := credentials.NewClientTLSFromFile("certs/server.crt", "")
+	if err != nil {
+		logger.Error("failed to load TLS certificates: %w", zap.Error(err))
+
+		return fmt.Errorf("failed to load TLS certificates: %w", err)
+	}
+
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(creds))
 	if err != nil {
 		return fmt.Errorf("error dialing client: %w", err)
 	}
@@ -114,7 +130,14 @@ func (s *ClientService) uploadBankDetails(ctx context.Context, cardNumber, cvc, 
 }
 
 func (s *ClientService) SendText(addr, text string, id string, info string) error {
-	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	creds, err := credentials.NewClientTLSFromFile("certs/server.crt", "")
+	if err != nil {
+		logger.Error("failed to load TLS certificates: %w", zap.Error(err))
+
+		return fmt.Errorf("failed to load TLS certificates: %w", err)
+	}
+
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(creds))
 	if err != nil {
 		return fmt.Errorf("error dialing client: %w", err)
 	}
@@ -147,7 +170,14 @@ func (s *ClientService) uploadText(ctx context.Context, text, info string) error
 }
 
 func (s *ClientService) SendFile(addr string, filePath string, batchSize int, id, info string) error {
-	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	creds, err := credentials.NewClientTLSFromFile("certs/server.crt", "")
+	if err != nil {
+		logger.Error("failed to load TLS certificates: %w", zap.Error(err))
+
+		return fmt.Errorf("failed to load TLS certificates: %w", err)
+	}
+
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(creds))
 	if err != nil {
 		return fmt.Errorf("error dialing client: %w", err)
 	}
