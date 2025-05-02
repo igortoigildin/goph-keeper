@@ -61,6 +61,6 @@ func Decrypt(encoded string, key []byte) (string, error) {
 	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
 
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
-	
+
 	return string(plaintext), err
 }

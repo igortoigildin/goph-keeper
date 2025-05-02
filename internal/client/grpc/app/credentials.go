@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	serviceDown "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/download"
 	serviceUp "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/upload"
+	"github.com/igortoigildin/goph-keeper/pkg/encryption"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
 	"github.com/igortoigildin/goph-keeper/pkg/session"
 	"github.com/spf13/cobra"
@@ -32,9 +33,19 @@ func savePasswordCmd(app *App) *cobra.Command {
 				logger.Fatal("failed to get login:", zap.Error(err))
 			}
 
+			encryptedLogin, err := encryption.Encrypt(loginStr, []byte(viper.Get("ENCRYPTION_KEY").(string)))
+			if err != nil {
+				logger.Error("failed to encrypt login", zap.Error(err))
+			}
+
 			passStr, err := cmd.Flags().GetString("password")
 			if err != nil {
 				logger.Fatal("failed to get password:", zap.Error(err))
+			}
+
+			encryptedPassword, err := encryption.Encrypt(passStr, []byte(viper.Get("ENCRYPTION_KEY").(string)))
+			if err != nil {
+				logger.Error("failed to encrypt password", zap.Error(err))
 			}
 
 			meta, err := cmd.Flags().GetString("service")
@@ -50,14 +61,14 @@ func savePasswordCmd(app *App) *cobra.Command {
 
 			serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
-			// Saving cledentials to local client storage
-			err = app.Saver.SaveCredentials(id.String(), meta, loginStr, passStr)
+			// Saving credentials to local client storage
+			err = app.Saver.SaveCredentials(id.String(), meta, encryptedLogin, encryptedPassword)
 			if err != nil {
 				logger.Error("failed to save credentials locally", zap.Error(err))
 			}
 
 			// Sending credentials with created uuid to server.
-			if err := clientService.SendPassword(fmt.Sprintf(":%s", serverAddr), loginStr, passStr, id.String(), meta); err != nil {
+			if err := clientService.SendPassword(fmt.Sprintf(":%s", serverAddr), encryptedLogin, encryptedPassword, id.String(), meta); err != nil {
 				logger.Error("failed to send credentials to server:", zap.Error(err))
 			}
 
@@ -97,15 +108,23 @@ func downloadPassCmd(app *App) *cobra.Command {
 			serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
 			if err := clientService.DownloadPassword(fmt.Sprintf(":%s", serverAddr), idStr); err != nil {
-				logger.Error("failed to obtain requested credentials from goph-keeper", zap.Error(err))
-
-				// if remote server is not available, try reach local storage
+				// if remote server is not available, try to reach local storage
 				res, err := app.GetCredential(idStr)
 				if err != nil {
 					logger.Error("failed to download date from local storage", zap.Error(err))
 				}
 
-				logger.Info("data from local storage:", zap.Any("data:", res))
+				decryptedLogin, err := encryption.Decrypt(res.Username, []byte(viper.Get("ENCRYPTION_KEY").(string)))
+				if err != nil {
+					logger.Error("failed to decrypt login", zap.Error(err))
+				}
+
+				decryptedPassword, err := encryption.Decrypt(res.Password, []byte(viper.Get("ENCRYPTION_KEY").(string)))
+				if err != nil {
+					logger.Error("failed to decrypt password", zap.Error(err))
+				}
+
+				logger.Info("Your data: ", zap.Any("login", decryptedLogin), zap.Any("password", decryptedPassword))
 
 			}
 		},

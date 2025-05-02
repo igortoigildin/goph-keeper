@@ -115,6 +115,7 @@ func downloadTextCmd(app *App) *cobra.Command {
 				logger.Info("your data:", zap.String("text:", decryptedText), zap.String("metadata:", res.Info))
 
 			}
+
 		},
 	}
 

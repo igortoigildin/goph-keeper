@@ -6,8 +6,10 @@ import (
 	"io"
 
 	desc "github.com/igortoigildin/goph-keeper/pkg/download_v1"
+	"github.com/igortoigildin/goph-keeper/pkg/encryption"
 	fl "github.com/igortoigildin/goph-keeper/pkg/file"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
+	"github.com/spf13/viper"
 
 	"github.com/igortoigildin/goph-keeper/pkg/session"
 	"go.uber.org/zap"
@@ -67,7 +69,17 @@ func (s *ClientService) DownloadPassword(addr, id string) error {
 	data := resp.GetData()
 	metadata := resp.GetMetadata()
 
-	logger.Info("Your data: ", zap.Any("login", data["login"]), zap.Any("password", data["password"]),
+	decryptedLogin, err := encryption.Decrypt(data["login"], []byte(viper.Get("ENCRYPTION_KEY").(string)))
+	if err != nil {
+		logger.Error("failed to decrypt login", zap.Error(err))
+	}
+
+	decryptedPassword, err := encryption.Decrypt(data["password"], []byte(viper.Get("ENCRYPTION_KEY").(string)))
+	if err != nil {
+		logger.Error("failed to decrypt password", zap.Error(err))
+	}
+
+	logger.Info("Your data: ", zap.Any("login", decryptedLogin), zap.Any("password", decryptedPassword),
 		zap.Any("info: ", metadata),
 	)
 
@@ -103,10 +115,15 @@ func (s *ClientService) DownloadText(addr, id string) error {
 		return fmt.Errorf("error downloading text: %w", err)
 	}
 
-	data := resp.GetText()
+	dataEncrypted := resp.GetText()
 	metadata := resp.GetMetadata()
 
-	logger.Info("Your data: ", zap.Any("text", data), zap.Any("metadata", metadata))
+	decryptedText, err := encryption.Decrypt(dataEncrypted, []byte(viper.Get("ENCRYPTION_KEY").(string)))
+	if err != nil {
+		logger.Error("failed to decrypt text data", zap.Error(err))
+	}
+
+	logger.Info("Your data: ", zap.Any("text", decryptedText), zap.Any("metadata", metadata))
 
 	return nil
 }
@@ -204,9 +221,24 @@ func (s *ClientService) DownloadBankDetails(addr, id string) error {
 	data := resp.GetData()
 	metadata := resp.GetMetadata()
 
-	logger.Info("Your data: ", zap.Any("card_number: ", data["card_number"]),
-		zap.Any("CVC: ", data["CVC"]),
-		zap.Any("expiration_date: ", data["expiration_date"]),
+	decryptedCardNumber, err := encryption.Decrypt(data["card_number"], []byte(viper.Get("ENCRYPTION_KEY").(string)))
+	if err != nil {
+		logger.Error("failed to decrypt card number", zap.Error(err))
+	}
+
+	decryptedCVC, err := encryption.Decrypt(data["CVC"], []byte(viper.Get("ENCRYPTION_KEY").(string)))
+	if err != nil {
+		logger.Error("failed to decrypt cvc", zap.Error(err))
+	}
+
+	decryptedExpDate, err := encryption.Decrypt(data["expiration_date"], []byte(viper.Get("ENCRYPTION_KEY").(string)))
+	if err != nil {
+		logger.Error("failed to decrypt expiration date", zap.Error(err))
+	}
+
+	logger.Info("Your data: ", zap.Any("card_number: ", decryptedCardNumber),
+		zap.Any("CVC: ", decryptedCVC),
+		zap.Any("expiration_date: ", decryptedExpDate),
 		zap.Any("metadata: ", metadata),
 	)
 
