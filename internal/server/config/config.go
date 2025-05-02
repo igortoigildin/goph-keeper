@@ -26,6 +26,7 @@ type Config struct {
 	Timeout        time.Duration `yaml:"timeout"`
 	MigrationsPath string
 	TokenTTL       time.Duration `yaml:"token_ttl" env-default:"1h"`
+	Key            string        `yaml:"key" env:"ENCRYPTION_KEY" env-required:"true"`
 }
 
 func MustLoad() *Config {
@@ -48,9 +49,6 @@ func MustLoadPath(configPath string) *Config {
 	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
 		panic("cannot read config: " + err.Error())
 	}
-
-	// flag.StringVar(&cfg.FlagLogLevel, "l", "info", "log level")
-	// flag.Parse()
 
 	if envLogLevel := os.Getenv("LOG_LEVEL"); envLogLevel != "" {
 		cfg.FlagLogLevel = envLogLevel

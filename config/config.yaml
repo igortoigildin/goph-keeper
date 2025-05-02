@@ -3,3 +3,4 @@ storage_path: "./storage/goph.db"
 grpc:
   port: 9000
   timeout: 15s
+key: "${ENCRYPTION_KEY}"

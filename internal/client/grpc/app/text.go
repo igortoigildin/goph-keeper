@@ -7,6 +7,7 @@ import (
 	serviceDown "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/download"
 	serviceUp "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/upload"
 
+	"github.com/igortoigildin/goph-keeper/pkg/encryption"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
 	"github.com/igortoigildin/goph-keeper/pkg/session"
 	"github.com/spf13/cobra"
@@ -46,12 +47,19 @@ func saveTextCmd(app *App) *cobra.Command {
 
 			serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
-			err = app.Saver.SaveText(id.String(), info, textData)
+			// Encrypting text data
+			encryptedText, err := encryption.Encrypt(textData, []byte(viper.Get("ENCRYPTION_KEY").(string)))
+			if err != nil {
+				logger.Error("failed to encrypt text data", zap.Error(err))
+			}
+
+			// Saving text locally in DB
+			err = app.Saver.SaveText(id.String(), info, encryptedText)
 			if err != nil {
 				logger.Error("failed to save text locally", zap.Error(err))
 			}
 
-			if err := clientService.SendText(fmt.Sprintf(":%s", serverAddr), textData, id.String(), info); err != nil {
+			if err := clientService.SendText(fmt.Sprintf(":%s", serverAddr), encryptedText, id.String(), info); err != nil {
 				logger.Fatal("failed to save text", zap.Error(err))
 			}
 
@@ -89,13 +97,6 @@ func downloadTextCmd(app *App) *cobra.Command {
 
 			serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
-			res, err := app.Downloader.GetText(idStr)
-			if err != nil {
-				logger.Error("failed to obtain text data from local storage: ", zap.Error(err))
-			}
-
-			logger.Info("your data:", zap.String("text:", res.Text), zap.String("metadata:", res.Info))
-
 			// Requesting text with provided uuid.
 			if err := clientService.DownloadText(fmt.Sprintf(":%s", serverAddr), idStr); err != nil {
 				logger.Error("failed to obtain text data from remote server: ", zap.Error(err))
@@ -106,7 +107,12 @@ func downloadTextCmd(app *App) *cobra.Command {
 					logger.Error("failed to obtain text data from local storage: ", zap.Error(err))
 				}
 
-				logger.Info("your data:", zap.String("text:", res.Text), zap.String("metadata:", res.Info))
+				decryptedText, err := encryption.Decrypt(res.Text, []byte(viper.Get("ENCRYPTION_KEY").(string)))
+				if err != nil {
+					logger.Error("failed to decrypt text data", zap.Error(err))
+				}
+
+				logger.Info("your data:", zap.String("text:", decryptedText), zap.String("metadata:", res.Info))
 
 			}
 		},
