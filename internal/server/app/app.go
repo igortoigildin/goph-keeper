@@ -13,6 +13,8 @@ import (
 	uploadpb "github.com/igortoigildin/goph-keeper/pkg/upload_v1"
 	"go.uber.org/zap"
 
+	interceptors "github.com/igortoigildin/goph-keeper/pkg/interceptors"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
@@ -82,7 +84,11 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 		return fmt.Errorf("failed to load TLS certificates: %w", err)
 	}
 
-	a.grpcServer = grpc.NewServer(grpc.Creds(creds))
+	a.grpcServer = grpc.NewServer(
+		grpc.Creds(creds),
+		grpc.UnaryInterceptor(interceptors.JwtUnaryInterceptor()),
+		grpc.StreamInterceptor(interceptors.JwtStreamInterceptor()),
+	)
 
 	reflection.Register(a.grpcServer)
 

@@ -8,7 +8,6 @@ import (
 	serviceUp "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/upload"
 	"github.com/igortoigildin/goph-keeper/pkg/encryption"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
-	"github.com/igortoigildin/goph-keeper/pkg/session"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -18,15 +17,15 @@ func saveCardInfoCmd(app *App) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "card",
 		Short: "Save bank card details in storage",
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
+		// PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		// 	// refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
 
-			if !session.IsSessionValid(refreshTokenSecretKey) {
-				logger.Error("Session expired or not found. Please login again")
-			}
+		// 	// if !session.IsSessionValid(refreshTokenSecretKey) {
+		// 	// 	logger.Error("Session expired or not found. Please login again")
+		// 	// }
 
-			logger.Info("Session is valid")
-		},
+		// 	// logger.Info("Session is valid")
+		// },
 		Run: func(cmd *cobra.Command, args []string) {
 			cardNumber, err := cmd.Flags().GetString("card_number")
 			if err != nil {
@@ -101,15 +100,15 @@ func downloadCardInfoCmd(app *App) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "card",
 		Short: "Download card details from storage",
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
+		// PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		// 	refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
 
-			if !session.IsSessionValid(refreshTokenSecretKey) {
-				logger.Fatal("Session expired or not found. Please login again")
-			}
+		// 	if !session.IsSessionValid(refreshTokenSecretKey) {
+		// 		logger.Fatal("Session expired or not found. Please login again")
+		// 	}
 
-			logger.Info("Session is valid")
-		},
+		// 	logger.Info("Session is valid")
+		// },
 		Run: func(cmd *cobra.Command, args []string) {
 			idStr, err := cmd.Flags().GetString("id")
 			if err != nil {

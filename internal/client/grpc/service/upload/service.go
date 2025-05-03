@@ -40,6 +40,7 @@ func (s *ClientService) SendPassword(addr, loginStr, passStr string, id string, 
 	creds, err := credentials.NewClientTLSFromFile("certs/server.crt", "")
 	if err != nil {
 		logger.Error("failed to load TLS certificates: %w", zap.Error(err))
+
 		return fmt.Errorf("failed to load TLS certificates: %w", err)
 	}
 
@@ -57,7 +58,7 @@ func (s *ClientService) SendPassword(addr, loginStr, passStr string, id string, 
 		return fmt.Errorf("error loading session: %w", err)
 	}
 
-	md := metadata.Pairs(login, ss.Login, "id", id)
+	md := metadata.Pairs(login, ss.Login, "id", id, "authorization", "Bearer "+ss.Token)
 
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
@@ -103,7 +104,7 @@ func (s *ClientService) SendBankDetails(addr, cardNumber, cvc, expDate string, i
 		return fmt.Errorf("error loading session: %w", err)
 	}
 
-	md := metadata.Pairs(login, ss.Login, "id", id)
+	md := metadata.Pairs(login, ss.Login, "id", id, "authorization", "Bearer "+ss.Token)
 
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
@@ -150,7 +151,7 @@ func (s *ClientService) SendText(addr, text string, id string, info string) erro
 		return fmt.Errorf("error loading session: %w", err)
 	}
 
-	md := metadata.Pairs(login, ss.Login, "id", id)
+	md := metadata.Pairs(login, ss.Login, "id", id, "authorization", "Bearer "+ss.Token)
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
 	if err = s.uploadText(ctx, text, info); err != nil {
@@ -190,7 +191,7 @@ func (s *ClientService) SendFile(addr string, filePath string, batchSize int, id
 		return fmt.Errorf("error loading session: %w", err)
 	}
 
-	md := metadata.Pairs(login, ss.Login, "id", id)
+	md := metadata.Pairs(login, ss.Login, "id", id, "authorization", "Bearer "+ss.Token)
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
 	if err = s.uploadFile(ctx, filePath, batchSize, info); err != nil {

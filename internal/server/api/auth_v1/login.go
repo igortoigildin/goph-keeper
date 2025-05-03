@@ -29,6 +29,6 @@ func (i *Implementation) Login(ctx context.Context, req *descAuth.LoginRequest) 
 	}
 
 	return &descAuth.LoginResponse{
-		RefreshToken: tkn,
+		Token: tkn,
 	}, nil
 }

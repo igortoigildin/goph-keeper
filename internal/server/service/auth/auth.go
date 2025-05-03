@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	models "github.com/igortoigildin/goph-keeper/internal/server/models"
@@ -16,10 +17,7 @@ import (
 )
 
 const (
-	refreshTokenSecretKey  = "W4/X+LLjehdxptt4YgGFCvMpq5ewptpZZYRHY6A72g0="
-	accessTokenSecretKey   = "VqvguGiffXILza1f44TWXowDT4zwf03dtXmqWW4SYyE="
-	refreshTokenExpiration = 60 * time.Minute
-	accessTokenExpiration  = 2 * time.Minute
+	tokenExpiration = 60 * time.Minute
 )
 
 var (
@@ -68,8 +66,10 @@ func (a *authServ) Login(ctx context.Context, login, password string) (string, e
 		return "", fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
 	}
 
+	jwtSecret := os.Getenv("JWT_SECRET")
+
 	// generate refresh token
-	refreshToken, err := utils.GenerateToken(*user, []byte(refreshTokenSecretKey), refreshTokenExpiration)
+	refreshToken, err := utils.GenerateToken(*user, []byte(jwtSecret), tokenExpiration)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate token: %w", err)
 	}

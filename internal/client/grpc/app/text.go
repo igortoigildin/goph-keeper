@@ -9,7 +9,6 @@ import (
 
 	"github.com/igortoigildin/goph-keeper/pkg/encryption"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
-	"github.com/igortoigildin/goph-keeper/pkg/session"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -19,20 +18,16 @@ func saveTextCmd(app *App) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "text",
 		Short: "Save arbitrary text data in storage",
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
-
-			if !session.IsSessionValid(refreshTokenSecretKey) {
-				logger.Error("Session expired or not found. Please login again")
-			}
-
-			logger.Info("Session is valid")
-		},
 		Run: func(cmd *cobra.Command, args []string) {
 			textData, err := cmd.Flags().GetString("text")
 			if err != nil {
 				logger.Fatal("failed to get text to be saved:", zap.Error(err))
 			}
+
+			logger.Debug("Saving text",
+				zap.String("text_length", string(len(textData))),
+				zap.String("text", textData),
+			)
 
 			info, err := cmd.Flags().GetString("info")
 			if err != nil {
@@ -48,10 +43,19 @@ func saveTextCmd(app *App) *cobra.Command {
 			serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
 			// Encrypting text data
-			encryptedText, err := encryption.Encrypt(textData, []byte(viper.Get("ENCRYPTION_KEY").(string)))
+			encryptionKey := []byte(viper.Get("ENCRYPTION_KEY").(string))
+			logger.Debug("Using encryption key",
+				zap.String("key_length", string(len(encryptionKey))),
+			)
+
+			encryptedText, err := encryption.Encrypt(textData, encryptionKey)
 			if err != nil {
 				logger.Error("failed to encrypt text data", zap.Error(err))
 			}
+
+			logger.Debug("Text encrypted successfully",
+				zap.String("encrypted_length", string(len(encryptedText))),
+			)
 
 			// Saving text locally in DB
 			err = app.Saver.SaveText(id.String(), info, encryptedText)
@@ -77,15 +81,6 @@ func downloadTextCmd(app *App) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "text",
 		Short: "Download arbitrary text data from storage",
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
-
-			if !session.IsSessionValid(refreshTokenSecretKey) {
-				logger.Fatal("Session expired or not found. Please login again")
-			}
-
-			logger.Info("Session is valid")
-		},
 		Run: func(cmd *cobra.Command, args []string) {
 			idStr, err := cmd.Flags().GetString("id")
 			if err != nil {
@@ -107,15 +102,27 @@ func downloadTextCmd(app *App) *cobra.Command {
 					logger.Error("failed to obtain text data from local storage: ", zap.Error(err))
 				}
 
-				decryptedText, err := encryption.Decrypt(res.Text, []byte(viper.Get("ENCRYPTION_KEY").(string)))
+				logger.Debug("Received encrypted text",
+					zap.String("encrypted_length", string(len(res.Text))),
+					zap.String("encrypted_text", res.Text),
+				)
+
+				encryptionKey := []byte(viper.Get("ENCRYPTION_KEY").(string))
+				logger.Debug("Using encryption key",
+					zap.String("key_length", string(len(encryptionKey))),
+				)
+
+				decryptedText, err := encryption.Decrypt(res.Text, encryptionKey)
 				if err != nil {
 					logger.Error("failed to decrypt text data", zap.Error(err))
 				}
 
+				logger.Debug("Text decrypted successfully",
+					zap.String("decrypted_length", string(len(decryptedText))),
+				)
+
 				logger.Info("your data:", zap.String("text:", decryptedText), zap.String("metadata:", res.Info))
-
 			}
-
 		},
 	}
 

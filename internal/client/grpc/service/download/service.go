@@ -52,12 +52,13 @@ func (s *ClientService) DownloadPassword(addr, id string) error {
 	defer conn.Close()
 
 	s.client = desc.NewDownloadV1Client(conn)
+
 	ss, err := session.LoadSession()
 	if err != nil {
 		return fmt.Errorf("error loading session: %w", err)
 	}
 
-	md := metadata.Pairs(login, ss.Login)
+	md := metadata.Pairs(login, ss.Login, "authorization", "Bearer "+ss.Token)
 
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
@@ -106,7 +107,7 @@ func (s *ClientService) DownloadText(addr, id string) error {
 		return fmt.Errorf("error loading session: %w", err)
 	}
 
-	md := metadata.Pairs(login, ss.Login)
+	md := metadata.Pairs(login, ss.Login, "authorization", "Bearer "+ss.Token)
 
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
@@ -148,7 +149,7 @@ func (s *ClientService) DownloadFile(addr string, id, fileName string) error {
 		return fmt.Errorf("error loading session: %w", err)
 	}
 
-	md := metadata.Pairs(login, ss.Login)
+	md := metadata.Pairs(login, ss.Login, "authorization", "Bearer "+ss.Token)
 
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 	stream, err := s.client.DownloadFile(ctx, &desc.DownloadFileRequest{Uuid: id})
@@ -210,7 +211,7 @@ func (s *ClientService) DownloadBankDetails(addr, id string) error {
 		return fmt.Errorf("error loading session: %w", err)
 	}
 
-	md := metadata.Pairs(login, ss.Login)
+	md := metadata.Pairs(login, ss.Login, "authorization", "Bearer "+ss.Token)
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
 	resp, err := s.client.DownloadBankData(ctx, &desc.DownloadBankDataRequest{Uuid: id})

@@ -64,6 +64,7 @@ func (auth *AuthService) Login(ctx context.Context, login, pass string) (string,
 	creds, err := credentials.NewClientTLSFromFile("certs/server.crt", "")
 	if err != nil {
 		logger.Error("failed to load TLS certificates: %w", zap.Error(err))
+
 		return "", fmt.Errorf("failed to load TLS certificates: %w", err)
 	}
 
@@ -81,5 +82,5 @@ func (auth *AuthService) Login(ctx context.Context, login, pass string) (string,
 		return "", fmt.Errorf("authentication error: %w", err)
 	}
 
-	return resp.GetRefreshToken(), nil
+	return resp.GetToken(), nil
 }
