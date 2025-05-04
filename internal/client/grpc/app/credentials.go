@@ -17,15 +17,6 @@ func savePasswordCmd(app *App) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "password",
 		Short: "Save login && password in storage",
-		// PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// 	refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
-
-		// 	if !session.IsSessionValid(refreshTokenSecretKey) {
-		// 		logger.Fatal("Session expired or not found. Please login again")
-		// 	}
-
-		// 	logger.Info("Session is valid")
-		// },
 		Run: func(cmd *cobra.Command, args []string) {
 			loginStr, err := cmd.Flags().GetString("login")
 			if err != nil {
@@ -60,15 +51,16 @@ func savePasswordCmd(app *App) *cobra.Command {
 
 			serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
-			// Saving credentials to local client storage
-			err = app.Saver.SaveCredentials(id.String(), meta, encryptedLogin, encryptedPassword)
+			// Sending credentials with created uuid to server.
+			etag, err := clientService.SendPassword(fmt.Sprintf(":%s", serverAddr), encryptedLogin, encryptedPassword, id.String(), meta)
 			if err != nil {
-				logger.Error("failed to save credentials locally", zap.Error(err))
+				logger.Error("failed to send credentials to server:", zap.Error(err))
 			}
 
-			// Sending credentials with created uuid to server.
-			if err := clientService.SendPassword(fmt.Sprintf(":%s", serverAddr), encryptedLogin, encryptedPassword, id.String(), meta); err != nil {
-				logger.Error("failed to send credentials to server:", zap.Error(err))
+			// Saving credentials to local client storage
+			err = app.Saver.SaveCredentials(id.String(), meta, encryptedLogin, encryptedPassword, etag)
+			if err != nil {
+				logger.Error("failed to save credentials locally", zap.Error(err))
 			}
 
 			logger.Info("Credentials saved successfully. Please save your uuid and use it to retrive your data back from Goph-keeper.",
@@ -88,15 +80,6 @@ func downloadPassCmd(app *App) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "password",
 		Short: "Download login && password from storage",
-		// PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// 	refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
-
-		// 	if !session.IsSessionValid(refreshTokenSecretKey) {
-		// 		logger.Fatal("Session expired or not found. Please login again")
-		// 	}
-
-		// 	logger.Info("Session is valid")
-		// },
 		Run: func(cmd *cobra.Command, args []string) {
 			idStr, err := cmd.Flags().GetString("id")
 			if err != nil {

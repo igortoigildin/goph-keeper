@@ -127,4 +127,3 @@ func (d *DataRepository) DownloadFile(ctx context.Context, bucketName, objectNam
 
 	return buf, metadata, nil
 }
-

@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 
+	model "github.com/igortoigildin/goph-keeper/internal/server/models"
 	models "github.com/igortoigildin/goph-keeper/internal/server/models"
 	fl "github.com/igortoigildin/goph-keeper/pkg/file"
 )
@@ -24,4 +25,5 @@ type DataRepository interface {
 	DownloadFile(ctx context.Context, bucketName, objectName string) (*bytes.Buffer, string, error)
 	SaveTextData(ctx context.Context, data any, login string, id string, info string) (string, error)
 	DownloadTextData(ctx context.Context, bucketName, objectName string) ([]byte, string, error)
+	ListObjects(ctx context.Context, login string) ([]model.ObjectInfo, error)
 }

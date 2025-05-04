@@ -9,4 +9,5 @@ type File struct {
 	Data      []byte
 	UpdatedAt time.Time
 	Info      string
+	Etag      string
 }

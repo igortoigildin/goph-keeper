@@ -16,15 +16,6 @@ func listAllSavedSecrets(app *App) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "all",
 		Short: "List all data currently saved in gopher-keeper",
-		// PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// 	refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
-
-		// 	if !session.IsSessionValid(refreshTokenSecretKey) {
-		// 		logger.Error("Session expired or not found. Please login again")
-		// 	}
-
-		// 	logger.Info("Session is valid")
-		// },
 		Run: func(cmd *cobra.Command, args []string) {
 			cards, err := app.Receiver.GetAllBankDetails()
 			if err != nil {

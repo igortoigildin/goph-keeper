@@ -15,9 +15,11 @@ import (
 	"go.uber.org/zap"
 
 	downloadApi "github.com/igortoigildin/goph-keeper/internal/server/api/download_v1"
+	listApi "github.com/igortoigildin/goph-keeper/internal/server/api/list_v1"
 	"github.com/igortoigildin/goph-keeper/internal/server/config"
 	authService "github.com/igortoigildin/goph-keeper/internal/server/service/auth"
 	downloadService "github.com/igortoigildin/goph-keeper/internal/server/service/download"
+	listService "github.com/igortoigildin/goph-keeper/internal/server/service/list"
 	uploadService "github.com/igortoigildin/goph-keeper/internal/server/service/upload"
 	repository "github.com/igortoigildin/goph-keeper/internal/server/storage"
 	dataRepository "github.com/igortoigildin/goph-keeper/internal/server/storage/minio"
@@ -39,6 +41,9 @@ type serviceProvider struct {
 
 	downloadService service.DownloadService
 	downloadImpl    *downloadApi.Implementation
+
+	listService service.ListService
+	listImpl    *listApi.Implementation
 
 	userRepository   repository.UserRepository
 	dataRepository   repository.DataRepository
@@ -164,4 +169,20 @@ func (s *serviceProvider) AccessRepository(ctx context.Context) downloadService.
 	}
 
 	return s.accessRepository
+}
+
+func (s *serviceProvider) ListImpl(ctx context.Context) *listApi.Implementation {
+	if s.listImpl == nil {
+		s.listImpl = listApi.NewImplementation(s.ListService(ctx))
+	}
+
+	return s.listImpl
+}
+
+func (s *serviceProvider) ListService(ctx context.Context) service.ListService {
+	if s.listService == nil {
+		s.listService = listService.New(ctx, s.DataRepository(ctx), s.AccessRepository(ctx))
+	}
+
+	return s.listService
 }

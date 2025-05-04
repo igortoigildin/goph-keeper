@@ -10,6 +10,7 @@ import (
 	authpb "github.com/igortoigildin/goph-keeper/pkg/auth_v1"
 	downloadpb "github.com/igortoigildin/goph-keeper/pkg/download_v1"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
+	listpb "github.com/igortoigildin/goph-keeper/pkg/sync_v1"
 	uploadpb "github.com/igortoigildin/goph-keeper/pkg/upload_v1"
 	"go.uber.org/zap"
 
@@ -95,6 +96,7 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 	uploadpb.RegisterUploadV1Server(a.grpcServer, a.serviceProvider.UploadImpl(ctx))
 	authpb.RegisterAuthV1Server(a.grpcServer, a.serviceProvider.AuthImpl(ctx))
 	downloadpb.RegisterDownloadV1Server(a.grpcServer, a.serviceProvider.DownloadImpl(ctx))
+	listpb.RegisterSyncV1Server(a.grpcServer, a.serviceProvider.ListImpl(ctx))
 
 	return nil
 }

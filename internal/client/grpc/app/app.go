@@ -7,6 +7,7 @@ import (
 
 	"github.com/igortoigildin/goph-keeper/internal/client/config"
 	"github.com/igortoigildin/goph-keeper/internal/client/grpc/models"
+	syncService "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/sync"
 	storage "github.com/igortoigildin/goph-keeper/internal/client/grpc/storage/sqlite"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
 	"github.com/spf13/cobra"
@@ -28,13 +29,18 @@ type App struct {
 	Saver
 	Downloader
 	Receiver
+	Syncer
+}
+
+type Syncer interface {
+	SyncAllData(addr string) error
 }
 
 type Saver interface {
-	SaveText(id, info, text string) error
-	SaveCredentials(id, service, username, password string) error
-	SaveBankDetails(cardNumber, cvc, expDate string, id, bankName string) error
-	SaveFile(id, filePath, info string) error
+	SaveText(id, info, text, etag string) error
+	SaveCredentials(id, service, username, password, etag string) error
+	SaveBankDetails(cardNumber, cvc, expDate, id, bankName, etag string) error
+	SaveFile(id, filePath, info, etag string) error
 }
 
 type Downloader interface {
@@ -65,6 +71,7 @@ func NewApp(dbPath string) (*App, error) {
 		Downloader: storage,
 		DBPath:     dbPath,
 		Receiver:   storage,
+		Syncer:     syncService.New(),
 	}, nil
 }
 
@@ -145,4 +152,9 @@ func init() {
 	listCmd.AddCommand(listAllSavedSecrets(app))
 
 	rootCmd.AddCommand(listCmd)
+
+	syncCmd.AddCommand(syncAllData(app))
+
+	// sync data with server
+	rootCmd.AddCommand(syncCmd)
 }

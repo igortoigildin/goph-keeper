@@ -57,14 +57,16 @@ func saveTextCmd(app *App) *cobra.Command {
 				zap.String("encrypted_length", string(len(encryptedText))),
 			)
 
-			// Saving text locally in DB
-			err = app.Saver.SaveText(id.String(), info, encryptedText)
+			// Sending text to remote server
+			etag, err := clientService.SendText(fmt.Sprintf(":%s", serverAddr), encryptedText, id.String(), info)
 			if err != nil {
-				logger.Error("failed to save text locally", zap.Error(err))
+				logger.Fatal("failed to save text", zap.Error(err))
 			}
 
-			if err := clientService.SendText(fmt.Sprintf(":%s", serverAddr), encryptedText, id.String(), info); err != nil {
-				logger.Fatal("failed to save text", zap.Error(err))
+			// Saving text locally in DB
+			err = app.Saver.SaveText(id.String(), info, encryptedText, etag)
+			if err != nil {
+				logger.Error("failed to save text locally", zap.Error(err))
 			}
 
 			logger.Info("Your text saved successfully", zap.String("uuid:", id.String()))

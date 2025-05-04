@@ -43,14 +43,16 @@ func InitDB(path string) (*sql.DB, error) {
 		service TEXT NOT NULL,
 		username TEXT NOT NULL,
 		password TEXT NOT NULL,
-		created_at DATETIME
+		created_at DATETIME,
+		etag TEXT
 	);
 
 	CREATE TABLE IF NOT EXISTS texts (
 		id TEXT PRIMARY KEY,
 		info TEXT NOT NULL,
 		text TEXT NOT NULL,
-		created_at DATETIME
+		created_at DATETIME,
+		etag TEXT
 	);
 
 	CREATE TABLE IF NOT EXISTS bank_data (
@@ -59,7 +61,8 @@ func InitDB(path string) (*sql.DB, error) {
 		card_number TEXT,
 		expiry TEXT,
 		cvc TEXT,
-		created_at DATETIME
+		created_at DATETIME,
+		etag TEXT
 	);
 
 	CREATE TABLE IF NOT EXISTS files (
@@ -67,7 +70,8 @@ func InitDB(path string) (*sql.DB, error) {
 		filename TEXT,
 		data BLOB,
 		info TEXT,
-		updated_at DATETIME
+		updated_at DATETIME,
+		etag TEXT
 	);
 	`
 	_, err = db.Exec(sqlStmt)
@@ -78,17 +82,17 @@ func InitDB(path string) (*sql.DB, error) {
 	return db, nil
 }
 
-func (rep *ClientRepository) SaveText(id, info, text string) error {
+func (rep *ClientRepository) SaveText(id, info, text, etag string) error {
 	_, err := rep.db.Exec(`
-		INSERT INTO texts (id, info, text, created_at)
-		VALUES (?, ?, ?, ?)`,
-		id, info, text, time.Now())
+		INSERT INTO texts (id, info, text, created_at, etag)
+		VALUES (?, ?, ?, ?, ?)`,
+		id, info, text, time.Now(), etag)
 
 	return err
 }
 
 func (rep *ClientRepository) GetAllTexts() ([]models.Text, error) {
-	rows, err := rep.db.Query("SELECT id, info, text, created_at FROM texts")
+	rows, err := rep.db.Query("SELECT id, info, text, created_at, etag FROM texts")
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +102,7 @@ func (rep *ClientRepository) GetAllTexts() ([]models.Text, error) {
 	for rows.Next() {
 		var t models.Text
 
-		err := rows.Scan(&t.ID, &t.Info, &t.Text, &t.CreatedAt)
+		err := rows.Scan(&t.ID, &t.Info, &t.Text, &t.CreatedAt, &t.Etag)
 		if err != nil {
 			return nil, err
 		}
@@ -115,7 +119,7 @@ func (rep *ClientRepository) GetText(id string) (models.Text, error) {
 		SELECT id, info, text, created_at
 		FROM texts
 		WHERE id = ?
-	`, id).Scan(&t.ID, &t.Info, &t.Text, &t.CreatedAt)
+	`, id).Scan(&t.ID, &t.Info, &t.Text, &t.CreatedAt, &t.Etag)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -127,17 +131,17 @@ func (rep *ClientRepository) GetText(id string) (models.Text, error) {
 	return t, nil
 }
 
-func (rep *ClientRepository) SaveCredentials(id, service, username, password string) error {
+func (rep *ClientRepository) SaveCredentials(id, service, username, password, etag string) error {
 	_, err := rep.db.Exec(`
-		INSERT INTO credentials (id, service, username, password, created_at)
-		VALUES (?, ?, ?, ?, ?)`,
-		id, service, username, password, time.Now())
+		INSERT INTO credentials (id, service, username, password, created_at, etag)
+		VALUES (?, ?, ?, ?, ?, ?)`,
+		id, service, username, password, time.Now(), etag)
 
 	return err
 }
 
 func (rep *ClientRepository) GetAllCredentials() ([]models.Credential, error) {
-	rows, err := rep.db.Query("SELECT id, service, username, password, created_at FROM credentials")
+	rows, err := rep.db.Query("SELECT id, service, username, password, created_at, etag FROM credentials")
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +151,7 @@ func (rep *ClientRepository) GetAllCredentials() ([]models.Credential, error) {
 	for rows.Next() {
 		var c models.Credential
 
-		err := rows.Scan(&c.ID, &c.Service, &c.Username, &c.Password, &c.CreatedAt)
+		err := rows.Scan(&c.ID, &c.Service, &c.Username, &c.Password, &c.CreatedAt, &c.Etag)
 		if err != nil {
 			return nil, err
 		}
@@ -161,10 +165,10 @@ func (rep *ClientRepository) GetCredential(id string) (models.Credential, error)
 	var c models.Credential
 
 	err := rep.db.QueryRow(`
-		SELECT id, service, username, password, created_at
+		SELECT id, service, username, password, created_at, etag
 		FROM credentials
 		WHERE id = ?
-	`, id).Scan(&c.ID, &c.Service, &c.Username, &c.Password, &c.CreatedAt)
+	`, id).Scan(&c.ID, &c.Service, &c.Username, &c.Password, &c.CreatedAt, &c.Etag)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -176,11 +180,11 @@ func (rep *ClientRepository) GetCredential(id string) (models.Credential, error)
 	return c, nil
 }
 
-func (rep *ClientRepository) SaveBankDetails(cardNumber, cvc, expDate string, id, bankName string) error {
+func (rep *ClientRepository) SaveBankDetails(cardNumber, cvc, expDate, id, bankName, etag string) error {
 	_, err := rep.db.Exec(`
-		INSERT INTO bank_data (id, bank_name, card_number, expiry, cvc, created_at)
-		VALUES (?, ?, ?, ?, ?, ?)`,
-		id, bankName, cardNumber, expDate, cvc, time.Now())
+		INSERT INTO bank_data (id, bank_name, card_number, expiry, cvc, created_at, etag)
+		VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		id, bankName, cardNumber, expDate, cvc, time.Now(), etag)
 
 	return err
 }
@@ -196,7 +200,7 @@ func (rep *ClientRepository) GetAllBankDetails() ([]models.BankDetails, error) {
 	for rows.Next() {
 		var c models.BankDetails
 
-		err := rows.Scan(&c.ID, &c.Info, &c.CardNumber, &c.Cvc, &c.ExpDate, &c.CreatedAt)
+		err := rows.Scan(&c.ID, &c.Info, &c.CardNumber, &c.Cvc, &c.ExpDate, &c.CreatedAt, &c.Etag)
 		if err != nil {
 			return nil, err
 		}
@@ -210,10 +214,10 @@ func (rep *ClientRepository) GetBankDetails(id string) (models.BankDetails, erro
 	var b models.BankDetails
 
 	err := rep.db.QueryRow(`
-		SELECT id, bank_name, card_number, expiry, cvc, created_at
+		SELECT id, bank_name, card_number, expiry, cvc, created_at, etag			
 		FROM bank_data
 		WHERE id = ?
-	`, id).Scan(&b.ID, &b.Info, &b.CardNumber, &b.ExpDate, &b.Cvc, &b.CreatedAt)
+	`, id).Scan(&b.ID, &b.Info, &b.CardNumber, &b.ExpDate, &b.Cvc, &b.CreatedAt, &b.Etag)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -225,7 +229,7 @@ func (rep *ClientRepository) GetBankDetails(id string) (models.BankDetails, erro
 	return b, nil
 }
 
-func (rep *ClientRepository) SaveFile(id, filePath, info string) error {
+func (rep *ClientRepository) SaveFile(id, filePath, info, etag string) error {
 	fileData, err := os.ReadFile(filePath)
 	if err != nil {
 		logger.Error("error while reading file", zap.Error(err))
@@ -238,15 +242,16 @@ func (rep *ClientRepository) SaveFile(id, filePath, info string) error {
 		Data:      fileData,
 		UpdatedAt: time.Now(),
 		Info:      info,
+		Etag:      etag,
 	}
 
-	_, err = rep.db.Exec("INSERT OR REPLACE INTO files (id, filename, data, updated_at, info) VALUES (?, ?, ?, ?, ?)",
-		f.ID, f.Filename, f.Data, f.UpdatedAt, f.Info)
+	_, err = rep.db.Exec("INSERT OR REPLACE INTO files (id, filename, data, updated_at, info, etag) VALUES (?, ?, ?, ?, ?, ?)",
+		f.ID, f.Filename, f.Data, f.UpdatedAt, f.Info, f.Etag)
 	return err
 }
 
 func (rep *ClientRepository) ListAllFiles() ([]models.File, error) {
-	rows, err := rep.db.Query("SELECT id, filename, data, info, updated_at FROM files")
+	rows, err := rep.db.Query("SELECT id, filename, data, info, updated_at, etag FROM files")
 	if err != nil {
 		return nil, err
 	}
@@ -256,7 +261,7 @@ func (rep *ClientRepository) ListAllFiles() ([]models.File, error) {
 	for rows.Next() {
 		var f models.File
 		var ignored []byte
-		err = rows.Scan(&f.ID, &f.Filename, &ignored, &f.Info, &f.UpdatedAt)
+		err = rows.Scan(&f.ID, &f.Filename, &ignored, &f.Info, &f.UpdatedAt, &f.Etag)
 		if err != nil {
 			return nil, err
 		}
@@ -269,10 +274,10 @@ func (rep *ClientRepository) GetFile(id string) (models.File, error) {
 	var f models.File
 
 	err := rep.db.QueryRow(`
-		SELECT id, filename, data, updated_at, info
+		SELECT id, filename, data, updated_at, info, etag
 		FROM files
 		WHERE id = ?
-	`, id).Scan(&f.ID, &f.Filename, &f.Data, &f.UpdatedAt, &f.Info)
+	`, id).Scan(&f.ID, &f.Filename, &f.Data, &f.UpdatedAt, &f.Info, &f.Etag)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

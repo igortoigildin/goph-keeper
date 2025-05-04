@@ -64,15 +64,16 @@ func saveCardInfoCmd(app *App) *cobra.Command {
 
 			serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
-			// Save data to local storate
-			err = app.Saver.SaveBankDetails(encryptedCardNumber, encryptedCVC, encryptedExpDate, id.String(), meta)
+			// Upload data to remote server
+			etag, err := clientService.SendBankDetails(fmt.Sprintf(":%s", serverAddr), encryptedCardNumber, encryptedCVC, encryptedExpDate, id.String(), meta)
 			if err != nil {
-				logger.Error("failed to save bank details locally", zap.Error(err))
+				logger.Error("failed to save bank details: ", zap.Error(err))
 			}
 
-			// Upload data to remote server
-			if err := clientService.SendBankDetails(fmt.Sprintf(":%s", serverAddr), encryptedCardNumber, encryptedCVC, encryptedExpDate, id.String(), meta); err != nil {
-				logger.Error("failed to save bank details: ", zap.Error(err))
+			// Save data to local storate
+			err = app.Saver.SaveBankDetails(encryptedCardNumber, encryptedCVC, encryptedExpDate, id.String(), meta, etag)
+			if err != nil {
+				logger.Error("failed to save bank details locally", zap.Error(err))
 			}
 
 			logger.Info("Your bank details saved successfully. Please keep your uuid and use it to retrive your data back from Goph-keeper.",

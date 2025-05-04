@@ -176,7 +176,7 @@ func (f *UploadService) SaveLoginPassword(ctx context.Context, data map[string]s
 	return etag, nil
 }
 
-func (f *UploadService) SaveFile(stream desc.UploadV1_UploadFileServer) (error) {
+func (f *UploadService) SaveFile(stream desc.UploadV1_UploadFileServer) error {
 	file := fl.NewFile()
 	var fileSize uint32
 	fileSize = 0
@@ -268,6 +268,6 @@ func (f *UploadService) SaveFile(stream desc.UploadV1_UploadFileServer) (error) 
 	if err := stream.SendAndClose(response); err != nil {
 		return fmt.Errorf("failed to send and close stream: %w", err)
 	}
-	
+
 	return nil
 }

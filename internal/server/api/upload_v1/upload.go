@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (i *Implementation) UploadFile(stream desc.UploadV1_UploadFileServer) (error) {
+func (i *Implementation) UploadFile(stream desc.UploadV1_UploadFileServer) error {
 	err := i.uploadService.SaveFile(stream)
 	if err != nil {
 		return status.Error(codes.Unknown, "failed to upload file")

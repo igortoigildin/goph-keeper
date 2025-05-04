@@ -10,4 +10,5 @@ type BankDetails struct {
 	Cvc        string
 	ExpDate    string
 	CreatedAt  time.Time
+	Etag       string
 }

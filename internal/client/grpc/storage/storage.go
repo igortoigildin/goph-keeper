@@ -3,10 +3,10 @@ package storage
 import "github.com/igortoigildin/goph-keeper/internal/client/grpc/models"
 
 type Saver interface {
-	SaveText(id, info, text string) error
-	SaveCredentials(id, service, username, password string) error
-	SaveBankDetails(cardNumber, cvc, expDate string, id, bankName string) error
-	SaveFile(id, filePath string) error
+	SaveText(id, info, text, etag string) error
+	SaveCredentials(id, service, username, password, etag string) error
+	SaveBankDetails(cardNumber, cvc, expDate, id, bankName, etag string) error
+	SaveFile(id, filePath, etag string) error
 }
 
 type Downloader interface {

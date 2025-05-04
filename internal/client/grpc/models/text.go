@@ -8,4 +8,5 @@ type Text struct {
 	Info      string
 	Text      string
 	CreatedAt time.Time
+	Etag      string
 }

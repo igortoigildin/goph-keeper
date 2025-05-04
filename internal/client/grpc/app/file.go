@@ -18,15 +18,6 @@ func saveBinCmd(app *App) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "bin",
 		Short: "Save binary data in storage",
-		// PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// 	refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
-
-		// 	if !session.IsSessionValid(refreshTokenSecretKey) {
-		// 		logger.Fatal("Session expired or not found. Please login again")
-		// 	}
-
-		// 	logger.Info("Session is valid")
-		// },
 		Run: func(cmd *cobra.Command, args []string) {
 			pathStr, err := cmd.Flags().GetString("file_path")
 			if err != nil {
@@ -46,14 +37,15 @@ func saveBinCmd(app *App) *cobra.Command {
 
 			serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
-			// save file to local client's storage
-			err = app.Saver.SaveFile(id.String(), pathStr, info)
+			etag, err := clientService.SendFile(fmt.Sprintf(":%s", serverAddr), pathStr, batchSize, id.String(), info)
 			if err != nil {
-				logger.Error("error saving file locally", zap.Error(err))
+				logger.Fatal("failed to save binary file: ", zap.Error(err))
 			}
 
-			if err := clientService.SendFile(fmt.Sprintf(":%s", serverAddr), pathStr, batchSize, id.String(), info); err != nil {
-				logger.Fatal("failed to save binary file: ", zap.Error(err))
+			// save file to local client's storage
+			err = app.Saver.SaveFile(id.String(), pathStr, info, etag)
+			if err != nil {
+				logger.Error("error saving file locally", zap.Error(err))
 			}
 
 			logger.Info("Your file saved successfully. Please keep your uuid and use it to retrive your data back from Goph-keeper.",
@@ -72,15 +64,6 @@ func downloadBinCmd(app *App) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "bin",
 		Short: "Download binary data from storage",
-		// PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// 	refreshTokenSecretKey, _ := viper.Get("REFRESH_SECRET").(string)
-
-		// 	if !session.IsSessionValid(refreshTokenSecretKey) {
-		// 		logger.Fatal("Session expired or not found. Please login again")
-		// 	}
-
-		// 	logger.Info("Session is valid")
-		// },
 		Run: func(cmd *cobra.Command, args []string) {
 			idStr, err := cmd.Flags().GetString("id")
 			if err != nil {

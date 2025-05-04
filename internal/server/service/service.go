@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	model "github.com/igortoigildin/goph-keeper/internal/server/models"
 	desc "github.com/igortoigildin/goph-keeper/pkg/upload_v1"
 )
 
@@ -12,7 +13,7 @@ type AuthService interface {
 }
 
 type UploadService interface {
-	SaveFile(stream desc.UploadV1_UploadFileServer) (error)
+	SaveFile(stream desc.UploadV1_UploadFileServer) error
 	SaveBankData(ctx context.Context, data map[string]string, info string) (string, error)
 	SaveText(ctx context.Context, text string, info string) (string, error)
 	SaveLoginPassword(ctx context.Context, data map[string]string, info string) (string, error)
@@ -23,4 +24,8 @@ type DownloadService interface {
 	DownloadBankData(ctx context.Context, id string) (map[string]string, string, error)
 	DownloadText(ctx context.Context, id string) (string, string, error)
 	DownloadLoginPassword(ctx context.Context, id string) (map[string]string, string, error)
+}
+
+type ListService interface {
+	List(ctx context.Context) ([]model.ObjectInfo, error)
 }
