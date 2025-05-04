@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	models "github.com/igortoigildin/goph-keeper/internal/server/models"
-	rep "github.com/igortoigildin/goph-keeper/internal/server/storage"
 	fl "github.com/igortoigildin/goph-keeper/pkg/file"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
 	desc "github.com/igortoigildin/goph-keeper/pkg/upload_v1"
@@ -27,39 +26,44 @@ type AccessRepository interface {
 	SaveAccess(ctx context.Context, login string, id string) error
 }
 
+type DataRepository interface {
+	SaveTextData(ctx context.Context, data any, login string, id string, info string) (string, error)
+	SaveFile(ctx context.Context, file *fl.File, login string, id string, meta string) (string, error)
+}
+
 type UploadService struct {
-	dataRepository   rep.DataRepository
+	dataRepository   DataRepository
 	accessRepository AccessRepository
 }
 
-func New(ctx context.Context, dataRep rep.DataRepository, accessRep AccessRepository) *UploadService {
+func New(ctx context.Context, dataRep DataRepository, accessRep AccessRepository) *UploadService {
 	return &UploadService{dataRepository: dataRep, accessRepository: accessRep}
 }
 
-func (f *UploadService) SaveBankData(ctx context.Context, data map[string]string, info string) error {
+func (f *UploadService) SaveBankData(ctx context.Context, data map[string]string, info string) (string, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		logger.Error("metada is not received from incoming context")
+		logger.Error("metadata is not received from incoming context")
 
-		return errors.New("metada not received from md")
+		return "", errors.New("metada not received from md")
 	} else if md.Len() == 0 {
-		logger.Error("metada is empty")
+		logger.Error("metadata is empty")
 
-		return errors.New("md is empty")
+		return "", errors.New("md is empty")
 	}
 
 	if _, ok = md[login]; !ok {
 		logger.Error("login not provided")
 
-		return errors.New("login is needed")
+		return "", errors.New("login is needed")
 	} else if len(data) == 0 {
 		logger.Error("bank data not provided")
 
-		return errors.New("bank details not provided")
+		return "", errors.New("bank details not provided")
 	} else if _, ok = md[id]; !ok {
 		logger.Error("item id not provided")
 
-		return errors.New("item id needed")
+		return "", errors.New("item id needed")
 	}
 
 	login := md[login][0]
@@ -73,39 +77,39 @@ func (f *UploadService) SaveBankData(ctx context.Context, data map[string]string
 	if err != nil {
 		logger.Error("error saving access: ", zap.Error(err))
 
-		return fmt.Errorf("error saving access: %w", err)
+		return "", fmt.Errorf("error saving access: %w", err)
 	}
 
-	err = f.dataRepository.SaveTextData(ctx, data, login, id, info)
+	etag, err := f.dataRepository.SaveTextData(ctx, data, login, id, info)
 	if err != nil {
 		logger.Error("error saving bank data:", zap.Error(err))
 
-		return fmt.Errorf("error saving bank data: %w", err)
+		return "", fmt.Errorf("error saving bank data: %w", err)
 	}
 
-	return nil
+	return etag, nil
 }
 
-func (f *UploadService) SaveText(ctx context.Context, text string, info string) error {
+func (f *UploadService) SaveText(ctx context.Context, text string, info string) (string, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		logger.Error("metada is not received from incoming context")
 
-		return errors.New("metada not received from md")
+		return "", errors.New("metada not received from md")
 	} else if md.Len() == 0 {
 		logger.Error("metada is emty")
 
-		return errors.New("md is empty")
+		return "", errors.New("md is empty")
 	}
 
 	if _, ok = md[login]; !ok {
 		logger.Error("login not provided")
 
-		return errors.New("login is needed")
+		return "", errors.New("login is needed")
 	} else if _, ok = md[id]; !ok {
 		logger.Error("item id not provided")
 
-		return errors.New("item id needed")
+		return "", errors.New("item id needed")
 	}
 
 	login := md[login][0]
@@ -118,35 +122,35 @@ func (f *UploadService) SaveText(ctx context.Context, text string, info string) 
 	if err != nil {
 		logger.Error("error saving access: ", zap.Error(err))
 
-		return fmt.Errorf("error saving access: %w", err)
+		return "", fmt.Errorf("error saving access: %w", err)
 	}
 
-	err = f.dataRepository.SaveTextData(ctx, text, login, id, info)
+	etag, err := f.dataRepository.SaveTextData(ctx, text, login, id, info)
 	if err != nil {
 		logger.Error("error saving text data: ", zap.Error(err))
 
-		return fmt.Errorf("error saving text data: %w", err)
+		return "", fmt.Errorf("error saving text data: %w", err)
 	}
 
-	return nil
+	return etag, nil
 }
 
-func (f *UploadService) SaveLoginPassword(ctx context.Context, data map[string]string, info string) error {
+func (f *UploadService) SaveLoginPassword(ctx context.Context, data map[string]string, info string) (string, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		logger.Error("metadata is not received from incoming context")
 
-		return errors.New("metadata not received from md")
+		return "", errors.New("metadata not received from md")
 	} else if md.Len() == 0 {
 		logger.Error("metadata is emty")
 
-		return errors.New("metadata is empty")
+		return "", errors.New("metadata is empty")
 	}
 
 	if _, ok = md[login]; !ok {
 		logger.Error("login not provided")
 
-		return errors.New("login is needed")
+		return "", errors.New("login is needed")
 	}
 
 	login := md[login][0]
@@ -159,20 +163,20 @@ func (f *UploadService) SaveLoginPassword(ctx context.Context, data map[string]s
 	if err != nil {
 		logger.Error("error saving access: ", zap.Error(err))
 
-		return fmt.Errorf("error saving access: %w", err)
+		return "", fmt.Errorf("error saving access: %w", err)
 	}
 
-	err = f.dataRepository.SaveTextData(ctx, data, login, id, info)
+	etag, err := f.dataRepository.SaveTextData(ctx, data, login, id, info)
 	if err != nil {
 		logger.Error("error saving credentials data", zap.Error(err))
 
-		return fmt.Errorf("error saving credentials data: %w", err)
+		return "", fmt.Errorf("error saving credentials data: %w", err)
 	}
 
-	return nil
+	return etag, nil
 }
 
-func (f *UploadService) SaveFile(stream desc.UploadV1_UploadFileServer) error {
+func (f *UploadService) SaveFile(stream desc.UploadV1_UploadFileServer) (error) {
 	file := fl.NewFile()
 	var fileSize uint32
 	fileSize = 0
@@ -244,7 +248,7 @@ func (f *UploadService) SaveFile(stream desc.UploadV1_UploadFileServer) error {
 	logger.Info("result:", zap.String("path", file.FilePath), zap.Any("size", fileSize))
 	fileName := filepath.Base(file.FilePath)
 
-	err = f.dataRepository.SaveFile(context.TODO(), file, login, id, info)
+	etag, err := f.dataRepository.SaveFile(context.TODO(), file, login, id, info)
 	if err != nil {
 		logger.Error("error uploading file to Minio: ", zap.Error(err))
 
@@ -259,5 +263,11 @@ func (f *UploadService) SaveFile(stream desc.UploadV1_UploadFileServer) error {
 		return fmt.Errorf("error deleting file: %w", err)
 	}
 
-	return stream.SendAndClose(&desc.UploadFileResponse{FileName: fileName, Size: fileSize})
+	response := &desc.UploadFileResponse{FileName: fileName, Size: fileSize, Etag: etag}
+
+	if err := stream.SendAndClose(response); err != nil {
+		return fmt.Errorf("failed to send and close stream: %w", err)
+	}
+	
+	return nil
 }

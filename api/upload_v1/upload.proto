@@ -7,10 +7,10 @@ import "google/protobuf/empty.proto";
 option go_package = "github.com/igortoigildin/goph-keeper/pkg/upload_v1;upload_v1";
 
 service UploadV1 {
-    rpc UploadPassword(UploadPasswordRequest) returns (google.protobuf.Empty);
-    rpc UploadText(UploadTextRequest) returns (google.protobuf.Empty);
+    rpc UploadPassword(UploadPasswordRequest) returns (UploadPasswordResponse);
+    rpc UploadText(UploadTextRequest) returns (UploadTextResponse);
     rpc UploadFile(stream UploadFileRequest) returns(UploadFileResponse);
-    rpc UploadBankData(UploadBankDataRequest) returns (google.protobuf.Empty);
+    rpc UploadBankData(UploadBankDataRequest) returns (UploadBankDataResponse);
 }
 
 message UploadFileRequest {
@@ -23,6 +23,7 @@ message UploadFileResponse {
     string file_name = 1;
     uint32 size = 2;
     string metadata = 3;
+    string etag = 4;
 }
 
 message UploadPasswordRequest {
@@ -30,13 +31,25 @@ message UploadPasswordRequest {
     string metadata = 2;
 }
 
+message UploadPasswordResponse {
+    string etag = 1;
+}
+
 message UploadTextRequest {
     string text = 1;
     string metadata = 2;
 }
 
+message UploadTextResponse {
+    string etag = 1;
+}
+
 message UploadBankDataRequest {
     map<string, string> data = 1;
     string metadata = 2;
+}
+
+message UploadBankDataResponse {
+    string etag = 1;
 }
 

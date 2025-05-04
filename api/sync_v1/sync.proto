@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package sync_v1;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/igortoigildin/goph-keeper/pkg/sync_v1;sync_v1";
+
+service SyncV1 {
+    rpc GetObjectList(SyncRequest) returns (SyncResponse);
+}
+
+message SyncRequest {
+    string login = 1;
+}
+
+
+message ObjectInfo {
+  string key = 1;
+  int64 size = 2;
+  string last_modified = 3;
+  string etag = 4;
+}
+
+message SyncResponse {
+  repeated ObjectInfo objects = 1;
+}
+
