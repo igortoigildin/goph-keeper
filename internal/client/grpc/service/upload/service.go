@@ -118,7 +118,7 @@ func (s *ClientService) SendBankDetails(addr, cardNumber, cvc, expDate string, i
 }
 
 func (s *ClientService) uploadBankDetails(ctx context.Context, cardNumber, cvc, expDate, meta string) (string, error) {
-	data := make(map[string]string, 3)
+	data := make(map[string]string, 4)
 	data["card_number"] = cardNumber
 	data["CVC"] = cvc
 	data["expiration_date"] = expDate
