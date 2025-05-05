@@ -23,7 +23,7 @@ type UserRepository interface {
 type DataRepository interface {
 	SaveFile(ctx context.Context, file *fl.File, login string, id string, meta string) (string, error)
 	DownloadFile(ctx context.Context, bucketName, objectName string) (*bytes.Buffer, string, error)
-	SaveTextData(ctx context.Context, data any, login string, id string, info string) (string, error)
-	DownloadTextData(ctx context.Context, bucketName, objectName string) ([]byte, string, error)
+	SaveTextData(ctx context.Context, data any, login string, id string, info string, dataType string) (string, error)
+	DownloadTextData(ctx context.Context, bucketName, objectName, dataType string) ([]byte, string, error)
 	ListObjects(ctx context.Context, login string) ([]model.ObjectInfo, error)
 }

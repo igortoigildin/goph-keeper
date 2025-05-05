@@ -8,4 +8,5 @@ type ObjectInfo struct {
 	Size         int64     `json:"size"`
 	LastModified time.Time `json:"last_modified"`
 	ETag         string    `json:"etag"`
+	Datatype     string    `json:"datatype"`
 }

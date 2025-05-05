@@ -3,6 +3,10 @@ PROJECT_BIN:=$(PROJECT_DIR)/bin
 $(shell [ -f bin ] || mkdir -p $(PROJECT_BIN))
 PATH := $(PROJECT_BIN):$(PATH)
 
+BUILD_VERSION := 1.2.0
+BUILD_DATE := $(shell date -u '+%Y-%m-%dT%H:%M:%SZ')
+BUILD_COMMIT := $(shell git rev-parse HEAD)
+
 GOLANGCI_LINT = $(PROJECT_BIN)/golangci-lint
 
 install-linter:
@@ -99,7 +103,7 @@ clear-server:
 
 ### Run basic building binary methods for client ###
 build-client:
-	go build -o ./bin/client cmd/client/main.go
+	go build -ldflags "-X 'github.com/igortoigildin/goph-keeper/buildinfo.BuildVersion=${BUILD_VERSION}' -X 'github.com/igortoigildin/goph-keeper/buildinfo.BuildDate=${BUILD_DATE}' -X 'github.com/igortoigildin/goph-keeper/buildinfo.BuildCommit=${BUILD_COMMIT}'" -o bin/client ./cmd/client/main.go
 
 clear-client:
 	rm -f ./bin/client

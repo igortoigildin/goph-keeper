@@ -154,6 +154,7 @@ func (s *ClientService) SendText(addr, text string, id string, info string) (str
 	}
 
 	md := metadata.Pairs(login, ss.Login, "id", id, "authorization", "Bearer "+ss.Token)
+
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
 	etag, err := s.uploadText(ctx, text, info)

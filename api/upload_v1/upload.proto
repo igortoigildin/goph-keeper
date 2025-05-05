@@ -17,6 +17,7 @@ message UploadFileRequest {
     string file_name = 1;
     bytes chunk = 2;
     string metadata = 3;
+    string data_type = 4;
 }
 
 message UploadFileResponse {
@@ -29,6 +30,7 @@ message UploadFileResponse {
 message UploadPasswordRequest {
     map<string, string> data = 1;
     string metadata = 2;
+    string data_type = 3;
 }
 
 message UploadPasswordResponse {
@@ -38,6 +40,7 @@ message UploadPasswordResponse {
 message UploadTextRequest {
     string text = 1;
     string metadata = 2;
+    string data_type = 3;
 }
 
 message UploadTextResponse {
@@ -47,6 +50,7 @@ message UploadTextResponse {
 message UploadBankDataRequest {
     map<string, string> data = 1;
     string metadata = 2;
+    string data_type = 3;
 }
 
 message UploadBankDataResponse {

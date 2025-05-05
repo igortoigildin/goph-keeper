@@ -10,6 +10,7 @@ import (
 	syncService "github.com/igortoigildin/goph-keeper/internal/client/grpc/service/sync"
 	storage "github.com/igortoigildin/goph-keeper/internal/client/grpc/storage/sqlite"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
+	desc "github.com/igortoigildin/goph-keeper/pkg/sync_v1"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
@@ -26,24 +27,27 @@ var (
 
 type App struct {
 	DBPath string
-	Saver
-	Downloader
-	Receiver
+	ClientSaver
+	ClientReceiver
 	Syncer
 }
 
 type Syncer interface {
-	SyncAllData(addr string) error
+	ListAllData(addr string) ([]*desc.ObjectInfo, error)
 }
 
-type Saver interface {
+type ClientSaver interface {
 	SaveText(id, info, text, etag string) error
 	SaveCredentials(id, service, username, password, etag string) error
 	SaveBankDetails(cardNumber, cvc, expDate, id, bankName, etag string) error
 	SaveFile(id, filePath, info, etag string) error
+	UpdateText(id, text, etag string) error
+	UpdateCredentials(id, service, username, password, etag string) error
+	UpdateBankDetails(id, cardNumber, cvc, expDate, bankName, etag string) error
+	UpdateFile(id, etag string, data []byte) error
 }
 
-type Downloader interface {
+type ClientReceiver interface {
 	GetAllTexts() ([]models.Text, error)
 	GetText(id string) (models.Text, error)
 	GetAllCredentials() ([]models.Credential, error)
@@ -51,12 +55,6 @@ type Downloader interface {
 	GetAllBankDetails() ([]models.BankDetails, error)
 	GetBankDetails(id string) (models.BankDetails, error)
 	GetFile(id string) (models.File, error)
-}
-
-type Receiver interface {
-	GetAllTexts() ([]models.Text, error)
-	GetAllCredentials() ([]models.Credential, error)
-	GetAllBankDetails() ([]models.BankDetails, error)
 	ListAllFiles() ([]models.File, error)
 }
 
@@ -67,11 +65,10 @@ func NewApp(dbPath string) (*App, error) {
 	}
 
 	return &App{
-		Saver:      storage,
-		Downloader: storage,
-		DBPath:     dbPath,
-		Receiver:   storage,
-		Syncer:     syncService.New(),
+		ClientSaver:    storage,
+		ClientReceiver: storage,
+		DBPath:         dbPath,
+		Syncer:         syncService.New(),
 	}, nil
 }
 
@@ -87,7 +84,12 @@ var downloadCmd = &cobra.Command{
 	Short: "Download data from storage",
 }
 
+var buildVersion string = "N/A"
+var buildDate string = "N/A"
+var buildCommit string = "N/A"
+
 func Execute() {
+
 	if err := rootCmd.Execute(); err != nil {
 		logger.Error("error executing root cmd", zap.Error(err))
 

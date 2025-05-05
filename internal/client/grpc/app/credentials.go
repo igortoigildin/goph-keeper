@@ -58,7 +58,7 @@ func savePasswordCmd(app *App) *cobra.Command {
 			}
 
 			// Saving credentials to local client storage
-			err = app.Saver.SaveCredentials(id.String(), meta, encryptedLogin, encryptedPassword, etag)
+			err = app.ClientSaver.SaveCredentials(id.String(), meta, encryptedLogin, encryptedPassword, etag)
 			if err != nil {
 				logger.Error("failed to save credentials locally", zap.Error(err))
 			}
@@ -89,9 +89,10 @@ func downloadPassCmd(app *App) *cobra.Command {
 			clientService := serviceDown.New()
 			serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
-			if err := clientService.DownloadPassword(fmt.Sprintf(":%s", serverAddr), idStr); err != nil {
+			_, err = clientService.DownloadPassword(fmt.Sprintf(":%s", serverAddr), idStr)
+			if err != nil {
 				// if remote server is not available, try to reach local storage
-				res, err := app.GetCredential(idStr)
+				res, err := app.ClientReceiver.GetCredential(idStr)
 				if err != nil {
 					logger.Error("failed to download date from local storage", zap.Error(err))
 				}

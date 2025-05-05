@@ -71,7 +71,7 @@ func saveCardInfoCmd(app *App) *cobra.Command {
 			}
 
 			// Save data to local storate
-			err = app.Saver.SaveBankDetails(encryptedCardNumber, encryptedCVC, encryptedExpDate, id.String(), meta, etag)
+			err = app.ClientSaver.SaveBankDetails(encryptedCardNumber, encryptedCVC, encryptedExpDate, id.String(), meta, etag)
 			if err != nil {
 				logger.Error("failed to save bank details locally", zap.Error(err))
 			}
@@ -104,13 +104,14 @@ func downloadCardInfoCmd(app *App) *cobra.Command {
 			serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
 			// obtain data from remote server
-			if err := clientService.DownloadBankDetails(fmt.Sprintf(":%s", serverAddr), idStr); err != nil {
+			_, err = clientService.DownloadBankDetails(fmt.Sprintf(":%s", serverAddr), idStr)
+			if err != nil {
 				logger.Error("failed to obtain card details from goph-keeper: ", zap.Error(err))
 
 				// if remote server not responding, try reach local storage
 				logger.Info("trying to obtain data locally")
 
-				res, err := app.Downloader.GetBankDetails(idStr)
+				res, err := app.ClientReceiver.GetBankDetails(idStr)
 				if err != nil {
 					logger.Error("failed to download bank details locally: ", zap.Error(err))
 				}
@@ -137,11 +138,11 @@ func downloadCardInfoCmd(app *App) *cobra.Command {
 					zap.Any("CVC", decryptedCVC),
 					zap.Any("expiration_date", decryptedExpDate),
 				)
-
 			}
 
 		},
 	}
+
 	cmd.Flags().StringP("id", "i", "", "A Universally Unique Identifier of the saved card details")
 
 	return cmd

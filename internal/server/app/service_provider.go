@@ -30,6 +30,7 @@ import (
 type serviceProvider struct {
 	grpcConfig config.GRPCConfig
 	pgConfig   config.PGConfig
+	mainConfig *config.Config
 
 	dbClient db.Client
 
@@ -51,7 +52,9 @@ type serviceProvider struct {
 }
 
 func newServiceProvider() *serviceProvider {
-	return &serviceProvider{}
+	return &serviceProvider{
+		mainConfig: config.MustLoad(),
+	}
 }
 
 func (s *serviceProvider) GRPCConfig() config.GRPCConfig {
@@ -69,7 +72,7 @@ func (s *serviceProvider) GRPCConfig() config.GRPCConfig {
 
 func (s *serviceProvider) PGConfig() config.PGConfig {
 	if s.pgConfig == nil {
-		cfg, err := config.NewPGConfig()
+		cfg, err := config.NewPGConfig(s.mainConfig)
 		if err != nil {
 			logger.Fatal("failed to get pg config:", zap.Error(err))
 		}

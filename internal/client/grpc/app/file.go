@@ -43,7 +43,7 @@ func saveBinCmd(app *App) *cobra.Command {
 			}
 
 			// save file to local client's storage
-			err = app.Saver.SaveFile(id.String(), pathStr, info, etag)
+			err = app.ClientSaver.SaveFile(id.String(), pathStr, info, etag)
 			if err != nil {
 				logger.Error("error saving file locally", zap.Error(err))
 			}
@@ -80,11 +80,12 @@ func downloadBinCmd(app *App) *cobra.Command {
 
 			serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
-			if err := clientService.DownloadFile(fmt.Sprintf(":%s", serverAddr), idStr, fileNameStr); err != nil {
+			_, err = clientService.DownloadFile(fmt.Sprintf(":%s", serverAddr), idStr, fileNameStr)
+			if err != nil {
 				logger.Error("failed to obtain requested binary data from goph-keeper: ", zap.Error(err))
 
 				// if remote server not responding, try to reach local storage
-				res, err := app.GetFile(idStr)
+				res, err := app.ClientReceiver.GetFile(idStr)
 				if err != nil {
 					logger.Error("failed to obtain requested binary data from goph-keeper: ", zap.Error(err))
 				}

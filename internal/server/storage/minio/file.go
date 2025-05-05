@@ -20,6 +20,7 @@ const (
 	secretKey = "miniosecretkey"
 	useSSL    = false
 	endpoint  = "localhost:9000"
+	binData   = "bin_data"
 )
 
 type DataRepository struct{}
@@ -40,8 +41,8 @@ func (d *DataRepository) SaveFile(ctx context.Context, file *fl.File, login stri
 	}
 
 	// Define the file to upload and the destination bucket
-	objectName := id    // The name for the object in MinIO
-	bucketName := login // Bucket name in MinIO
+	objectName := binData + "_" + id // The name for the object in MinIO
+	bucketName := login              // Bucket name in MinIO
 
 	// Ensure the bucket exists (or create it)
 	err = client.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{})
@@ -56,7 +57,8 @@ func (d *DataRepository) SaveFile(ctx context.Context, file *fl.File, login stri
 	}
 
 	meatadata := map[string]string{
-		"meta": meta,
+		"meta":     meta,
+		"dataType": binData,
 	}
 
 	// Open the file to upload
@@ -89,6 +91,8 @@ func (d *DataRepository) SaveFile(ctx context.Context, file *fl.File, login stri
 }
 
 func (d *DataRepository) DownloadFile(ctx context.Context, bucketName, objectName string) (*bytes.Buffer, string, error) {
+	objectName = binData + "_" + objectName // The name for the object in MinIO
+
 	client, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure: useSSL,

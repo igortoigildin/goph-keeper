@@ -43,6 +43,26 @@ func (d *DataRepository) ListObjects(ctx context.Context, bucketName string) ([]
 			ETag:         object.ETag,
 		}
 
+		// Get object info to access UserMetadata
+		objectInfo, err := client.StatObject(ctx, bucketName, object.Key, minio.StatObjectOptions{})
+		if err != nil {
+			logger.Error("error getting object info: ", zap.Error(err))
+			continue
+		}
+
+		if objectInfo.UserMetadata != nil {
+			info.Datatype = objectInfo.UserMetadata["datatype"]
+			logger.Info("Object metadata:",
+				zap.String("key", object.Key),
+				zap.String("datatype", info.Datatype),
+				zap.Any("userMetadata", objectInfo.UserMetadata),
+			)
+		} else {
+			logger.Info("No metadata found for object:",
+				zap.String("key", object.Key),
+			)
+		}
+
 		allObjects = append(allObjects, info)
 	}
 
@@ -57,7 +77,6 @@ func (d *DataRepository) ListObjects(ctx context.Context, bucketName string) ([]
 	if err := encoder.Encode(allObjects); err != nil {
 		logger.Error("error while encoding JSON: ", zap.Error(err))
 	}
-
 	logger.Info("JSON saved to minio_objects.json")
 
 	return allObjects, nil

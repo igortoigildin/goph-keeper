@@ -116,7 +116,7 @@ func (rep *ClientRepository) GetText(id string) (models.Text, error) {
 	var t models.Text
 
 	err := rep.db.QueryRow(`
-		SELECT id, info, text, created_at
+		SELECT id, info, text, created_at, etag
 		FROM texts
 		WHERE id = ?
 	`, id).Scan(&t.ID, &t.Info, &t.Text, &t.CreatedAt, &t.Etag)
@@ -190,7 +190,7 @@ func (rep *ClientRepository) SaveBankDetails(cardNumber, cvc, expDate, id, bankN
 }
 
 func (rep *ClientRepository) GetAllBankDetails() ([]models.BankDetails, error) {
-	rows, err := rep.db.Query("SELECT id, bank_name, card_number, expiry, cvc, created_at FROM bank_data")
+	rows, err := rep.db.Query("SELECT id, bank_name, card_number, expiry, cvc, created_at, etag FROM bank_data")
 	if err != nil {
 		return nil, err
 	}
@@ -199,11 +199,13 @@ func (rep *ClientRepository) GetAllBankDetails() ([]models.BankDetails, error) {
 	var cards []models.BankDetails
 	for rows.Next() {
 		var c models.BankDetails
+		var bankName string
 
-		err := rows.Scan(&c.ID, &c.Info, &c.CardNumber, &c.Cvc, &c.ExpDate, &c.CreatedAt, &c.Etag)
+		err := rows.Scan(&c.ID, &bankName, &c.CardNumber, &c.ExpDate, &c.Cvc, &c.CreatedAt, &c.Etag)
 		if err != nil {
 			return nil, err
 		}
+		c.Info = bankName
 		cards = append(cards, c)
 	}
 
@@ -286,4 +288,38 @@ func (rep *ClientRepository) GetFile(id string) (models.File, error) {
 		return models.File{}, fmt.Errorf("error requesting file: %w", err)
 	}
 	return f, nil
+}
+
+func (rep *ClientRepository) UpdateText(id, text, etag string) error {
+	_, err := rep.db.Exec(`
+		UPDATE texts SET text = ?, etag = ? WHERE id = ?
+	`, text, etag, id)
+	return err
+}
+
+func (rep *ClientRepository) UpdateCredentials(id, service, username, password, etag string) error {
+	_, err := rep.db.Exec(`
+		UPDATE credentials SET service = ?, username = ?, password = ?, etag = ? WHERE id = ?
+	`, service, username, password, etag, id)
+	return err
+}
+
+func (rep *ClientRepository) UpdateBankDetails(id, cardNumber, cvc, expDate, bankName, etag string) error {
+	_, err := rep.db.Exec(`
+		UPDATE bank_data SET card_number = ?, cvc = ?, expiry = ?, bank_name = ?, etag = ? WHERE id = ?
+	`, cardNumber, cvc, expDate, bankName, etag, id)
+	return err
+}
+
+func (rep *ClientRepository) UpdateFile(id, etag string, data []byte) error {
+	f := models.File{
+		ID:        id,
+		Data:      data,
+		UpdatedAt: time.Now(),
+		Etag:      etag,
+	}
+
+	_, err := rep.db.Exec("INSERT OR REPLACE INTO files (id, data, updated_at, etag) VALUES (?, ?, ?, ?, ?, ?)",
+		f.ID, f.Data, f.UpdatedAt, f.Etag)
+	return err
 }

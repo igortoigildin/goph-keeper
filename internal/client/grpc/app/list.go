@@ -17,7 +17,7 @@ func listAllSavedSecrets(app *App) *cobra.Command {
 		Use:   "all",
 		Short: "List all data currently saved in gopher-keeper",
 		Run: func(cmd *cobra.Command, args []string) {
-			cards, err := app.Receiver.GetAllBankDetails()
+			cards, err := app.ClientReceiver.GetAllBankDetails()
 			if err != nil {
 				logger.Error("failed to get card secrets list", zap.Error(err))
 
@@ -36,7 +36,7 @@ func listAllSavedSecrets(app *App) *cobra.Command {
 				)
 			}
 
-			creds, err := app.Receiver.GetAllCredentials()
+			creds, err := app.ClientReceiver.GetAllCredentials()
 			if err != nil {
 				logger.Error("failed to get credential secrets list", zap.Error(err))
 
@@ -55,7 +55,7 @@ func listAllSavedSecrets(app *App) *cobra.Command {
 				)
 			}
 
-			files, err := app.Receiver.ListAllFiles()
+			files, err := app.ClientReceiver.ListAllFiles()
 			if err != nil {
 				logger.Error("failed to get files list", zap.Error(err))
 
@@ -75,7 +75,7 @@ func listAllSavedSecrets(app *App) *cobra.Command {
 				)
 			}
 
-			texts, err := app.Receiver.GetAllTexts()
+			texts, err := app.ClientReceiver.GetAllTexts()
 			if err != nil {
 				logger.Error("failed to get files list", zap.Error(err))
 

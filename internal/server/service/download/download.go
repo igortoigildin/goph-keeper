@@ -15,7 +15,11 @@ import (
 )
 
 const (
-	login = "login"
+	login         = "login"
+	loginPassword = "login_password"
+	bankData      = "bank_data"
+	textData      = "text_data"
+	binData       = "bin_data"
 )
 
 type AccessRepository interface {
@@ -118,7 +122,7 @@ func (d *DownloadService) DownloadBankData(ctx context.Context, id string) (map[
 		return nil, "", errors.New("authorization error")
 	}
 
-	data, metadata, err := d.dataRepository.DownloadTextData(ctx, login, id)
+	data, metadata, err := d.dataRepository.DownloadTextData(ctx, login, id, bankData)
 	if err != nil {
 		return nil, "", fmt.Errorf("error downloading bank details: %s", err)
 	}
@@ -172,7 +176,7 @@ func (d *DownloadService) DownloadText(ctx context.Context, id string) (string, 
 		return "", "", errors.New("authorization error")
 	}
 
-	data, metadata, err := d.dataRepository.DownloadTextData(ctx, login, id)
+	data, metadata, err := d.dataRepository.DownloadTextData(ctx, login, id, textData)
 	if err != nil {
 		return "", "", fmt.Errorf("error downloading text: %s", err)
 	}
@@ -217,7 +221,7 @@ func (d *DownloadService) DownloadLoginPassword(ctx context.Context, id string) 
 		return nil, "", errors.New("authorization error")
 	}
 
-	data, metadata, err := d.dataRepository.DownloadTextData(ctx, login, id)
+	data, metadata, err := d.dataRepository.DownloadTextData(ctx, login, id, loginPassword)
 	if err != nil {
 		logger.Error("error downloading login credentials: ", zap.Error(err))
 

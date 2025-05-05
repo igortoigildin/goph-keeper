@@ -4,12 +4,17 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/igortoigildin/goph-keeper/buildinfo"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
 func LoadConfig() error {
+	fmt.Printf("Build Version: %s\n", buildinfo.BuildVersion)
+	fmt.Printf("Build Date: %s\n", buildinfo.BuildDate)
+	fmt.Printf("Build Commit: %s\n", buildinfo.BuildCommit)
+
 	err := godotenv.Load("././.env")
 	if err != nil {
 		logger.Error("Failed to load .env file")

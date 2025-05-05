@@ -5,6 +5,7 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"io"
 	"strings"
 
@@ -41,7 +42,7 @@ func Encrypt(plaintext string, key []byte) (string, error) {
 
 func Decrypt(encoded string, key []byte) (string, error) {
 	logger.Debug("Starting decryption",
-		zap.String("encoded_length", string(len(encoded))),
+		zap.String("encoded_length", fmt.Sprintf("%d", len(encoded))),
 		zap.String("encoded_data", encoded),
 	)
 

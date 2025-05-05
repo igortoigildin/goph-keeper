@@ -3,3 +3,9 @@ storage_path: "./storage/goph.db"
 timeout: 15s
 grpc:
   port: 9000
+  tls:
+    enabled: false
+key: "test_encryption_key"
+pg:
+  dsn: "postgres://postgres:postgres@localhost:5432/goph_keeper?sslmode=disable"
+  migrations_path: "./migrations"

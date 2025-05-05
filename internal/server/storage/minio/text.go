@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (d *DataRepository) SaveTextData(ctx context.Context, data any, login string, id string, info string) (string, error) {
+func (d *DataRepository) SaveTextData(ctx context.Context, data any, login string, id string, info string, datatype string) (string, error) {
 	client, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure: useSSL,
@@ -36,8 +36,8 @@ func (d *DataRepository) SaveTextData(ctx context.Context, data any, login strin
 	buf := bytes.NewReader(serializedData)
 
 	// Define the file to upload and the destination bucket
-	objectName := id    // The name for the object in MinIO
-	bucketName := login // Bucket name in MinIO
+	objectName := datatype + "_" + id // The name for the object in MinIO
+	bucketName := login               // Bucket name in MinIO
 
 	// Ensure the bucket exists (or create it)
 	err = client.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{})
@@ -52,13 +52,15 @@ func (d *DataRepository) SaveTextData(ctx context.Context, data any, login strin
 	}
 
 	// Save additional info about data to be saved
-	meatadata := map[string]string{
-		"info": info,
+	metadata := map[string]string{
+		"info":     info,
+		"datatype": datatype,
 	}
 
 	objInfo, err := client.PutObject(ctx, bucketName, objectName, buf,
 		int64(buf.Len()),
-		minio.PutObjectOptions{ContentType: "application/json", UserMetadata: meatadata})
+		minio.PutObjectOptions{ContentType: "application/json", UserMetadata: metadata})
+
 	if err != nil {
 		logger.Error("error while uploading object to minio: ", zap.Error(err))
 
@@ -70,46 +72,37 @@ func (d *DataRepository) SaveTextData(ctx context.Context, data any, login strin
 	return objInfo.ETag, nil
 }
 
-func (d *DataRepository) DownloadTextData(ctx context.Context, bucketName, objectName string) ([]byte, string, error) {
+func (d *DataRepository) DownloadTextData(ctx context.Context, bucketName, objectName, dataType string) ([]byte, string, error) {
 	client, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure: useSSL,
 	})
 	if err != nil {
 		logger.Error("error while creating minio client: ", zap.Error(err))
-
 		return nil, "", fmt.Errorf("error instantiating Minio client with options: %w", err)
 	}
 
+	objectName = dataType + "_" + objectName
+
+	fmt.Println("OBJECTNAME", objectName)
+
+	// Get the object
 	obj, err := client.GetObject(ctx, bucketName, objectName, minio.GetObjectOptions{})
 	if err != nil {
 		logger.Error("error opening targeted file: ", zap.Error(err))
-
 		return nil, "", fmt.Errorf("error opening targeted file: %w", err)
 	}
 	defer obj.Close()
-
-	info, err := client.StatObject(ctx, bucketName, objectName, minio.GetObjectOptions{})
-	if err != nil {
-		logger.Error("error getting object metadata: ", zap.Error(err))
-
-		return nil, "", fmt.Errorf("error getting object metadata: %w", err)
-	}
-
-	metadata := info.UserMetadata["Info"]
 
 	// Read the object data into a byte buffer
 	buf := new(bytes.Buffer)
 	_, err = io.Copy(buf, obj)
 	if err != nil {
 		logger.Error("error copying targeted file: ", zap.Error(err))
-
 		return nil, "", fmt.Errorf("error copying targeted file: %w", err)
 	}
 
 	res := buf.Bytes()
 
-	logger.Info("Object downloaded successfully: ", zap.String("id:", objectName))
-
-	return res, metadata, nil
+	return res, "", nil
 }

@@ -96,6 +96,11 @@ The project implements a storage system for storing different types of data, suc
    ```bash
    make test-cover
    ```
+10. Generate TLS certs:
+
+```bash
+make certs
+```
 
 ### Commands Examples
 
@@ -170,4 +175,10 @@ You also my add your optional additional metadata for your secrets with flags -i
 
 ```bash
     bin/client list all
+```
+
+10. Sync secrets data between client and server
+
+```bash
+    bin/client sync all
 ```

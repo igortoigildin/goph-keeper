@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/brianvoe/gofakeit/v6"
+	gofakeit "github.com/brianvoe/gofakeit/v7"
 	"github.com/igortoigildin/goph-keeper/pkg/auth_v1"
 	"github.com/igortoigildin/goph-keeper/pkg/download_v1"
 	"github.com/igortoigildin/goph-keeper/pkg/upload_v1"
@@ -27,16 +27,18 @@ func TestSaveText_Happy(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotEmpty(t, resReg.GetUserId())
 
-	_, err = st.AuthClient.Login(ctx, &auth_v1.LoginRequest{
+	resp, err := st.AuthClient.Login(ctx, &auth_v1.LoginRequest{
 		Login:    login,
 		Password: pass,
 	})
 	require.NoError(t, err)
 
+	token := resp.GetToken()
+
 	text := gofakeit.Adverb()
 	id := gofakeit.Digit()
 
-	md := metadata.Pairs("login", login, "id", id)
+	md := metadata.Pairs("login", login, "id", id, "authorization", "Bearer "+token)
 
 	ctx = metadata.NewOutgoingContext(context.Background(), md)
 
@@ -58,17 +60,19 @@ func TestDownloadText_Happy(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotEmpty(t, resReg.GetUserId())
 
-	_, err = st.AuthClient.Login(ctx, &auth_v1.LoginRequest{
+	resp, err := st.AuthClient.Login(ctx, &auth_v1.LoginRequest{
 		Login:    login,
 		Password: pass,
 	})
 	require.NoError(t, err)
 
+	token := resp.GetToken()
+
 	text := gofakeit.Adverb()
 	id := gofakeit.Number(23, 1948)
 	idUpd := strconv.Itoa(id)
 
-	md := metadata.Pairs("login", login, "id", idUpd)
+	md := metadata.Pairs("login", login, "id", idUpd, "authorization", "Bearer "+token)
 
 	ctx = metadata.NewOutgoingContext(context.Background(), md)
 
@@ -163,13 +167,15 @@ func TestSaveBankDetails_Happy(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotEmpty(t, resReg.GetUserId())
 
-	_, err = st.AuthClient.Login(ctx, &auth_v1.LoginRequest{
+	resp, err := st.AuthClient.Login(ctx, &auth_v1.LoginRequest{
 		Login:    login,
 		Password: pass,
 	})
 	require.NoError(t, err)
 
-	md := metadata.Pairs("login", login, "id", id)
+	token := resp.GetToken()
+
+	md := metadata.Pairs("login", login, "id", id, "authorization", "Bearer "+token)
 
 	ctx = metadata.NewOutgoingContext(context.Background(), md)
 
@@ -197,13 +203,15 @@ func TestDownloadBankDetails_Happy(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotEmpty(t, resReg.GetUserId())
 
-	_, err = st.AuthClient.Login(ctx, &auth_v1.LoginRequest{
+	resp, err := st.AuthClient.Login(ctx, &auth_v1.LoginRequest{
 		Login:    login,
 		Password: pass,
 	})
 	require.NoError(t, err)
 
-	md := metadata.Pairs("login", login, "id", id)
+	token := resp.GetToken()
+
+	md := metadata.Pairs("login", login, "id", id, "authorization", "Bearer "+token)
 
 	ctx = metadata.NewOutgoingContext(context.Background(), md)
 

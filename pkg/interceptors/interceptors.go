@@ -20,7 +20,8 @@ func JwtUnaryInterceptor() grpc.UnaryServerInterceptor {
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
 	) (interface{}, error) {
-		if strings.HasSuffix(info.FullMethod, "/Login") {
+
+		if strings.HasSuffix(info.FullMethod, "/Login") || strings.HasSuffix(info.FullMethod, "/Register") {
 			return handler(ctx, req)
 		}
 
@@ -67,6 +68,7 @@ func JwtStreamInterceptor() grpc.StreamServerInterceptor {
 		info *grpc.StreamServerInfo,
 		handler grpc.StreamHandler,
 	) error {
+
 		// Пропускаем проверку токена для метода Login
 		if strings.HasSuffix(info.FullMethod, "/Login") {
 			return handler(srv, ss)

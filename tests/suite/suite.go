@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/igortoigildin/goph-keeper/internal/server/app"
 	config "github.com/igortoigildin/goph-keeper/internal/server/config"
 	auth "github.com/igortoigildin/goph-keeper/pkg/auth_v1"
 	download "github.com/igortoigildin/goph-keeper/pkg/download_v1"
@@ -19,6 +20,7 @@ type Suite struct {
 	AuthClient     auth.AuthV1Client
 	UploadClient   upload.UploadV1Client
 	DownloadClient download.DownloadV1Client
+	server         *app.App
 }
 
 const (
@@ -29,6 +31,9 @@ const (
 func New(t *testing.T) (context.Context, *Suite) {
 	t.Helper()
 	t.Parallel()
+
+	// Set test environment
+	os.Setenv("TEST_ENV", "true")
 
 	cfg := config.MustLoadPath(configPath())
 

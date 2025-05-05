@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"os"
 
 	"github.com/igortoigildin/goph-keeper/internal/server/closer"
 	config "github.com/igortoigildin/goph-keeper/internal/server/config"
@@ -68,6 +69,11 @@ func (a *App) initDeps(ctx context.Context) error {
 }
 
 func (a *App) initConfig(_ context.Context) error {
+	// Skip loading .env file in test mode
+	if os.Getenv("TEST_ENV") == "true" {
+		return nil
+	}
+
 	err := config.LoadFromFile(cfgFileName)
 	if err != nil {
 		return fmt.Errorf("error loading config from local file: %w", err)
@@ -77,7 +83,6 @@ func (a *App) initConfig(_ context.Context) error {
 }
 
 func (a *App) initGRPCServer(ctx context.Context) error {
-
 	creds, err := credentials.NewServerTLSFromFile("certs/server.crt", "certs/server.key")
 	if err != nil {
 		logger.Error("failed to load TLS certificates: %w", zap.Error(err))
@@ -90,7 +95,6 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 		grpc.UnaryInterceptor(interceptors.JwtUnaryInterceptor()),
 		grpc.StreamInterceptor(interceptors.JwtStreamInterceptor()),
 	)
-
 	reflection.Register(a.grpcServer)
 
 	uploadpb.RegisterUploadV1Server(a.grpcServer, a.serviceProvider.UploadImpl(ctx))
@@ -102,7 +106,7 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 }
 
 func (a *App) runGRPCServer() error {
-	logger.Info("GRPC server with TLS is running on:", zap.Any("address:", a.serviceProvider.GRPCConfig().Address()))
+	logger.Info("GRPC server is running on:", zap.Any("address:", a.serviceProvider.GRPCConfig().Address()))
 
 	list, err := net.Listen("tcp", a.serviceProvider.GRPCConfig().Address())
 	if err != nil {

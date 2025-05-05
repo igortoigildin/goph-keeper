@@ -22,6 +22,7 @@ func (i *Implementation) GetObjectList(ctx context.Context, req *desc.SyncReques
 			Size:         obj.Size,
 			LastModified: obj.LastModified.Format(time.RFC3339),
 			Etag:         obj.ETag,
+			Datatype:     obj.Datatype,
 		}
 	}
 

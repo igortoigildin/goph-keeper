@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 
+	"github.com/igortoigildin/goph-keeper/internal/client/grpc/models"
 	desc "github.com/igortoigildin/goph-keeper/pkg/download_v1"
 	"github.com/igortoigildin/goph-keeper/pkg/encryption"
 	fl "github.com/igortoigildin/goph-keeper/pkg/file"
@@ -23,13 +25,6 @@ const (
 	password = "password"
 )
 
-type Downloader interface {
-	DownloadPassword(addr, id string) error
-	DownloadText(addr, id string) error
-	DownloadFile(addr, id, fileName string) error
-	DownloadBankDetails(addr, id string) error
-}
-
 type ClientService struct {
 	client desc.DownloadV1Client
 }
@@ -38,16 +33,16 @@ func New() *ClientService {
 	return &ClientService{}
 }
 
-func (s *ClientService) DownloadPassword(addr, id string) error {
+func (s *ClientService) DownloadPassword(addr, id string) (models.Credential, error) {
 	creds, err := credentials.NewClientTLSFromFile("certs/server.crt", "")
 	if err != nil {
 		logger.Error("failed to load TLS certificates: %w", zap.Error(err))
-		return fmt.Errorf("failed to load TLS certificates: %w", err)
+		return models.Credential{}, fmt.Errorf("failed to load TLS certificates: %w", err)
 	}
 
 	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(creds))
 	if err != nil {
-		return fmt.Errorf("error dialing client: %w", err)
+		return models.Credential{}, fmt.Errorf("error dialing client: %w", err)
 	}
 	defer conn.Close()
 
@@ -55,7 +50,7 @@ func (s *ClientService) DownloadPassword(addr, id string) error {
 
 	ss, err := session.LoadSession()
 	if err != nil {
-		return fmt.Errorf("error loading session: %w", err)
+		return models.Credential{}, fmt.Errorf("error loading session: %w", err)
 	}
 
 	md := metadata.Pairs(login, ss.Login, "authorization", "Bearer "+ss.Token)
@@ -64,7 +59,7 @@ func (s *ClientService) DownloadPassword(addr, id string) error {
 
 	resp, err := s.client.DownloadPassword(ctx, &desc.DownloadPasswordRequest{Uuid: id})
 	if err != nil {
-		return fmt.Errorf("error downloading password: %w", err)
+		return models.Credential{}, fmt.Errorf("error downloading password: %w", err)
 	}
 
 	data := resp.GetData()
@@ -84,27 +79,34 @@ func (s *ClientService) DownloadPassword(addr, id string) error {
 		zap.Any("info: ", metadata),
 	)
 
-	return nil
+	resObj := models.Credential{
+		ID:       id,
+		Username: decryptedLogin,
+		Password: decryptedPassword,
+		Service:  metadata,
+	}
+
+	return resObj, nil
 }
 
-func (s *ClientService) DownloadText(addr, id string) error {
+func (s *ClientService) DownloadText(addr, id string) (models.Text, error) {
 	creds, err := credentials.NewClientTLSFromFile("certs/server.crt", "")
 	if err != nil {
 		logger.Error("failed to load TLS certificates: %w", zap.Error(err))
 
-		return fmt.Errorf("failed to load TLS certificates: %w", err)
+		return models.Text{}, fmt.Errorf("failed to load TLS certificates: %w", err)
 	}
 
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(creds))
 	if err != nil {
-		return fmt.Errorf("error dialing client: %w", err)
+		return models.Text{}, fmt.Errorf("error dialing client: %w", err)
 	}
 	defer conn.Close()
 
 	s.client = desc.NewDownloadV1Client(conn)
 	ss, err := session.LoadSession()
 	if err != nil {
-		return fmt.Errorf("error loading session: %w", err)
+		return models.Text{}, fmt.Errorf("error loading session: %w", err)
 	}
 
 	md := metadata.Pairs(login, ss.Login, "authorization", "Bearer "+ss.Token)
@@ -113,7 +115,7 @@ func (s *ClientService) DownloadText(addr, id string) error {
 
 	resp, err := s.client.DownloadText(ctx, &desc.DownloadTextRequest{Uuid: id})
 	if err != nil {
-		return fmt.Errorf("error downloading text: %w", err)
+		return models.Text{}, fmt.Errorf("error downloading text: %w", err)
 	}
 
 	dataEncrypted := resp.GetText()
@@ -126,27 +128,33 @@ func (s *ClientService) DownloadText(addr, id string) error {
 
 	logger.Info("Your data: ", zap.Any("text", decryptedText), zap.Any("metadata", metadata))
 
-	return nil
+	resObj := models.Text{
+		ID:   id,
+		Text: decryptedText,
+		Info: metadata,
+	}
+
+	return resObj, nil
 }
 
-func (s *ClientService) DownloadFile(addr string, id, fileName string) error {
+func (s *ClientService) DownloadFile(addr string, id, fileName string) (models.File, error) {
 	creds, err := credentials.NewClientTLSFromFile("certs/server.crt", "")
 	if err != nil {
 		logger.Error("failed to load TLS certificates: %w", zap.Error(err))
 
-		return fmt.Errorf("failed to load TLS certificates: %w", err)
+		return models.File{}, fmt.Errorf("failed to load TLS certificates: %w", err)
 	}
 
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(creds))
 	if err != nil {
-		return fmt.Errorf("error dialing client: %w", err)
+		return models.File{}, fmt.Errorf("error dialing client: %w", err)
 	}
 	defer conn.Close()
 
 	s.client = desc.NewDownloadV1Client(conn)
 	ss, err := session.LoadSession()
 	if err != nil {
-		return fmt.Errorf("error loading session: %w", err)
+		return models.File{}, fmt.Errorf("error loading session: %w", err)
 	}
 
 	md := metadata.Pairs(login, ss.Login, "authorization", "Bearer "+ss.Token)
@@ -154,7 +162,7 @@ func (s *ClientService) DownloadFile(addr string, id, fileName string) error {
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 	stream, err := s.client.DownloadFile(ctx, &desc.DownloadFileRequest{Uuid: id})
 	if err != nil {
-		return fmt.Errorf("error downloading file: %w", err)
+		return models.File{}, fmt.Errorf("error downloading file: %w", err)
 	}
 
 	file := fl.NewFile()
@@ -176,7 +184,7 @@ func (s *ClientService) DownloadFile(addr string, id, fileName string) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error receiving byte chunk: %w", err)
+			return models.File{}, fmt.Errorf("error receiving byte chunk: %w", err)
 		}
 
 		chunk := req.GetChunk()
@@ -184,31 +192,43 @@ func (s *ClientService) DownloadFile(addr string, id, fileName string) error {
 		logger.Info("received a chunk with size:", zap.Uint32("size", fileSize))
 
 		if err := file.Write(chunk); err != nil {
-			return fmt.Errorf("error adding byte chunk to file: %w", err)
+			return models.File{}, fmt.Errorf("error adding byte chunk to file: %w", err)
 		}
 	}
 
-	return nil
+	fileData, err := os.ReadFile(file.FilePath)
+	if err != nil {
+		logger.Error("error while reading file", zap.Error(err))
+		return models.File{}, fmt.Errorf("error while reading file: %w", err)
+	}
+
+	resObj := models.File{
+		ID:       id,
+		Data:     fileData,
+		Filename: file.FilePath,
+	}
+
+	return resObj, nil
 }
 
-func (s *ClientService) DownloadBankDetails(addr, id string) error {
+func (s *ClientService) DownloadBankDetails(addr, id string) (models.BankDetails, error) {
 	creds, err := credentials.NewClientTLSFromFile("certs/server.crt", "")
 	if err != nil {
 		logger.Error("failed to load TLS certificates: %w", zap.Error(err))
 
-		return fmt.Errorf("failed to load TLS certificates: %w", err)
+		return models.BankDetails{}, fmt.Errorf("failed to load TLS certificates: %w", err)
 	}
 
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(creds))
 	if err != nil {
-		return fmt.Errorf("error dialing client: %w", err)
+		return models.BankDetails{}, fmt.Errorf("error dialing client: %w", err)
 	}
 	defer conn.Close()
 
 	s.client = desc.NewDownloadV1Client(conn)
 	ss, err := session.LoadSession()
 	if err != nil {
-		return fmt.Errorf("error loading session: %w", err)
+		return models.BankDetails{}, fmt.Errorf("error loading session: %w", err)
 	}
 
 	md := metadata.Pairs(login, ss.Login, "authorization", "Bearer "+ss.Token)
@@ -216,7 +236,7 @@ func (s *ClientService) DownloadBankDetails(addr, id string) error {
 
 	resp, err := s.client.DownloadBankData(ctx, &desc.DownloadBankDataRequest{Uuid: id})
 	if err != nil {
-		return fmt.Errorf("erorr downloading text: %w", err)
+		return models.BankDetails{}, fmt.Errorf("erorr downloading text: %w", err)
 	}
 
 	data := resp.GetData()
@@ -243,5 +263,13 @@ func (s *ClientService) DownloadBankDetails(addr, id string) error {
 		zap.Any("metadata: ", metadata),
 	)
 
-	return nil
+	resObj := models.BankDetails{
+		ID:         id,
+		CardNumber: decryptedCardNumber,
+		Cvc:        decryptedCVC,
+		ExpDate:    decryptedExpDate,
+		Info:       metadata,
+	}
+
+	return resObj, nil
 }

@@ -3,7 +3,7 @@ package tests
 import (
 	"testing"
 
-	"github.com/brianvoe/gofakeit/v6"
+	"github.com/brianvoe/gofakeit/v7"
 	"github.com/igortoigildin/goph-keeper/pkg/auth_v1"
 	"github.com/igortoigildin/goph-keeper/tests/suite"
 	"github.com/stretchr/testify/assert"

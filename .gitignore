@@ -41,3 +41,7 @@ vendor/
 certs/*
 
 session/*
+session.json
+sqlite3
+
+minio_objects.json

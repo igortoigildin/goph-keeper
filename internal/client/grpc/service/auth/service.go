@@ -3,6 +3,7 @@ package register
 import (
 	"context"
 	"fmt"
+	"os"
 
 	desc "github.com/igortoigildin/goph-keeper/pkg/auth_v1"
 	"github.com/igortoigildin/goph-keeper/pkg/logger"
@@ -10,6 +11,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 )
 
@@ -19,6 +21,7 @@ type AuthService struct {
 }
 
 func New(addr string) *AuthService {
+	logger.Initialize("info")
 	return &AuthService{
 		addr: addr,
 	}
@@ -60,16 +63,23 @@ func (auth *AuthService) RegisterNewUser(ctx context.Context, login, pass string
 }
 
 func (auth *AuthService) Login(ctx context.Context, login, pass string) (string, error) {
-	// Load TLS credentials
-	creds, err := credentials.NewClientTLSFromFile("certs/server.crt", "")
-	if err != nil {
-		logger.Error("failed to load TLS certificates: %w", zap.Error(err))
+	var opts []grpc.DialOption
 
-		return "", fmt.Errorf("failed to load TLS certificates: %w", err)
+	// Use insecure credentials in test mode
+	if os.Getenv("TEST_ENV") == "true" {
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	} else {
+		// Load TLS credentials
+		creds, err := credentials.NewClientTLSFromFile("certs/server.crt", "")
+		if err != nil {
+			logger.Error("failed to load TLS certificates: %w", zap.Error(err))
+			return "", fmt.Errorf("failed to load TLS certificates: %w", err)
+		}
+		opts = append(opts, grpc.WithTransportCredentials(creds))
 	}
 
-	// Create gRPC connection with TLS
-	conn, err := grpc.Dial(auth.addr, grpc.WithTransportCredentials(creds))
+	// Create gRPC connection
+	conn, err := grpc.Dial(auth.addr, opts...)
 	if err != nil {
 		return "", fmt.Errorf("error dialing client: %w", err)
 	}

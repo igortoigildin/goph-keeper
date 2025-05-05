@@ -25,7 +25,7 @@ func saveTextCmd(app *App) *cobra.Command {
 			}
 
 			logger.Debug("Saving text",
-				zap.String("text_length", string(len(textData))),
+				zap.String("text_length", fmt.Sprintf("%d", len(textData))),
 				zap.String("text", textData),
 			)
 
@@ -45,7 +45,7 @@ func saveTextCmd(app *App) *cobra.Command {
 			// Encrypting text data
 			encryptionKey := []byte(viper.Get("ENCRYPTION_KEY").(string))
 			logger.Debug("Using encryption key",
-				zap.String("key_length", string(len(encryptionKey))),
+				zap.String("key_length", fmt.Sprintf("%d", len(encryptionKey))),
 			)
 
 			encryptedText, err := encryption.Encrypt(textData, encryptionKey)
@@ -54,7 +54,7 @@ func saveTextCmd(app *App) *cobra.Command {
 			}
 
 			logger.Debug("Text encrypted successfully",
-				zap.String("encrypted_length", string(len(encryptedText))),
+				zap.String("encrypted_length", fmt.Sprintf("%d", len(encryptedText))),
 			)
 
 			// Sending text to remote server
@@ -64,7 +64,7 @@ func saveTextCmd(app *App) *cobra.Command {
 			}
 
 			// Saving text locally in DB
-			err = app.Saver.SaveText(id.String(), info, encryptedText, etag)
+			err = app.ClientSaver.SaveText(id.String(), info, encryptedText, etag)
 			if err != nil {
 				logger.Error("failed to save text locally", zap.Error(err))
 			}
@@ -95,23 +95,24 @@ func downloadTextCmd(app *App) *cobra.Command {
 			serverAddr, _ := viper.Get("GRPC_PORT").(string)
 
 			// Requesting text with provided uuid.
-			if err := clientService.DownloadText(fmt.Sprintf(":%s", serverAddr), idStr); err != nil {
+			_, err = clientService.DownloadText(fmt.Sprintf(":%s", serverAddr), idStr)
+			if err != nil {
 				logger.Error("failed to obtain text data from remote server: ", zap.Error(err))
 
 				// if remote server not responding, try to reach local client storage
-				res, err := app.Downloader.GetText(idStr)
+				res, err := app.ClientReceiver.GetText(idStr)
 				if err != nil {
 					logger.Error("failed to obtain text data from local storage: ", zap.Error(err))
 				}
 
 				logger.Debug("Received encrypted text",
-					zap.String("encrypted_length", string(len(res.Text))),
+					zap.String("encrypted_length", fmt.Sprintf("%d", len(res.Text))),
 					zap.String("encrypted_text", res.Text),
 				)
 
 				encryptionKey := []byte(viper.Get("ENCRYPTION_KEY").(string))
 				logger.Debug("Using encryption key",
-					zap.String("key_length", string(len(encryptionKey))),
+					zap.String("key_length", fmt.Sprintf("%d", len(encryptionKey))),
 				)
 
 				decryptedText, err := encryption.Decrypt(res.Text, encryptionKey)
@@ -120,7 +121,7 @@ func downloadTextCmd(app *App) *cobra.Command {
 				}
 
 				logger.Debug("Text decrypted successfully",
-					zap.String("decrypted_length", string(len(decryptedText))),
+					zap.String("decrypted_length", fmt.Sprintf("%d", len(decryptedText))),
 				)
 
 				logger.Info("your data:", zap.String("text:", decryptedText), zap.String("metadata:", res.Info))

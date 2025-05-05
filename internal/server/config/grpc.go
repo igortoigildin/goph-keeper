@@ -14,11 +14,19 @@ const (
 
 type GRPCConfig interface {
 	Address() string
+	GetTLS() TLSConfig
+}
+
+type TLSConfig struct {
+	Enabled  bool   `yaml:"enabled"`
+	CertFile string `yaml:"cert_file"`
+	KeyFile  string `yaml:"key_file"`
 }
 
 type GrpcConfig struct {
 	Host string
-	Port string `yaml:"port"`
+	Port string    `yaml:"port"`
+	TLS  TLSConfig `yaml:"tls"`
 }
 
 func NewGRPCConfig() (GRPCConfig, error) {
@@ -40,4 +48,8 @@ func NewGRPCConfig() (GRPCConfig, error) {
 
 func (cfg *GrpcConfig) Address() string {
 	return net.JoinHostPort(cfg.Host, cfg.Port)
+}
+
+func (cfg *GrpcConfig) GetTLS() TLSConfig {
+	return cfg.TLS
 }

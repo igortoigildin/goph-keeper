@@ -20,6 +20,7 @@ message ObjectInfo {
   int64 size = 2;
   string last_modified = 3;
   string etag = 4;
+  string datatype = 5;
 }
 
 message SyncResponse {

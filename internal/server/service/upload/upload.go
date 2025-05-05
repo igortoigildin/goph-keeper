@@ -17,8 +17,12 @@ import (
 )
 
 const (
-	login = "login"
-	id    = "id"
+	login         = "login"
+	id            = "id"
+	loginPassword = "login_password"
+	bankData      = "bank_data"
+	textData      = "text_data"
+	binData       = "bin_data"
 )
 
 type AccessRepository interface {
@@ -27,7 +31,7 @@ type AccessRepository interface {
 }
 
 type DataRepository interface {
-	SaveTextData(ctx context.Context, data any, login string, id string, info string) (string, error)
+	SaveTextData(ctx context.Context, data any, login string, id string, info string, dataType string) (string, error)
 	SaveFile(ctx context.Context, file *fl.File, login string, id string, meta string) (string, error)
 }
 
@@ -80,7 +84,7 @@ func (f *UploadService) SaveBankData(ctx context.Context, data map[string]string
 		return "", fmt.Errorf("error saving access: %w", err)
 	}
 
-	etag, err := f.dataRepository.SaveTextData(ctx, data, login, id, info)
+	etag, err := f.dataRepository.SaveTextData(ctx, data, login, id, info, bankData)
 	if err != nil {
 		logger.Error("error saving bank data:", zap.Error(err))
 
@@ -125,7 +129,7 @@ func (f *UploadService) SaveText(ctx context.Context, text string, info string) 
 		return "", fmt.Errorf("error saving access: %w", err)
 	}
 
-	etag, err := f.dataRepository.SaveTextData(ctx, text, login, id, info)
+	etag, err := f.dataRepository.SaveTextData(ctx, text, login, id, info, textData)
 	if err != nil {
 		logger.Error("error saving text data: ", zap.Error(err))
 
@@ -166,7 +170,7 @@ func (f *UploadService) SaveLoginPassword(ctx context.Context, data map[string]s
 		return "", fmt.Errorf("error saving access: %w", err)
 	}
 
-	etag, err := f.dataRepository.SaveTextData(ctx, data, login, id, info)
+	etag, err := f.dataRepository.SaveTextData(ctx, data, login, id, info, loginPassword)
 	if err != nil {
 		logger.Error("error saving credentials data", zap.Error(err))
 
