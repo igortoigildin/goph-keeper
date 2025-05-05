@@ -47,7 +47,7 @@ func (d *DataRepository) SaveFile(ctx context.Context, file *fl.File, login stri
 	// Ensure the bucket exists (or create it)
 	err = client.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{})
 	if err != nil {
-		if exists, errBucketExists := client.BucketExists(context.Background(), bucketName); errBucketExists == nil && exists {
+		if exists, errBucketExists := client.BucketExists(ctx, bucketName); errBucketExists == nil && exists {
 			logger.Info("Bucket already exists")
 		} else {
 			logger.Info("Failed to create bucket:", zap.Error(err))
