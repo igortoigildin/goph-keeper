@@ -1,0 +1,10 @@
+env: "local"
+storage_path: "./storage/goph.db"
+grpc:
+  port: 9000
+  timeout: 15s
+  tls:
+    enabled: true
+    cert_file: "certs/server.crt"
+    key_file: "certs/server.key"
+key: "${ENCRYPTION_KEY}"

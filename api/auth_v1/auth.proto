@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package auth_v1;
+
+option go_package = "github.com/igortoigildin/goph-keeper/pkg/auth_v1;auth_v1";
+
+service AuthV1 {
+    rpc Register (RegisterRequest) returns (RegisterResponse);
+    rpc Login (LoginRequest) returns (LoginResponse);
+}
+
+message LoginRequest {
+    string login = 1;
+    string password = 2;
+}
+
+message LoginResponse {
+    string token = 1;
+}
+
+message RegisterRequest {
+    string login = 1; // Login of the user to register
+    string password = 2; // Password of the user to register
+}
+
+message RegisterResponse {
+    int64 user_id = 1; // User ID of the registered user
+}
